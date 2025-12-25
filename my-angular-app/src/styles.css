@@ -1,0 +1,102 @@
+/* Global Styles */
+:root {
+    --fis-primary: #667eea;
+    --fis-secondary: #764ba2;
+    --fis-dark: #1a202c;
+    --fis-light: #f7fafc;
+    --fis-success: #48bb78;
+    --fis-danger: #f56565;
+    --fis-warning: #ecc94b;
+    --fis-info: #4299e1;
+}
+
+body {
+    margin: 0;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: var(--fis-light);
+    color: #2d3748;
+}
+
+/* Custom Card */
+.card {
+    border: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border-radius: 12px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    background-color: white;
+    border-bottom: 1px solid #edf2f7;
+    padding: 1.25rem 1.5rem;
+    border-top-left-radius: 12px !important;
+    border-top-right-radius: 12px !important;
+}
+
+/* Custom Badges */
+.badge {
+    padding: 0.5em 1em;
+    font-weight: 600;
+    border-radius: 6px;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.025em;
+}
+
+.badge-draft {
+    background-color: #edf2f7 !important;
+    color: #4a5568 !important;
+}
+
+.badge-submitted {
+    background-color: #ebf8ff !important;
+    color: #3182ce !important;
+}
+
+.badge-approved {
+    background-color: #f0fff4 !important;
+    color: #38a169 !important;
+}
+
+.badge-rejected {
+    background-color: #fff5f5 !important;
+    color: #e53e3e !important;
+}
+
+.badge-completed {
+    background-color: #e6fffa !important;
+    color: #319795 !important;
+}
+
+/* Custom Buttons */
+.btn-primary {
+    background: linear-gradient(135deg, var(--fis-primary) 0%, var(--fis-secondary) 100%);
+    border: none;
+    font-weight: 500;
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+/* Table Enhancements */
+.table {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.table thead th {
+    background-color: #f8fafc;
+    color: #64748b;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    border-top: none;
+}

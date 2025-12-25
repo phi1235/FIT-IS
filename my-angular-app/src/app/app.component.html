@@ -1,0 +1,37 @@
+<nav class="main-header" *ngIf="!isAdminRoute && !isAuthPage">
+  <div class="nav-container">
+    <a routerLink="/home" class="nav-logo">
+      <img src="logo.png" alt="FIS Logo" class="logo-image">
+      <span>FIS BANK</span>
+    </a>
+    <div class="nav-links">
+      <a routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Trang Chủ</a>
+      <a routerLink="/tickets" routerLinkActive="active" *ngIf="isAuthenticated && isInternalUser">Tickets</a>
+      <a routerLink="/sign" routerLinkActive="active" *ngIf="!isAuthenticated">Đăng Ký</a>
+
+      <!-- User dropdown menu -->
+      <div class="user-dropdown" *ngIf="isAuthenticated">
+        <button class="user-dropdown-toggle" (click)="toggleUserMenu()">
+          <span class="user-name">{{ getDisplayName() }}</span>
+          <span class="dropdown-arrow">&#9660;</span>
+        </button>
+        <div class="user-dropdown-menu" *ngIf="showUserMenu">
+          <a routerLink="/admin" class="dropdown-item adminn-item" *ngIf="isAdmin" (click)="toggleUserMenu()">
+            Quản Trị
+          </a>
+          <button class="dropdown-item logout-item" (click)="logout()">
+            Đăng Xuất
+          </button>
+        </div>
+      </div>
+
+      <a routerLink="/login" class="btn-login" *ngIf="!isAuthenticated">Đăng Nhập</a>
+    </div>
+  </div>
+</nav>
+
+<main [class.fullscreen]="isAdminRoute">
+  <router-outlet></router-outlet>
+</main>
+
+<app-toast></app-toast>

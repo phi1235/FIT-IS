@@ -1,0 +1,14 @@
+# Common ignores
+**/node_modules
+**/dist
+**/target
+**/.git
+**/.idea
+**/.vscode
+**/.DS_Store
+**/*.log
+
+# Keycloak distribution and archives
+keycloak-18.0.2/
+keycloak-18.0.2.tar.gz
+

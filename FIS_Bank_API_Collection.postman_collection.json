@@ -1,0 +1,986 @@
+{
+    "info": {
+        "_postman_id": "fis-bank-keycloak-api",
+        "name": "FIS Bank - Keycloak Integration API",
+        "description": "Collection for testing FIS Bank Spring Boot Keycloak Integration APIs",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:8082",
+            "type": "string"
+        },
+        {
+            "key": "keycloakUrl",
+            "value": "http://localhost:8080",
+            "type": "string"
+        },
+        {
+            "key": "realm",
+            "value": "phi-realm",
+            "type": "string"
+        },
+        {
+            "key": "clientId",
+            "value": "angular-app",
+            "type": "string"
+        },
+        {
+            "key": "accessToken",
+            "value": "",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "1. Authentication",
+            "item": [
+                {
+                    "name": "Health Check",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/public/health",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "public",
+                                "health"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Login - Database",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"username\": \"admin\",\n    \"password\": \"admin123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/login/database",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "login",
+                                "database"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Login - Federation",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"username\": \"user_1\",\n    \"password\": \"123456\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/login/federation",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "login",
+                                "federation"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Login - Generic",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"username\": \"admin\",\n    \"password\": \"admin123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/login?authType=database",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "login"
+                            ],
+                            "query": [
+                                {
+                                    "key": "authType",
+                                    "value": "database"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "2. MFA (Two-Factor Authentication)",
+            "item": [
+                {
+                    "name": "Setup MFA",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/mfa/setup?username=admin",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "mfa",
+                                "setup"
+                            ],
+                            "query": [
+                                {
+                                    "key": "username",
+                                    "value": "admin"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Verify MFA Code",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"username\": \"admin\",\n    \"code\": \"123456\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/mfa/verify",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "mfa",
+                                "verify"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Check MFA Status",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/mfa/status?username=admin",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "mfa",
+                                "status"
+                            ],
+                            "query": [
+                                {
+                                    "key": "username",
+                                    "value": "admin"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Disable MFA",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/mfa/disable?username=admin",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "mfa",
+                                "disable"
+                            ],
+                            "query": [
+                                {
+                                    "key": "username",
+                                    "value": "admin"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "3. User Management",
+            "item": [
+                {
+                    "name": "Get Current User (Me)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/users/me",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "users",
+                                "me"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get My Role",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/users/me/role",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "users",
+                                "me",
+                                "role"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "[Admin] Get All Users",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/users/admin/all",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "users",
+                                "admin",
+                                "all"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "[Admin] Get User Role",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/users/admin/role?username=user_1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "users",
+                                "admin",
+                                "role"
+                            ],
+                            "query": [
+                                {
+                                    "key": "username",
+                                    "value": "user_1"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "[Admin] Update User Role",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"username\": \"user_1\",\n    \"role\": \"checker\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/users/admin/role",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "users",
+                                "admin",
+                                "role"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "4. Tickets",
+            "item": [
+                {
+                    "name": "Get All Tickets",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/tickets",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "tickets"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Ticket by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/tickets/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "tickets",
+                                "1"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Tickets by Status",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/tickets/status/PENDING",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "tickets",
+                                "status",
+                                "PENDING"
+                            ]
+                        },
+                        "description": "Status: DRAFT, PENDING, APPROVED, REJECTED"
+                    }
+                },
+                {
+                    "name": "Create Ticket",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"title\": \"Test Ticket\",\n    \"description\": \"This is a test ticket created from Postman\",\n    \"amount\": 1000000\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/tickets",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "tickets"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Submit Ticket",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/tickets/1/submit",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "tickets",
+                                "1",
+                                "submit"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "[Checker/Admin] Approve Ticket",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/tickets/1/approve",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "tickets",
+                                "1",
+                                "approve"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "[Checker/Admin] Reject Ticket",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"reason\": \"Invalid amount or missing information\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/tickets/1/reject",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "tickets",
+                                "1",
+                                "reject"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "5. Reports",
+            "item": [
+                {
+                    "name": "Download User Report (PDF)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/reports/users?format=pdf",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "reports",
+                                "users"
+                            ],
+                            "query": [
+                                {
+                                    "key": "format",
+                                    "value": "pdf"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Download User Report (Excel)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/reports/users?format=xlsx",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "reports",
+                                "users"
+                            ],
+                            "query": [
+                                {
+                                    "key": "format",
+                                    "value": "xlsx"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Download Ticket Report (PDF)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/reports/tickets?format=pdf",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "reports",
+                                "tickets"
+                            ],
+                            "query": [
+                                {
+                                    "key": "format",
+                                    "value": "pdf"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Download Ticket Report (Excel)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/reports/tickets?format=xlsx",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "reports",
+                                "tickets"
+                            ],
+                            "query": [
+                                {
+                                    "key": "format",
+                                    "value": "xlsx"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "6. Remote User Federation API",
+            "item": [
+                {
+                    "name": "Lookup User by Username",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api?username=admin",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api"
+                            ],
+                            "query": [
+                                {
+                                    "key": "username",
+                                    "value": "admin"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Lookup User by Email",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api?email=admin@fis.com.vn",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api"
+                            ],
+                            "query": [
+                                {
+                                    "key": "email",
+                                    "value": "admin@fis.com.vn"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Lookup User by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api?id=1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api"
+                            ],
+                            "query": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Validate Credentials (Login)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"username\": \"admin\",\n    \"password\": \"admin123\",\n    \"timestamp\": \"1703412360\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "login"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "7. Keycloak OAuth2",
+            "item": [
+                {
+                    "name": "Get Token (Password Grant)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "var jsonData = pm.response.json();",
+                                    "pm.collectionVariables.set('accessToken', jsonData.access_token);"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/x-www-form-urlencoded"
+                            }
+                        ],
+                        "body": {
+                            "mode": "urlencoded",
+                            "urlencoded": [
+                                {
+                                    "key": "grant_type",
+                                    "value": "password"
+                                },
+                                {
+                                    "key": "client_id",
+                                    "value": "{{clientId}}"
+                                },
+                                {
+                                    "key": "username",
+                                    "value": "admin"
+                                },
+                                {
+                                    "key": "password",
+                                    "value": "admin123"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{keycloakUrl}}/realms/{{realm}}/protocol/openid-connect/token",
+                            "host": [
+                                "{{keycloakUrl}}"
+                            ],
+                            "path": [
+                                "realms",
+                                "{{realm}}",
+                                "protocol",
+                                "openid-connect",
+                                "token"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get User Info",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{keycloakUrl}}/realms/{{realm}}/protocol/openid-connect/userinfo",
+                            "host": [
+                                "{{keycloakUrl}}"
+                            ],
+                            "path": [
+                                "realms",
+                                "{{realm}}",
+                                "protocol",
+                                "openid-connect",
+                                "userinfo"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Refresh Token",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/x-www-form-urlencoded"
+                            }
+                        ],
+                        "body": {
+                            "mode": "urlencoded",
+                            "urlencoded": [
+                                {
+                                    "key": "grant_type",
+                                    "value": "refresh_token"
+                                },
+                                {
+                                    "key": "client_id",
+                                    "value": "{{clientId}}"
+                                },
+                                {
+                                    "key": "refresh_token",
+                                    "value": "{{refreshToken}}"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{keycloakUrl}}/realms/{{realm}}/protocol/openid-connect/token",
+                            "host": [
+                                "{{keycloakUrl}}"
+                            ],
+                            "path": [
+                                "realms",
+                                "{{realm}}",
+                                "protocol",
+                                "openid-connect",
+                                "token"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Logout",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/x-www-form-urlencoded"
+                            }
+                        ],
+                        "body": {
+                            "mode": "urlencoded",
+                            "urlencoded": [
+                                {
+                                    "key": "client_id",
+                                    "value": "{{clientId}}"
+                                },
+                                {
+                                    "key": "refresh_token",
+                                    "value": "{{refreshToken}}"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{keycloakUrl}}/realms/{{realm}}/protocol/openid-connect/logout",
+                            "host": [
+                                "{{keycloakUrl}}"
+                            ],
+                            "path": [
+                                "realms",
+                                "{{realm}}",
+                                "protocol",
+                                "openid-connect",
+                                "logout"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get OpenID Configuration",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{keycloakUrl}}/realms/{{realm}}/.well-known/openid-configuration",
+                            "host": [
+                                "{{keycloakUrl}}"
+                            ],
+                            "path": [
+                                "realms",
+                                "{{realm}}",
+                                ".well-known",
+                                "openid-configuration"
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

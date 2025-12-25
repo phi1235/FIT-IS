@@ -1,0 +1,3 @@
+com.example.keycloak.provider.CustomUserStorageProviderFactory
+com.example.keycloak.provider.RemoteUserStorageProviderFactory
+

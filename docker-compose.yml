@@ -1,0 +1,119 @@
+services:
+  # Comment lại Keycloak - sẽ chạy ở local
+  keycloak:
+    image: quay.io/keycloak/keycloak:18.0.2
+    command: ["start-dev", "--http-port=8080"]
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      JAVA_OPTS_APPEND: "-Xms512m -Xmx1024m"
+    ports:
+      - "8080:8080"
+    volumes:
+      # Mount all custom themes; inside contains /custom/login/...
+      - ./keycloak-theme:/opt/keycloak/themes
+      # Mount custom provider JAR
+      - ./spring-boot-keycloak/target/keycloak-integration-1.0.0.jar:/opt/keycloak/providers/keycloak-integration.jar
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/realms/master"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # Spring API - chạy bằng Docker
+  spring-api:
+    build:
+      context: ./spring-boot-keycloak
+      dockerfile: Dockerfile
+    environment:
+      KEYCLOAK_AUTH_SERVER_URL: http://keycloak:8080
+      SERVER_PORT: ${SERVER_PORT}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    depends_on:
+      keycloak:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8082:8082"
+
+  # Comment lại Angular App - sẽ chạy ở local
+#  angular-app:
+#    build:
+#      context: ./my-angular-app
+#      dockerfile: Dockerfile
+#    depends_on:
+#      - keycloak
+#    ports:
+#      - "4200:80"
+
+  # Redis - chạy bằng Docker
+  redis:
+    image: redis:7-alpine
+    container_name: redis-cache
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PostgreSQL - Database chính của ứng dụng
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # pgAdmin - Web interface để quản lý PostgreSQL
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+networks:
+  default:
+    name: angular-project-net
+
+volumes:
+  redis-data:
+  postgres-data:
+  pgadmin-data:

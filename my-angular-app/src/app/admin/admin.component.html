@@ -1,0 +1,189 @@
+<div class="admin-container">
+  <!-- Main Content -->
+  <main class="admin-main">
+    <!-- Stats Grid -->
+    <div class="dashboard-header">
+      <h2>Dashboard Overview</h2>
+      <div class="header-actions">
+        <button class="btn-refresh" (click)="loadData()" [disabled]="loading">
+          🔄 Làm mới dữ liệu
+        </button>
+      </div>
+    </div>
+
+    <!-- User Stats -->
+    <div *ngIf="isAdmin">
+      <h3 class="stats-title">Quản lý Người dùng</h3>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon u-icon">👥</div>
+          <div class="stat-info">
+            <div class="stat-value">{{ totalUsers }}</div>
+            <div class="stat-label">Tổng số Users</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon u-icon">👑</div>
+          <div class="stat-info">
+            <div class="stat-value">{{ adminCount }}</div>
+            <div class="stat-label">Admin</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon u-icon">✅</div>
+          <div class="stat-info">
+            <div class="stat-value">{{ activeCount }}</div>
+            <div class="stat-label">Đang hoạt động</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ticket Stats -->
+    <h3 class="stats-title">Quản lý Tickets</h3>
+    <div class="stats-grid">
+      <div class="stat-card t-total">
+        <div class="stat-icon t-icon">🎫</div>
+        <div class="stat-info">
+          <div class="stat-value">{{ totalTickets }}</div>
+          <div class="stat-label">Tổng số Tickets</div>
+        </div>
+      </div>
+      <div class="stat-card t-pending">
+        <div class="stat-icon t-icon">⏳</div>
+        <div class="stat-info">
+          <div class="stat-value">{{ pendingTickets }}</div>
+          <div class="stat-label">Chờ phê duyệt</div>
+        </div>
+      </div>
+      <div class="stat-card t-approved">
+        <div class="stat-icon t-icon">✔️</div>
+        <div class="stat-info">
+          <div class="stat-value">{{ approvedTickets }}</div>
+          <div class="stat-label">Đã phê duyệt</div>
+        </div>
+      </div>
+      <div class="stat-card t-rejected">
+        <div class="stat-icon t-icon">❌</div>
+        <div class="stat-info">
+          <div class="stat-value">{{ rejectedTickets }}</div>
+          <div class="stat-label">Đã từ chối</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Reports Section -->
+    <div class="reports-section mb-4">
+      <h3 class="stats-title">Báo cáo Nhanh</h3>
+      <div class="reports-grid">
+        <div class="report-card" *ngIf="isAdmin">
+          <h4>Báo cáo Users</h4>
+          <div class="report-actions">
+            <button class="btn-report pdf" (click)="downloadReport('users', 'pdf')">PDF</button>
+            <button class="btn-report excel" (click)="downloadReport('users', 'xlsx')">Excel</button>
+          </div>
+        </div>
+        <div class="report-card">
+          <h4>Báo cáo Tickets</h4>
+          <div class="report-actions">
+            <button class="btn-report pdf" (click)="downloadReport('tickets', 'pdf')">PDF</button>
+            <button class="btn-report excel" (click)="downloadReport('tickets', 'xlsx')">Excel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="users-section mt-4" *ngIf="isAdmin">
+      <div class="section-header">
+        <h2>Danh Sách Users</h2>
+      </div>
+
+      <!-- Error Message -->
+      <div *ngIf="error" class="error-message">
+        ⚠️ {{ error }}
+      </div>
+
+      <!-- Loading -->
+      <div *ngIf="loading" class="loading">
+        <div class="spinner"></div>
+        <span>Đang tải...</span>
+      </div>
+
+      <!-- Users Table -->
+      <div *ngIf="!loading" class="table-container">
+        <table class="users-table">
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Họ Tên</th>
+              <th>Role</th>
+              <th>Trạng thái</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let user of users" [class.disabled]="!user.enabled">
+              <td>
+                <strong>{{ user.username }}</strong>
+              </td>
+              <td>{{ user.email }}</td>
+              <td>{{ (user.firstName || '') + ' ' + (user.lastName || '') }}</td>
+              <td>
+                <span class="badge" [class.badge-admin]="user.role === 'admin'"
+                  [class.badge-user]="user.role === 'user'">
+                  {{ user.role === 'admin' ? '👑 Admin' : '👤 User' }}
+                </span>
+              </td>
+              <td>
+                <span class="status" [class.status-active]="user.enabled" [class.status-inactive]="!user.enabled">
+                  {{ user.enabled ? '✅ Hoạt động' : '❌ Vô hiệu hóa' }}
+                </span>
+              </td>
+              <td>
+                <button class="btn-action" (click)="openRoleModal(user)">
+                  ✏️ Đổi Role
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="users.length === 0">
+              <td colspan="6" class="no-data">Không có dữ liệu</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- Role Update Modal -->
+  <div *ngIf="showRoleModal" class="modal-overlay" (click)="closeRoleModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Đổi Role cho User</h3>
+        <button class="btn-close" (click)="closeRoleModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Username:</label>
+          <input type="text" [value]="selectedUser?.username" readonly class="form-control">
+        </div>
+        <div class="form-group">
+          <label>Role mới:</label>
+          <select [(ngModel)]="newRole" class="form-control">
+            <option value="user">👤 User</option>
+            <option value="maker">✍️ Maker</option>
+            <option value="checker">🔍 Checker</option>
+            <option value="admin">👑 Admin</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="closeRoleModal()">Hủy</button>
+        <button class="btn-save" (click)="updateUserRole()" [disabled]="loading">
+          {{ loading ? 'Đang lưu...' : 'Lưu' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
