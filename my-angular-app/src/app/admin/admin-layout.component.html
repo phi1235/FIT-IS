@@ -1,0 +1,48 @@
+<div class="admin-layout">
+  <!-- Sidebar -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-header">
+      <div class="logo-box">FIS</div>
+      <span>FIS Portal</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-item">
+        <span class="icon">📊</span> Dashboard
+      </a>
+      <a routerLink="/admin/tickets" routerLinkActive="active" class="nav-item">
+        <span class="icon">🎫</span> Quản lý Tickets
+      </a>
+      <a routerLink="/admin" [queryParams]="{view: 'users'}" class="nav-item" *ngIf="isAdmin">
+        <span class="icon">👥</span> Quản lý Users
+      </a>
+      <div class="nav-divider"></div>
+      <a routerLink="/home" class="nav-item">
+        <span class="icon">🏠</span> Về Trang Chủ
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-pill">
+        <span class="u-name">{{ currentUser?.username || 'Admin' }}</span>
+        <button class="logout-sm" (click)="logout()">🚪</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Area -->
+  <div class="admin-main-area">
+    <header class="admin-top-bar">
+      <div class="breadcrumb">
+        <span>Portal</span> / <strong>Hệ thống nội bộ</strong>
+      </div>
+      <div class="top-bar-actions">
+        <!-- Optional notifications or search -->
+      </div>
+    </header>
+
+    <main class="admin-content-scroll">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>
