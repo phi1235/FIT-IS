@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { KeycloakService } from '../services/keycloak.service';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-admin-layout',
@@ -15,25 +16,42 @@ export class AdminLayoutComponent implements OnInit {
   isAuthenticated = false;
   isAdmin = false;
 
-  constructor(private keycloakService: KeycloakService) { }
+  constructor(
+    private keycloakService: KeycloakService,
+    private authService: AuthService,
+    private router: Router
+  ) { }
 
-  async ngOnInit() {
-    this.isAuthenticated = this.keycloakService.isAuthenticated();
-    if (this.isAuthenticated) {
-      await this.loadUserProfile();
+  ngOnInit() {
+    // Check custom auth first
+    if (this.authService.isAuthenticated) {
+      this.isAuthenticated = true;
+      this.currentUser = this.authService.userInfo;
+      this.isAdmin = this.authService.isAdmin;
+    } else if (this.keycloakService.isAuthenticated()) {
+      this.isAuthenticated = true;
+      this.loadKeycloakProfile();
     }
 
-    this.keycloakService.isAuthenticated$.subscribe(isAuth => {
-      this.isAuthenticated = isAuth;
+    // Subscribe to AuthService changes
+    this.authService.isAuthenticated$.subscribe(isAuth => {
       if (isAuth) {
-        this.loadUserProfile();
-      } else {
-        this.currentUser = null;
+        this.isAuthenticated = true;
+        this.currentUser = this.authService.userInfo;
+        this.isAdmin = this.authService.isAdmin;
+      }
+    });
+
+    // Subscribe to Keycloak changes
+    this.keycloakService.isAuthenticated$.subscribe(isAuth => {
+      if (isAuth && !this.authService.isAuthenticated) {
+        this.isAuthenticated = true;
+        this.loadKeycloakProfile();
       }
     });
   }
 
-  async loadUserProfile() {
+  async loadKeycloakProfile() {
     try {
       this.currentUser = await this.keycloakService.getUserProfile();
       this.isAdmin = this.keycloakService.hasRole('admin');
@@ -56,10 +74,22 @@ export class AdminLayoutComponent implements OnInit {
     }
   }
 
-  logout() {
-    this.keycloakService.logout();
+  getDisplayName(): string {
+    if (this.currentUser) {
+      return this.currentUser.username || this.currentUser.preferred_username || 'User';
+    }
+    return 'User';
   }
 
-
+  logout() {
+    // Logout from custom auth
+    if (this.authService.isAuthenticated) {
+      this.authService.logout();
+    } else if (this.keycloakService.isAuthenticated()) {
+      // Only logout from Keycloak if using Keycloak auth
+      this.keycloakService.logout();
+    } else {
+      this.router.navigate(['/home']);
+    }
+  }
 }
-

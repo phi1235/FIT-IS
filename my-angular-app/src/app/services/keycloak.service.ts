@@ -51,8 +51,8 @@ export class KeycloakService {
         clientId: this.keycloakConfig.clientId
       });
 
+      // Initialize without forcing login - just check if already authenticated
       const authenticated = await this.keycloak.init({
-        onLoad: 'check-sso',
         pkceMethod: 'S256',
         checkLoginIframe: false
       });
@@ -60,9 +60,11 @@ export class KeycloakService {
       this.isAuthenticatedSubject.next(authenticated);
 
       if (authenticated) {
-        console.log('User is authenticated');
+        console.log('User is authenticated via Keycloak SSO');
         this.setupTokenRefresh();
         this.redirectAfterLogin();
+      } else {
+        console.log('User not authenticated - showing app normally');
       }
 
       // Listen to authentication events
@@ -94,7 +96,8 @@ export class KeycloakService {
 
       return authenticated;
     } catch (error) {
-      console.error('Failed to initialize Keycloak', error);
+      console.warn('Keycloak initialization failed - app will work without SSO', error);
+      this.isAuthenticatedSubject.next(false);
       return false;
     }
   }

@@ -1,4 +1,4 @@
-<nav class="main-header" *ngIf="!isAdminRoute">
+<nav class="main-header" *ngIf="!isAdminRoute && !isAuthPage">
   <div class="nav-container">
     <a routerLink="/home" class="nav-logo">
       <img src="logo.png" alt="FIS Logo" class="logo-image">
@@ -25,7 +25,7 @@
         </div>
       </div>
 
-      <button class="btn-login" *ngIf="!isAuthenticated" (click)="login()">Đăng Nhập</button>
+      <a routerLink="/login" class="btn-login" *ngIf="!isAuthenticated">Đăng Nhập</a>
     </div>
   </div>
 </nav>
@@ -33,3 +33,5 @@
 <main [class.fullscreen]="isAdminRoute">
   <router-outlet></router-outlet>
 </main>
+
+<app-toast></app-toast>

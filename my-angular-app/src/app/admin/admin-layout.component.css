@@ -76,33 +76,35 @@
   border-top: 1px solid #2d3748;
 }
 
-.user-pill {
+.user-info {
   background: #2d3748;
-  padding: 10px 15px;
-  border-radius: 10px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  padding: 12px 15px;
+  border-radius: 8px;
+  margin-bottom: 12px;
 }
 
 .u-name {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: #e2e8f0;
 }
 
-.logout-sm {
-  background: none;
+.logout-btn {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 600;
   cursor: pointer;
-  padding: 5px;
-  border-radius: 4px;
+  transition: all 0.2s;
 }
 
-.logout-sm:hover {
-  background: #4a5568;
+.logout-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
 /* Main Area */

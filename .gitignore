@@ -1,2 +1,33 @@
+# Environment files (may contain secrets)
 .env
 
+# Angular environment files with actual values
+**/src/environments/environment.ts
+**/src/environments/environment.prod.ts
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+target/
+*.jar
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Angular cache
+.angular/
+
+# Keycloak
+keycloak-*/data/

@@ -2,11 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { Router, RouterOutlet, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { KeycloakService } from './services/keycloak.service';
+import { AuthService } from './services/auth.service';
+import { ToastComponent } from './components/toast.component';
 import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, ToastComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })
@@ -17,10 +19,12 @@ export class AppComponent implements OnInit {
   isAdmin = false;
   isInternalUser = false;
   isAdminRoute = false;
+  isAuthPage = false;
   showUserMenu = false;
 
   constructor(
     private keycloakService: KeycloakService,
+    private authService: AuthService,
     private router: Router
   ) { }
 
@@ -28,66 +32,102 @@ export class AppComponent implements OnInit {
     this.showUserMenu = !this.showUserMenu;
   }
 
-  // Close dropdown when clicking outside
   closeUserMenu(): void {
     this.showUserMenu = false;
   }
 
   getDisplayName(): string {
-    // Try from userProfile first
+    // Try from AuthService (custom login) first
+    if (this.authService.isAuthenticated) {
+      return this.authService.getDisplayName();
+    }
+    // Fallback to userProfile from Keycloak
     if (this.userProfile) {
       return this.userProfile.username || this.userProfile.preferred_username || '';
     }
-    // Fallback to keycloak service
     return this.keycloakService.getUsername() || 'User';
   }
 
   ngOnInit(): void {
-    // Detect current route to hide navbar on admin pages
+    // Detect current route
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe((event: NavigationEnd) => {
         this.isAdminRoute = event.urlAfterRedirects.startsWith('/admin');
+        this.isAuthPage = event.urlAfterRedirects.startsWith('/login') || event.urlAfterRedirects.startsWith('/sign');
       });
 
-    // Check initial authentication state
+    // Check custom auth (from AuthService)
+    this.checkAuthState();
+
+    // Subscribe to AuthService changes (custom login)
+    this.authService.isAuthenticated$.subscribe(isAuth => {
+      if (isAuth) {
+        this.isAuthenticated = true;
+        this.userProfile = this.authService.userInfo;
+        this.isAdmin = this.authService.isAdmin;
+        this.isInternalUser = true;
+        console.log('Auth state updated:', {
+          isAuthenticated: this.isAuthenticated,
+          isAdmin: this.isAdmin,
+          userProfile: this.userProfile,
+          roles: this.userProfile?.roles
+        });
+      } else {
+        // Check Keycloak if not custom authenticated
+        this.checkKeycloakAuth();
+      }
+    });
+
+    // Subscribe to Keycloak changes
+    this.keycloakService.isAuthenticated$.subscribe(isAuth => {
+      if (isAuth && !this.authService.isAuthenticated) {
+        this.isAuthenticated = true;
+        this.loadUserProfile();
+      }
+    });
+  }
+
+  private checkAuthState(): void {
+    // Check custom auth first
+    if (this.authService.isAuthenticated) {
+      this.isAuthenticated = true;
+      this.isAdmin = this.authService.isAdmin;
+      this.isInternalUser = true;
+      this.userProfile = this.authService.userInfo;
+    } else {
+      // Check Keycloak
+      this.checkKeycloakAuth();
+    }
+  }
+
+  private checkKeycloakAuth(): void {
     this.isAuthenticated = this.keycloakService.isAuthenticated();
     if (this.isAuthenticated) {
       this.loadUserProfile();
+    } else {
+      this.isAdmin = false;
+      this.isInternalUser = false;
+      this.userProfile = null;
     }
-
-    // Subscribe to authentication state changes
-    this.keycloakService.isAuthenticated$.subscribe(isAuth => {
-      this.isAuthenticated = isAuth;
-      if (isAuth) {
-        this.loadUserProfile();
-      } else {
-        this.userProfile = null;
-      }
-    });
   }
 
   async loadUserProfile(): Promise<void> {
     try {
       this.userProfile = await this.keycloakService.getUserProfile();
-      console.log('User profile loaded:', this.userProfile);
-      // Check roles
       this.isAdmin = this.keycloakService.hasRole('admin');
-      this.isInternalUser = true; // Bất kỳ ai đăng nhập đều có thể xem/tạo tickets
+      this.isInternalUser = true;
     } catch (error) {
       console.error('Failed to load user profile:', error);
-      // Fallback: create minimal profile from token
       if (this.keycloakService.isAuthenticated()) {
         const token = this.keycloakService.getToken();
         if (token) {
-          // Try to get username from token
           try {
             const tokenPayload = JSON.parse(atob(token.split('.')[1]));
             this.userProfile = {
               username: tokenPayload.preferred_username || tokenPayload.sub,
               email: tokenPayload.email
             };
-            // Check admin role from token
             const roles = tokenPayload.realm_access?.roles || [];
             this.isAdmin = roles.includes('admin');
             this.isInternalUser = true;
@@ -100,12 +140,20 @@ export class AppComponent implements OnInit {
   }
 
   login(): void {
-    this.keycloakService.login({
-      redirectUri: window.location.origin + '/home'
-    });
+    this.router.navigate(['/login']);
   }
 
   logout(): void {
-    this.keycloakService.logout();
+    // Logout from both services
+    if (this.authService.isAuthenticated) {
+      this.authService.logout();
+    }
+    if (this.keycloakService.isAuthenticated()) {
+      this.keycloakService.logout();
+    }
+    this.isAuthenticated = false;
+    this.isAdmin = false;
+    this.userProfile = null;
+    this.router.navigate(['/home']);
   }
 }

@@ -16,17 +16,13 @@
       <a routerLink="/admin" [queryParams]="{view: 'users'}" class="nav-item" *ngIf="isAdmin">
         <span class="icon">👥</span> Quản lý Users
       </a>
-      <div class="nav-divider"></div>
-      <a routerLink="/home" class="nav-item">
-        <span class="icon">🏠</span> Về Trang Chủ
-      </a>
     </nav>
 
     <div class="sidebar-footer">
-      <div class="user-pill">
-        <span class="u-name">{{ currentUser?.username || 'Admin' }}</span>
-        <button class="logout-sm" (click)="logout()">🚪</button>
+      <div class="user-info">
+        <span class="u-name">{{ getDisplayName() }}</span>
       </div>
+      <button class="logout-btn" (click)="logout()">Đăng Xuất</button>
     </div>
   </aside>
 
