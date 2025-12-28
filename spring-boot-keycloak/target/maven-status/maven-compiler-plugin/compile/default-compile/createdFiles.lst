@@ -11,8 +11,10 @@ com/example/keycloak/service/ReportService.class
 com/example/keycloak/service/UserService.class
 com/example/keycloak/controller/AuthController.class
 com/example/keycloak/dto/TicketRequest.class
+com/example/keycloak/dto/MigratePasswordRequest.class
 com/example/keycloak/service/CacheExampleService.class
 com/example/keycloak/dto/ErrorResponse$ErrorResponseBuilder.class
+com/example/keycloak/service/ReportJobService.class
 com/example/keycloak/service/MfaService.class
 com/example/keycloak/dto/MfaRequest.class
 com/example/keycloak/dto/UserDTO.class
@@ -26,6 +28,7 @@ com/example/keycloak/service/TicketService.class
 com/example/keycloak/dto/LoginResponse$UserInfo$UserInfoBuilder.class
 com/example/keycloak/strategy/DatabaseAuthenticationStrategy.class
 com/example/keycloak/dto/ChangePasswordRequest.class
+com/example/keycloak/dto/PagedResponse.class
 com/example/keycloak/service/federation/ActiveDirectoryFederationStrategy.class
 com/example/keycloak/controller/ReportController.class
 com/example/keycloak/dto/LoginResponse$LoginResponseBuilder.class
@@ -36,6 +39,7 @@ com/example/keycloak/filter/IpFilter.class
 com/example/keycloak/dto/TicketDTO.class
 com/example/keycloak/service/AuthenticationService.class
 com/example/keycloak/controller/ReportController$ReportSupplier.class
+com/example/keycloak/model/ReportJob$Status.class
 com/example/keycloak/service/AuthService.class
 com/example/keycloak/repository/TicketRepository.class
 com/example/keycloak/service/federation/FederationStrategy.class
@@ -45,6 +49,7 @@ com/example/keycloak/dto/LoginResponse$UserInfo.class
 com/example/keycloak/service/JwtService.class
 com/example/keycloak/exception/GlobalExceptionHandler.class
 com/example/keycloak/strategy/FederationAuthenticationStrategy.class
+com/example/keycloak/model/ReportJob.class
 com/example/keycloak/controller/UserController.class
 com/example/keycloak/filter/RateLimitingFilter.class
 com/example/keycloak/KeycloakIntegrationApplication.class

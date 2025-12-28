@@ -55,7 +55,12 @@ public class RemoteUserStorageProvider implements
     public RemoteUserStorageProvider(KeycloakSession session, ComponentModel model, String apiUrl) {
         this.session = session;
         this.model = model;
-        this.apiUrl = apiUrl;
+        // Normalize apiUrl: remove trailing slash if present
+        String rawApiUrl = apiUrl;
+        if (rawApiUrl != null && rawApiUrl.endsWith("/")) {
+            rawApiUrl = rawApiUrl.substring(0, rawApiUrl.length() - 1);
+        }
+        this.apiUrl = rawApiUrl;
         // In production, this should come from secure configuration (Vault, HSM, etc.)
         this.apiSecret = model.get("apiSecret", "default-secret-change-in-production");
         this.httpClient = HttpClient.newBuilder()
@@ -95,6 +100,7 @@ public class RemoteUserStorageProvider implements
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(uriStr))
                     .timeout(Duration.ofSeconds(REQUEST_TIMEOUT_SECONDS))
+                    .header("Accept", "application/json")
                     .header("X-Timestamp", timestamp)
                     .header("X-Signature", signature)
                     .header("X-Request-ID", generateRequestId())
@@ -111,6 +117,9 @@ public class RemoteUserStorageProvider implements
                         return new CustomUserAdapter(session, realm, model, remoteUser);
                     }
                 }
+            } else {
+                log.warn("Fetch user failed for {}: {}. Status code: {}, Body: {}", field, value, response.statusCode(),
+                        response.body());
             }
         } catch (Exception e) {
             log.error("Error fetching user by {}: {}", field, e.getMessage());
@@ -156,7 +165,6 @@ public class RemoteUserStorageProvider implements
         try {
             String password = credentialInput.getChallengeResponse();
 
-            // Send plain password - connection should be HTTPS in production
             // The API endpoint will verify against BCrypt hash in database
             String timestamp = String.valueOf(Instant.now().getEpochSecond());
             String requestBody = objectMapper.writeValueAsString(Map.of(
@@ -170,6 +178,7 @@ public class RemoteUserStorageProvider implements
                     .uri(URI.create(apiUrl + "/login"))
                     .timeout(Duration.ofSeconds(REQUEST_TIMEOUT_SECONDS))
                     .header("Content-Type", "application/json")
+                    .header("Accept", "application/json")
                     .header("X-Timestamp", timestamp)
                     .header("X-Signature", signature)
                     .header("X-Request-ID", generateRequestId())
@@ -198,7 +207,7 @@ public class RemoteUserStorageProvider implements
     }
 
     /**
-     * SECURITY: Generate HMAC signature for API request
+     * Generate HMAC signature for API request
      * This ensures request integrity and authenticity
      */
     private String generateHmacSignature(String method, String url, String body, String timestamp) {
@@ -220,7 +229,7 @@ public class RemoteUserStorageProvider implements
     }
 
     /**
-     * SECURITY: Hash password before transmission
+     * Hash password before transmission
      * Uses SHA-256 for one-way hashing
      */
     private String hashForTransmission(String password) {

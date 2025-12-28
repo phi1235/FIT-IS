@@ -20,67 +20,56 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
-    
+
     private final List<AuthenticationStrategy> authenticationStrategies;
     private final MfaService mfaService;
-    
-    /**
-     * Authenticate user với strategy cụ thể
-     * 
-     * @param request LoginRequest
-     * @param authType Loại authentication (database, federation, etc.)
-     * @return LoginResponse
-     * @throws AuthenticationException nếu authentication thất bại
-     */
+
     public LoginResponse authenticate(LoginRequest request, String authType) throws AuthenticationException {
         AuthenticationStrategy strategy = findStrategy(authType);
-        
+
         if (strategy == null) {
             throw new AuthenticationException(
-                "Unsupported authentication type: " + authType,
-                "UNSUPPORTED_AUTH_TYPE"
-            );
+                    "Unsupported authentication type: " + authType,
+                    "UNSUPPORTED_AUTH_TYPE");
         }
-        
+
         log.info("Using {} strategy for user {}", authType, request.getUsername());
         LoginResponse response = strategy.authenticate(request);
-        
+
         // Verify MFA nếu user đã enable MFA
         if (mfaService.isMfaEnabled(request.getUsername())) {
             if (request.getMfaCode() == null || request.getMfaCode().isEmpty()) {
                 throw new AuthenticationException(
-                    "MFA code is required for this user",
-                    "MFA_REQUIRED"
-                );
+                        "MFA code is required for this user",
+                        "MFA_REQUIRED");
             }
-            
+
             if (!mfaService.verifyCode(request.getUsername(), request.getMfaCode())) {
                 throw new AuthenticationException(
-                    "Invalid MFA code",
-                    "INVALID_MFA_CODE"
-                );
+                        "Invalid MFA code",
+                        "INVALID_MFA_CODE");
             }
-            
+
             log.info("MFA verified successfully for user {}", request.getUsername());
         }
-        
+
         return response;
     }
-    
+
     /**
      * Authenticate với database strategy (default)
      */
     public LoginResponse authenticateWithDatabase(LoginRequest request) throws AuthenticationException {
         return authenticate(request, "database");
     }
-    
+
     /**
      * Authenticate với federation strategy
      */
     public LoginResponse authenticateWithFederation(LoginRequest request) throws AuthenticationException {
         return authenticate(request, "federation");
     }
-    
+
     /**
      * Tìm strategy phù hợp với authType
      */
@@ -91,4 +80,3 @@ public class AuthenticationService {
                 .orElse(null);
     }
 }
-

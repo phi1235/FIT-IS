@@ -52,7 +52,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .cors().configurationSource(corsConfigurationSource()).and()
-                
+
                 // Authorization rules
                 .authorizeRequests()
                 // Cho phép preflight OPTIONS cho tất cả endpoint
@@ -68,6 +68,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/actuator/health").permitAll()
                 // Admin endpoints
                 .antMatchers("/api/users/admin/**").hasRole("admin")
+                // Report endpoints - cần authentication
+                .antMatchers("/api/reports/users/**").hasRole("admin")
+                .antMatchers("/api/reports/tickets/**").authenticated()
                 // Tất cả các request khác cần authentication
                 .anyRequest().authenticated()
                 .and()

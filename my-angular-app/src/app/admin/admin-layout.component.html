@@ -8,13 +8,13 @@
 
     <nav class="sidebar-nav">
       <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-item">
-        <span class="icon">📊</span> Dashboard
+        <span class="icon"></span> Dashboard
       </a>
       <a routerLink="/admin/tickets" routerLinkActive="active" class="nav-item">
-        <span class="icon">🎫</span> Quản lý Tickets
+        <span class="icon"></span> Quản lý Tickets
       </a>
-      <a routerLink="/admin" [queryParams]="{view: 'users'}" class="nav-item" *ngIf="isAdmin">
-        <span class="icon">👥</span> Quản lý Users
+      <a routerLink="/admin/users" routerLinkActive="active" class="nav-item" *ngIf="isAdmin">
+        <span class="icon"></span> Quản lý Users
       </a>
     </nav>
 

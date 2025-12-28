@@ -5,6 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../services/auth.service';
 import { ToastService } from '../services/toast.service';
+import { CryptoService } from '../services/crypto.service';
 import { LoginResponse, UserInfo } from '../models/api.models';
 import { environment } from '../../environments/environment';
 
@@ -22,12 +23,18 @@ export class LoginComponent implements OnInit {
     successMessage = '';
     showPassword = false;
 
+    // Password migration state
+    showMigrationDialog = false;
+    migrationUsername = '';
+    migrationCurrentPassword = '';
+
     constructor(
         private fb: FormBuilder,
         private http: HttpClient,
         private router: Router,
         private authService: AuthService,
-        private toastService: ToastService
+        private toastService: ToastService,
+        private cryptoService: CryptoService
     ) { }
 
     ngOnInit(): void {
@@ -94,9 +101,14 @@ export class LoginComponent implements OnInit {
         this.errorMessage = '';
         this.successMessage = '';
 
+        const plainPassword = this.loginForm.value.password;
+        // Note: For v1 users, send plain password. V2 migration will hash on backend.
+        // TODO: Once all users migrated to v2, re-enable client-side SHA256 hashing
+        // const hashedPassword = this.cryptoService.hashPassword(plainPassword);
+
         const loginData = {
             username: this.loginForm.value.username.trim(),
-            password: this.loginForm.value.password
+            password: plainPassword // Send plain password for v1 compatibility
         };
 
         this.http.post<any>('/api/auth/login/database', loginData).subscribe({
@@ -104,11 +116,19 @@ export class LoginComponent implements OnInit {
                 this.isLoading = false;
                 console.log('Login response:', response);
 
+                // Check if password migration is required
+                if (response.requiresPasswordMigration) {
+                    this.showMigrationDialog = true;
+                    this.migrationUsername = loginData.username;
+                    this.migrationCurrentPassword = plainPassword; // Keep plain for migration
+                    this.errorMessage = 'Bạn cần cập nhật mật khẩu để sử dụng định dạng bảo mật mới.';
+                    return;
+                }
+
                 // Parse roles - handle both string and array formats
                 let roles: string[] = [];
                 const roleData = response.user?.role || response.userInfo?.roles || response.user?.roles;
                 if (typeof roleData === 'string') {
-                    // Handle string like "[ROLE_admin]" or "ROLE_admin" or "admin"
                     const cleanRole = roleData.replace(/[\[\]]/g, '').trim();
                     if (cleanRole) {
                         roles = [cleanRole];
@@ -117,7 +137,6 @@ export class LoginComponent implements OnInit {
                     roles = roleData;
                 }
 
-                // Extract user info - handle both response.user and response.userInfo
                 const user = response.user || response.userInfo || {};
                 const userInfo: UserInfo = {
                     username: user.username || loginData.username,
@@ -129,25 +148,20 @@ export class LoginComponent implements OnInit {
 
                 console.log('Parsed userInfo:', userInfo);
 
-                // Extract token - handle both response.token and response.tokenInfo
                 const token = response.token || response.tokenInfo || {};
 
-                // Save auth state
                 this.authService.setAuth(
                     token.accessToken || '',
                     token.refreshToken || '',
                     userInfo
                 );
 
-                // Show success toast
                 this.toastService.success('Đăng nhập thành công!');
 
-                // Check if admin role (handles both 'admin' and 'ROLE_admin')
                 const isAdmin = userInfo.roles.some(role =>
                     role === 'admin' || role === 'ROLE_admin' || role.toLowerCase().includes('admin')
                 );
 
-                // Redirect after 1s
                 setTimeout(() => {
                     if (isAdmin) {
                         this.router.navigate(['/admin']);
@@ -171,5 +185,47 @@ export class LoginComponent implements OnInit {
                 }
             }
         });
+    }
+
+    /**
+     * Handle password migration
+     * User enters new password, which is hashed and sent to backend
+     */
+    migratePassword(newPassword: string): void {
+        if (!newPassword || newPassword.length < 8) {
+            this.errorMessage = 'Mật khẩu mới phải có ít nhất 8 ký tự';
+            return;
+        }
+
+        this.isLoading = true;
+        const hashedNewPassword = this.cryptoService.hashPassword(newPassword);
+
+        const migrateData = {
+            username: this.migrationUsername,
+            currentPassword: this.migrationCurrentPassword, // Plain password for verification
+            newPassword: hashedNewPassword // SHA256 hashed
+        };
+
+        this.http.post<any>('/api/auth/password/migrate', migrateData).subscribe({
+            next: (response) => {
+                this.isLoading = false;
+                this.showMigrationDialog = false;
+                this.toastService.success('Mật khẩu đã được cập nhật. Vui lòng đăng nhập lại!');
+
+                // Update password in form and retry login
+                this.loginForm.patchValue({ password: newPassword });
+                this.onSubmit();
+            },
+            error: (error: HttpErrorResponse) => {
+                this.isLoading = false;
+                this.errorMessage = error.error?.message || 'Không thể cập nhật mật khẩu';
+            }
+        });
+    }
+
+    closeMigrationDialog(): void {
+        this.showMigrationDialog = false;
+        this.migrationUsername = '';
+        this.migrationCurrentPassword = '';
     }
 }

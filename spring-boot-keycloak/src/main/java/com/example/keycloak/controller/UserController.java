@@ -3,6 +3,7 @@ package com.example.keycloak.controller;
 import com.example.keycloak.dto.RoleUpdateRequest;
 import com.example.keycloak.dto.UserDTO;
 import com.example.keycloak.dto.UserInfo;
+import com.example.keycloak.dto.PagedResponse;
 import com.example.keycloak.provider.CustomUser;
 import com.example.keycloak.provider.CustomUserRepository;
 import com.example.keycloak.service.RoleService;
@@ -52,7 +53,7 @@ public class UserController {
         try (Connection connection = dataSource.getConnection()) {
             CustomUserRepository userRepository = new CustomUserRepository(connection);
             List<CustomUser> users = userRepository.searchUsers(""); // Search empty để lấy tất cả
-            
+
             List<UserDTO> userDTOs = users.stream()
                     .map(user -> new UserDTO(
                             user.getId(),
@@ -61,11 +62,48 @@ public class UserController {
                             user.getFirstName(),
                             user.getLastName(),
                             user.getRole() != null ? user.getRole() : "user",
-                            user.isEnabled()
-                    ))
+                            user.isEnabled()))
                     .collect(Collectors.toList());
-            
+
             return ResponseEntity.ok(userDTOs);
+        } catch (SQLException e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * Admin endpoint - Lấy danh sách users với phân trang
+     * 
+     * @param page   số trang (0-based)
+     * @param size   số lượng items mỗi trang
+     * @param search từ khóa tìm kiếm (optional)
+     */
+    @GetMapping("/admin/list")
+    @PreAuthorize("hasRole('admin')")
+    public ResponseEntity<PagedResponse<UserDTO>> getUsersPaginated(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "") String search) {
+        try (Connection connection = dataSource.getConnection()) {
+            CustomUserRepository userRepository = new CustomUserRepository(connection);
+
+            // Get paginated users
+            List<CustomUser> users = userRepository.searchUsersPaginated(search, page, size);
+            int totalElements = userRepository.countBySearch(search);
+
+            List<UserDTO> userDTOs = users.stream()
+                    .map(user -> new UserDTO(
+                            user.getId(),
+                            user.getUsername(),
+                            user.getEmail(),
+                            user.getFirstName(),
+                            user.getLastName(),
+                            user.getRole() != null ? user.getRole() : "user",
+                            user.isEnabled()))
+                    .collect(Collectors.toList());
+
+            PagedResponse<UserDTO> response = new PagedResponse<>(userDTOs, page, size, totalElements);
+            return ResponseEntity.ok(response);
         } catch (SQLException e) {
             return ResponseEntity.internalServerError().build();
         }
@@ -80,7 +118,7 @@ public class UserController {
     public ResponseEntity<String> updateUserRole(@Valid @RequestBody RoleUpdateRequest request) {
         boolean success = roleService.updateUserRole(request.getUsername(), request.getRole());
         if (success) {
-            return ResponseEntity.ok(String.format("Role updated successfully: %s -> %s", 
+            return ResponseEntity.ok(String.format("Role updated successfully: %s -> %s",
                     request.getUsername(), request.getRole()));
         }
         return ResponseEntity.badRequest()
@@ -98,7 +136,7 @@ public class UserController {
             return ResponseEntity.ok(String.format("{\"username\":\"%s\",\"role\":\"%s\"}", username, role));
         }
         return ResponseEntity.notFound().build();
-        }
+    }
 
     /**
      * User endpoint - Lấy role của chính mình

@@ -20,15 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-/**
- * Custom User Storage Provider cho Keycloak
- * Provider này cho phép Keycloak sử dụng custom database để quản lý users
- * 
- * SECURITY: 
- * - Password hashing với BCrypt (work factor 12)
- * - Audit logging cho tất cả authentication attempts
- * - Constant-time password comparison
- */
 public class CustomUserStorageProvider implements
         UserStorageProvider,
         UserLookupProvider,
@@ -119,38 +110,32 @@ public class CustomUserStorageProvider implements
             log.info("User found in database: {}", customUser != null ? customUser.getUsername() : "null");
 
             if (customUser == null) {
-                // Audit log: User not found
                 auditLog.warn("AUTH_FAILED | user={} | reason=USER_NOT_FOUND | ip={}",
                         username, clientIp);
                 return false;
             }
 
-            // Check if account is enabled
             if (!customUser.isEnabled()) {
                 auditLog.warn("AUTH_FAILED | user={} | reason=ACCOUNT_DISABLED | ip={}",
                         username, clientIp);
                 return false;
             }
 
-            // SECURITY: Validate password using BCrypt constant-time comparison
             String inputPassword = credentialInput.getChallengeResponse();
             String storedHash = customUser.getPassword();
+            int passwordVersion = customUser.getPasswordVersion();
 
-            // Debug logging - using INFO level to ensure it's visible
-            log.info("Password validation for user: {}, hash length: {}, hash: {}",
-                    username, storedHash != null ? storedHash.length() : 0,
-                    storedHash != null ? storedHash : "null");
+            log.info("Password validation for user: {}, version: {}, hash length: {}",
+                    username, passwordVersion, storedHash != null ? storedHash.length() : 0);
 
-            boolean isValid = verifyPassword(inputPassword, storedHash);
+            boolean isValid = verifyPasswordWithVersion(inputPassword, storedHash, passwordVersion);
 
             if (isValid) {
-                // Audit log: Successful authentication
-                auditLog.info("AUTH_SUCCESS | user={} | ip={}", username, clientIp);
+                auditLog.info("AUTH_SUCCESS | user={} | version={} | ip={}", username, passwordVersion, clientIp);
                 return true;
             } else {
-                // Audit log: Invalid password
-                auditLog.warn("AUTH_FAILED | user={} | reason=INVALID_PASSWORD | ip={}",
-                        username, clientIp);
+                auditLog.warn("AUTH_FAILED | user={} | reason=INVALID_PASSWORD | version={} | ip={}",
+                        username, passwordVersion, clientIp);
                 return false;
             }
 
@@ -163,48 +148,58 @@ public class CustomUserStorageProvider implements
     }
 
     /**
-     * SECURITY: Verify password using BCrypt
-     * BCrypt includes constant-time comparison to prevent timing attacks
-     * 
-     * @param plainPassword  the plain text password to check
-     * @param hashedPassword the BCrypt hashed password from database
-     * @return true if password matches
+     * Verify password based on version
+     * Version 1: BCrypt(plain_password) - OLD format
+     * Version 2: BCrypt(SHA256(password)) - NEW format (client sends SHA256)
      */
-    private boolean verifyPassword(String plainPassword, String hashedPassword) {
-        if (plainPassword == null || hashedPassword == null) {
+    private boolean verifyPasswordWithVersion(String inputPassword, String storedHash, int version) {
+        if (inputPassword == null || storedHash == null) {
             log.warn("Password verification failed: null password or hash");
             return false;
         }
 
-        // Trim whitespace from hash (in case database has trailing spaces)
-        String trimmedHash = hashedPassword.trim();
-        
-        log.info("verifyPassword - Hash length: {}, Hash: {}", trimmedHash.length(), trimmedHash);
-        log.info("verifyPassword - Password length: {}", plainPassword != null ? plainPassword.length() : 0);
+        String trimmedHash = storedHash.trim();
+        log.info("verifyPasswordWithVersion - version: {}, input length: {}, hash length: {}",
+                version, inputPassword.length(), trimmedHash.length());
 
         try {
-            // BCrypt.checkpw performs constant-time comparison
-            boolean result = BCrypt.checkpw(plainPassword, trimmedHash);
-            log.info("BCrypt.checkpw result: {}", result);
-            if (!result) {
-                log.info("BCrypt verification failed - password mismatch");
+            if (version == 2) {
+                // New format: input is already SHA256 hashed from client
+                // Verify: BCrypt.check(SHA256_input, stored_BCrypt_hash)
+                if (inputPassword.length() != 64) {
+                    log.warn("Version 2 expects SHA256 input (64 chars), got: {}", inputPassword.length());
+                    return false;
+                }
+                return BCrypt.checkpw(inputPassword, trimmedHash);
+            } else {
+                // Old format (version 1): input is plain password
+                // Verify: BCrypt.check(plain_input, stored_BCrypt_hash)
+                return BCrypt.checkpw(inputPassword, trimmedHash);
             }
-            return result;
         } catch (IllegalArgumentException e) {
-            // Invalid hash format - might be plaintext (legacy) or corrupted
-            log.error("Invalid password hash format detected. Hash length: {}, Hash: {}, Error: {}",
-                    trimmedHash.length(), trimmedHash, e.getMessage(), e);
-
-            if (!trimmedHash.startsWith("$2a$") && !trimmedHash.startsWith("$2b$")) {
-                log.warn("SECURITY WARNING: Plaintext password detected for comparison. " +
-                        "Please migrate all passwords to BCrypt immediately!");
-                return trimmedHash.equals(plainPassword);
-            }
+            log.error("Invalid password hash format. Error: {}", e.getMessage());
             return false;
         }
     }
-   
-    public static String hashPassword(String plainPassword) {
+
+    /**
+     * Legacy verifyPassword for backward compatibility
+     */
+    private boolean verifyPassword(String plainPassword, String hashedPassword) {
+        return verifyPasswordWithVersion(plainPassword, hashedPassword, 1);
+    }
+
+    /**
+     * Hash password for new format (expects SHA256 input from client)
+     */
+    public static String hashPassword(String sha256Password) {
+        return BCrypt.hashpw(sha256Password, BCrypt.gensalt(BCRYPT_WORK_FACTOR));
+    }
+
+    /**
+     * Hash plain password (for migration or direct use)
+     */
+    public static String hashPlainPassword(String plainPassword) {
         return BCrypt.hashpw(plainPassword, BCrypt.gensalt(BCRYPT_WORK_FACTOR));
     }
 

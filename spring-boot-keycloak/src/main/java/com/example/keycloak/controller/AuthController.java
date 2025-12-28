@@ -5,6 +5,7 @@ import com.example.keycloak.dto.LoginRequest;
 import com.example.keycloak.dto.LoginResponse;
 import com.example.keycloak.dto.MfaRequest;
 import com.example.keycloak.dto.MfaSetupResponse;
+import com.example.keycloak.dto.MigratePasswordRequest;
 import com.example.keycloak.dto.RegisterRequest;
 import com.example.keycloak.dto.UserDTO;
 import com.example.keycloak.service.AuthenticationService;
@@ -26,11 +27,11 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Validated
 public class AuthController {
-    
+
     private final AuthenticationService authenticationService;
     private final MfaService mfaService;
     private final UserService userService;
-    
+
     /**
      * API đăng nhập sử dụng User Provider Database
      * Sử dụng Strategy Pattern - DatabaseAuthenticationStrategy
@@ -42,7 +43,7 @@ public class AuthController {
         LoginResponse response = authenticationService.authenticateWithDatabase(request);
         return ResponseEntity.ok(response);
     }
-    
+
     /**
      * API đăng nhập sử dụng Remote User Federation
      * Sử dụng Strategy Pattern - FederationAuthenticationStrategy
@@ -54,7 +55,7 @@ public class AuthController {
         LoginResponse response = authenticationService.authenticateWithFederation(request);
         return ResponseEntity.ok(response);
     }
-    
+
     /**
      * API đăng nhập generic - cho phép chọn authentication type
      */
@@ -66,7 +67,7 @@ public class AuthController {
         LoginResponse response = authenticationService.authenticate(request, authType);
         return ResponseEntity.ok(response);
     }
-    
+
     /**
      * Setup MFA cho user - tạo secret và QR code
      */
@@ -75,17 +76,17 @@ public class AuthController {
         String secret = mfaService.generateSecret(username);
         String qrCodeUrl = mfaService.generateQrCodeUrl(username, secret, "Bank App");
         String manualEntryKey = mfaService.getSecret(username);
-        
+
         MfaSetupResponse response = MfaSetupResponse.builder()
-            .secret(secret)
-            .qrCodeUrl(qrCodeUrl)
-            .manualEntryKey(manualEntryKey)
-            .message("Scan QR code with Google Authenticator or enter key manually")
-            .build();
-        
+                .secret(secret)
+                .qrCodeUrl(qrCodeUrl)
+                .manualEntryKey(manualEntryKey)
+                .message("Scan QR code with Google Authenticator or enter key manually")
+                .build();
+
         return ResponseEntity.ok(response);
     }
-    
+
     /**
      * Verify MFA code
      */
@@ -97,7 +98,7 @@ public class AuthController {
         }
         return ResponseEntity.status(401).body("{\"status\":\"error\",\"message\":\"Invalid MFA code\"}");
     }
-    
+
     /**
      * Disable MFA cho user
      */
@@ -106,7 +107,7 @@ public class AuthController {
         mfaService.disableMfa(username);
         return ResponseEntity.ok("{\"status\":\"success\",\"message\":\"MFA disabled\"}");
     }
-    
+
     /**
      * Check if MFA is enabled for user
      */
@@ -115,7 +116,7 @@ public class AuthController {
         boolean enabled = mfaService.isMfaEnabled(username);
         return ResponseEntity.ok(String.format("{\"enabled\":%s}", enabled));
     }
-    
+
     /**
      * Đăng ký user mới - Public endpoint
      */
@@ -124,18 +125,16 @@ public class AuthController {
         try {
             UserDTO user = userService.registerUser(request);
             return ResponseEntity.ok(Map.of(
-                "status", "success",
-                "message", "User registered successfully",
-                "user", user
-            ));
+                    "status", "success",
+                    "message", "User registered successfully",
+                    "user", user));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of(
-                "status", "error",
-                "message", e.getMessage()
-            ));
+                    "status", "error",
+                    "message", e.getMessage()));
         }
     }
-    
+
     /**
      * Đổi password - Yêu cầu authentication
      * User tự đổi password của mình
@@ -145,27 +144,55 @@ public class AuthController {
         try {
             // Lấy username từ request body
             String username = request.getUsername();
-            
+
             boolean success = userService.changePassword(username, request);
             if (success) {
                 return ResponseEntity.ok(Map.of(
-                    "status", "success",
-                    "message", "Password changed successfully"
-                ));
+                        "status", "success",
+                        "message", "Password changed successfully"));
             } else {
                 return ResponseEntity.badRequest().body(Map.of(
-                    "status", "error",
-                    "message", "Failed to change password"
-                ));
+                        "status", "error",
+                        "message", "Failed to change password"));
             }
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of(
-                "status", "error",
-                "message", e.getMessage()
-            ));
+                    "status", "error",
+                    "message", e.getMessage()));
         }
     }
-    
+
+    /**
+     * Password Migration endpoint
+     * Cho phép users với password format cũ (version 1) migrate sang format mới
+     * (version 2)
+     * Client gửi password đã được SHA256 hash
+     */
+    @PostMapping("/password/migrate")
+    public ResponseEntity<?> migratePassword(@Valid @RequestBody MigratePasswordRequest request) {
+        try {
+            boolean success = userService.migratePassword(
+                    request.getUsername(),
+                    request.getCurrentPassword(),
+                    request.getNewPassword());
+
+            if (success) {
+                return ResponseEntity.ok(Map.of(
+                        "status", "success",
+                        "message", "Password migrated successfully. Please login again.",
+                        "passwordVersion", 2));
+            } else {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "status", "error",
+                        "message", "Failed to migrate password"));
+            }
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "status", "error",
+                    "message", e.getMessage()));
+        }
+    }
+
     /**
      * Public endpoint - không cần authentication
      */
@@ -174,4 +201,3 @@ public class AuthController {
         return ResponseEntity.ok("Service is running");
     }
 }
-

@@ -16,10 +16,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-/**
- * Service để sinh và validate JWT token locally
- * Thay thế việc sử dụng Keycloak token
- */
 @Slf4j
 @Service
 public class JwtService {
@@ -54,7 +50,7 @@ public class JwtService {
         claims.put("userId", userId);
         claims.put("email", email);
         claims.put("type", "access");
-        
+
         return createToken(claims, username, jwtExpiration);
     }
 
@@ -64,7 +60,7 @@ public class JwtService {
     public String generateRefreshToken(String username) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("type", "refresh");
-        
+
         return createToken(claims, username, refreshExpiration);
     }
 

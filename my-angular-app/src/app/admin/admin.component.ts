@@ -1,20 +1,18 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { AdminService, User } from '../services/admin.service';
+import { AdminService, User, PagedResponse } from '../services/admin.service';
 import { TicketService, TicketDTO, TicketStatus } from '../services/ticket.service';
 import { KeycloakService } from '../services/keycloak.service';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule],
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.css'
 })
 export class AdminComponent implements OnInit {
-  users: User[] = [];
-  tickets: TicketDTO[] = [];
   loading = false;
   error: string | null = null;
 
@@ -30,20 +28,17 @@ export class AdminComponent implements OnInit {
   approvedTickets = 0;
   rejectedTickets = 0;
 
-  // Form để cập nhật role
-  selectedUser: User | null = null;
-  newRole: string = 'user';
-  showRoleModal = false;
   isAdmin = false;
 
   constructor(
     private adminService: AdminService,
     private ticketService: TicketService,
-    private keycloakService: KeycloakService
+    private keycloakService: KeycloakService,
+    private authService: AuthService
   ) { }
 
   ngOnInit() {
-    this.isAdmin = this.keycloakService.hasRole('admin');
+    this.isAdmin = this.authService.isAdmin || this.keycloakService.hasRole('admin');
     this.loadData();
   }
 
@@ -52,89 +47,45 @@ export class AdminComponent implements OnInit {
     this.error = null;
 
     if (this.isAdmin) {
-      this.adminService.getAllUsers().subscribe({
-        next: (users) => {
-          this.users = users;
-          this.updateUserStats();
-          this.loadTickets();
-        },
-        error: (err) => {
-          console.error('Failed to load users:', err);
-          this.error = `Không thể tải danh sách users. Lỗi: ${err.status}`;
-          this.loadTickets(); // Still try to load tickets
-        }
-      });
-    } else {
-      this.loadTickets();
+      this.loadUserStats();
     }
+    this.loadTicketStats();
   }
 
-  private loadTickets() {
-    this.ticketService.getAllTickets().subscribe({
-      next: (tickets) => {
-        this.tickets = tickets;
-        this.updateTicketStats();
+  private loadUserStats() {
+    // Load first page just to get total count for stats
+    this.adminService.getUsersPaginated(0, 100, '').subscribe({
+      next: (response: PagedResponse<User>) => {
+        this.totalUsers = response.totalElements;
+        // Calculate stats from the sample
+        this.adminCount = response.content.filter(u => u.role === 'admin').length;
+        this.userCount = response.content.filter(u => u.role === 'user').length;
+        this.activeCount = response.content.filter(u => u.enabled).length;
         this.loading = false;
       },
       error: (err) => {
-        console.error('Failed to load tickets:', err);
+        console.error('Failed to load user stats:', err);
+        this.error = `Không thể tải thống kê users. Lỗi: ${err.status}`;
+        this.loading = false;
+      }
+    });
+  }
+
+  private loadTicketStats() {
+    this.ticketService.getAllTickets().subscribe({
+      next: (tickets: TicketDTO[]) => {
+        this.totalTickets = tickets.length;
+        this.pendingTickets = tickets.filter(t => t.status === TicketStatus.SUBMITTED).length;
+        this.approvedTickets = tickets.filter(t => t.status === TicketStatus.APPROVED).length;
+        this.rejectedTickets = tickets.filter(t => t.status === TicketStatus.REJECTED).length;
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Failed to load ticket stats:', err);
         this.error = (this.error ? this.error + ' ' : '') + 'Không thể tải thống kê tickets.';
         this.loading = false;
       }
     });
-  }
-
-  loadUsers() {
-    this.loadData();
-  }
-
-  openRoleModal(user: User) {
-    this.selectedUser = user;
-    this.newRole = user.role || 'user';
-    this.showRoleModal = true;
-  }
-
-  closeRoleModal() {
-    this.showRoleModal = false;
-    this.selectedUser = null;
-  }
-
-  updateUserRole() {
-    if (!this.selectedUser) return;
-
-    this.loading = true;
-    this.error = null;
-
-    this.adminService.updateUserRole(this.selectedUser.username, this.newRole).subscribe({
-      next: (response) => {
-        console.log('Role updated:', response);
-        if (this.selectedUser) {
-          this.selectedUser.role = this.newRole;
-        }
-        this.closeRoleModal();
-        this.loading = false;
-        this.loadData();
-      },
-      error: (err) => {
-        console.error('Failed to update role:', err);
-        this.error = 'Không thể cập nhật role. Vui lòng thử lại.';
-        this.loading = false;
-      }
-    });
-  }
-
-  private updateUserStats() {
-    this.totalUsers = this.users.length;
-    this.adminCount = this.users.filter(u => u.role === 'admin').length;
-    this.userCount = this.users.filter(u => u.role === 'user').length;
-    this.activeCount = this.users.filter(u => u.enabled).length;
-  }
-
-  private updateTicketStats() {
-    this.totalTickets = this.tickets.length;
-    this.pendingTickets = this.tickets.filter(t => t.status === TicketStatus.SUBMITTED).length;
-    this.approvedTickets = this.tickets.filter(t => t.status === TicketStatus.APPROVED).length;
-    this.rejectedTickets = this.tickets.filter(t => t.status === TicketStatus.REJECTED).length;
   }
 
   downloadReport(type: string, format: string) {

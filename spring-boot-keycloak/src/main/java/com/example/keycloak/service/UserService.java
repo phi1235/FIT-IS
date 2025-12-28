@@ -60,8 +60,8 @@ public class UserService {
 
             // Insert new user
             String sql = "INSERT INTO users (id, username, email, password, first_name, last_name, enabled, role) " +
-                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-            
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 pstmt.setString(1, id);
                 pstmt.setString(2, request.getUsername().trim().toLowerCase());
@@ -71,21 +71,20 @@ public class UserService {
                 pstmt.setString(6, request.getLastName());
                 pstmt.setBoolean(7, true); // enabled by default
                 pstmt.setString(8, "user"); // default role
-                
+
                 pstmt.executeUpdate();
             }
 
             log.info("User registered successfully: {}", request.getUsername());
 
             return new UserDTO(
-                id,
-                request.getUsername(),
-                request.getEmail(),
-                request.getFirstName(),
-                request.getLastName(),
-                "user",
-                true
-            );
+                    id,
+                    request.getUsername(),
+                    request.getEmail(),
+                    request.getFirstName(),
+                    request.getLastName(),
+                    "user",
+                    true);
         } catch (SQLException e) {
             log.error("Error registering user: {}", e.getMessage());
             throw new RuntimeException("Failed to register user: " + e.getMessage());
@@ -100,7 +99,7 @@ public class UserService {
             // Get current password hash
             String sql = "SELECT password FROM users WHERE username = ?";
             String currentHash = null;
-            
+
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 pstmt.setString(1, username);
                 try (ResultSet rs = pstmt.executeQuery()) {
@@ -122,12 +121,12 @@ public class UserService {
             // Hash and update new password
             String newHash = passwordEncoder.encode(request.getNewPassword());
             String updateSql = "UPDATE users SET password = ? WHERE username = ?";
-            
+
             try (PreparedStatement pstmt = conn.prepareStatement(updateSql)) {
                 pstmt.setString(1, newHash);
                 pstmt.setString(2, username);
                 int rowsAffected = pstmt.executeUpdate();
-                
+
                 if (rowsAffected > 0) {
                     log.info("Password changed successfully for user: {}", username);
                     return true;
@@ -158,6 +157,71 @@ public class UserService {
             try (ResultSet rs = pstmt.executeQuery()) {
                 return rs.next();
             }
+        }
+    }
+
+    /**
+     * Migrate password from old format (version 1) to new SHA256 format (version 2)
+     * 
+     * @param username          username
+     * @param currentPassword   plain password for verification against current hash
+     * @param newPasswordSha256 SHA256 hashed new password from client
+     */
+    public boolean migratePassword(String username, String currentPassword, String newPasswordSha256) {
+        try (Connection conn = getConnection()) {
+            // Get current password hash and version
+            String sql = "SELECT password, COALESCE(password_version, 1) as password_version FROM users WHERE username = ?";
+            String currentHash = null;
+            int currentVersion = 1;
+
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, username);
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    if (rs.next()) {
+                        currentHash = rs.getString("password");
+                        currentVersion = rs.getInt("password_version");
+                    }
+                }
+            }
+
+            if (currentHash == null) {
+                throw new RuntimeException("User not found");
+            }
+
+            // Only allow migration for version 1 users
+            if (currentVersion != 1) {
+                throw new RuntimeException("Password is already migrated to new format");
+            }
+
+            // Verify current password (plain password against BCrypt hash)
+            if (!passwordEncoder.matches(currentPassword, currentHash)) {
+                throw new RuntimeException("Current password is incorrect");
+            }
+
+            // Validate SHA256 input (should be 64 characters hex)
+            if (newPasswordSha256 == null || newPasswordSha256.length() != 64) {
+                throw new RuntimeException("Invalid new password format. Expected SHA256 hash.");
+            }
+
+            // Hash the SHA256 password with BCrypt and update with version 2
+            String newHash = passwordEncoder.encode(newPasswordSha256);
+            String updateSql = "UPDATE users SET password = ?, password_version = 2 WHERE username = ?";
+
+            try (PreparedStatement pstmt = conn.prepareStatement(updateSql)) {
+                pstmt.setString(1, newHash);
+                pstmt.setString(2, username);
+                int rowsAffected = pstmt.executeUpdate();
+
+                if (rowsAffected > 0) {
+                    log.info("Password migrated successfully for user: {} (version 1 -> 2)", username);
+                    return true;
+                }
+            }
+
+            return false;
+        } catch (SQLException e) {
+            log.error("Error migrating password: {}", e.getMessage());
+            throw new RuntimeException("Failed to migrate password: " + e.getMessage());
         }
     }
 

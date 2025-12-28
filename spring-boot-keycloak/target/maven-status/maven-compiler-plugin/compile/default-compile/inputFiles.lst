@@ -4,6 +4,8 @@
 /home/nguyen-phi/Downloads/angular project/spring-boot-keycloak/src/main/java/com/example/keycloak/strategy/DatabaseAuthenticationStrategy.java
 /home/nguyen-phi/Downloads/angular project/spring-boot-keycloak/src/main/java/com/example/keycloak/provider/CustomUserAdapter.java
 /home/nguyen-phi/Downloads/angular project/spring-boot-keycloak/src/main/java/com/example/keycloak/dto/ErrorResponse.java
+/home/nguyen-phi/Downloads/angular project/spring-boot-keycloak/src/main/java/com/example/keycloak/model/ReportJob.java
+/home/nguyen-phi/Downloads/angular project/spring-boot-keycloak/src/main/java/com/example/keycloak/dto/MigratePasswordRequest.java
 /home/nguyen-phi/Downloads/angular project/spring-boot-keycloak/src/main/java/com/example/keycloak/config/RedisConfig.java
 /home/nguyen-phi/Downloads/angular project/spring-boot-keycloak/src/main/java/com/example/keycloak/dto/RejectionRequest.java
 /home/nguyen-phi/Downloads/angular project/spring-boot-keycloak/src/main/java/com/example/keycloak/service/RemoteFederationService.java
@@ -11,12 +13,14 @@
 /home/nguyen-phi/Downloads/angular project/spring-boot-keycloak/src/main/java/com/example/keycloak/dto/UserDTO.java
 /home/nguyen-phi/Downloads/angular project/spring-boot-keycloak/src/main/java/com/example/keycloak/dto/RegisterRequest.java
 /home/nguyen-phi/Downloads/angular project/spring-boot-keycloak/src/main/java/com/example/keycloak/provider/RemoteUserStorageProviderFactory.java
+/home/nguyen-phi/Downloads/angular project/spring-boot-keycloak/src/main/java/com/example/keycloak/service/ReportJobService.java
 /home/nguyen-phi/Downloads/angular project/spring-boot-keycloak/src/main/java/com/example/keycloak/strategy/AuthenticationStrategy.java
 /home/nguyen-phi/Downloads/angular project/spring-boot-keycloak/src/main/java/com/example/keycloak/service/UserService.java
 /home/nguyen-phi/Downloads/angular project/spring-boot-keycloak/src/main/java/com/example/keycloak/provider/RemoteUserStorageProvider.java
 /home/nguyen-phi/Downloads/angular project/spring-boot-keycloak/src/main/java/com/example/keycloak/controller/TicketController.java
 /home/nguyen-phi/Downloads/angular project/spring-boot-keycloak/src/main/java/com/example/keycloak/controller/UserController.java
 /home/nguyen-phi/Downloads/angular project/spring-boot-keycloak/src/main/java/com/example/keycloak/dto/TicketStatus.java
+/home/nguyen-phi/Downloads/angular project/spring-boot-keycloak/src/main/java/com/example/keycloak/dto/PagedResponse.java
 /home/nguyen-phi/Downloads/angular project/spring-boot-keycloak/src/main/java/com/example/keycloak/dto/ChangePasswordRequest.java
 /home/nguyen-phi/Downloads/angular project/spring-boot-keycloak/src/main/java/com/example/keycloak/dto/UserInfo.java
 /home/nguyen-phi/Downloads/angular project/spring-boot-keycloak/src/main/java/com/example/keycloak/dto/TicketDTO.java

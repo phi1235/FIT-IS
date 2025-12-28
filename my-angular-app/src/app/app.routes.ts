@@ -4,7 +4,9 @@ import { SignPageComponent } from './sign-page/sign-page.component';
 import { LoginComponent } from './login/login.component';
 import { AdminComponent } from './admin/admin.component';
 import { AdminLayoutComponent } from './admin/admin-layout.component';
+import { UserManagementComponent } from './admin/user-management.component';
 import { portalGuard } from './guards/portal.guard';
+import { adminGuard } from './guards/admin.guard';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -28,6 +30,7 @@ export const routes: Routes = [
     canActivate: [portalGuard], // Cho phép Admin, Maker, Checker vào portal
     children: [
       { path: '', component: AdminComponent }, // Dashboard
+      { path: 'users', component: UserManagementComponent, canActivate: [adminGuard] }, // User Management
       {
         path: 'tickets',
         children: [
@@ -41,3 +44,4 @@ export const routes: Routes = [
   },
   { path: '**', redirectTo: 'home' }
 ];
+

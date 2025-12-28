@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,7 +44,7 @@ public class RemoteAuthController {
      * Get user by username, email, or id
      * Called by RemoteUserStorageProvider for user lookup
      */
-    @GetMapping
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getUser(
             @RequestParam(required = false) String username,
             @RequestParam(required = false) String email,
@@ -84,7 +85,7 @@ public class RemoteAuthController {
      * Validate user credentials
      * Called by RemoteUserStorageProvider.isValid() for password verification
      */
-    @PostMapping("/login")
+    @PostMapping(value = "/login", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> validateCredentials(@RequestBody Map<String, String> request,
             @RequestHeader(value = "X-Timestamp", required = false) String timestamp,
             @RequestHeader(value = "X-Signature", required = false) String signature) {
@@ -178,7 +179,7 @@ public class RemoteAuthController {
     private boolean validateSignature(String method, String url, String body,
             String timestamp, String signature) {
         if (timestamp == null || signature == null) {
-            log.warn("Missing timestamp or signature in request");
+            log.warn("Missing timestamp or signature in request. Timestamp: {}, Signature: {}", timestamp, signature);
             return false;
         }
 

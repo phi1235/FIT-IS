@@ -6,14 +6,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-/**
- * Remote Federation Service
- * 
- * Design Patterns Applied:
- * - Strategy Pattern: Delegate authentication to specific FederationStrategy
- * - Dependency Injection: Inject all available strategies via Spring
- * 
- */
 @Slf4j
 @Service
 public class RemoteFederationService {
@@ -21,9 +13,6 @@ public class RemoteFederationService {
     private final List<FederationStrategy> strategies;
     private final FederationStrategy defaultStrategy;
 
-    /**
-     * Constructor Injection - Spring auto-injects all FederationStrategy beans
-     */
     public RemoteFederationService(List<FederationStrategy> strategies) {
         this.strategies = strategies;
         // Default to API strategy if available, otherwise first strategy

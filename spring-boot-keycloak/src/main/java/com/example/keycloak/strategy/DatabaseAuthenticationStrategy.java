@@ -48,21 +48,48 @@ public class DatabaseAuthenticationStrategy implements AuthenticationStrategy {
         try {
             log.info("Authenticating user {} with Database Provider", request.getUsername());
 
-            // Step 1: Validate credentials với Keycloak (chỉ check 200/401)
+            // Step 1: Get user info first to check password version
+            CustomUser customUser = getUserFromDatabase(request.getUsername());
+
+            if (customUser == null) {
+                throw new AuthenticationException("User not found", "USER_NOT_FOUND");
+            }
+
+            int passwordVersion = customUser.getPasswordVersion();
+            log.info("User {} has password version: {}", request.getUsername(), passwordVersion);
+
+            // Step 2: Validate with Keycloak
             validateWithKeycloak(request.getUsername(), request.getPassword());
-            
             log.info("Keycloak validated credentials for user: {}", request.getUsername());
 
-            // Step 2: Lấy user info từ database
-            LoginResponse.UserInfo userInfo = getUserInfoFromDatabase(request.getUsername());
+            // Step 3: Check if migration is required
+            if (passwordVersion == 1) {
+                // Old format - password is valid but needs migration
+                log.info("User {} needs password migration from version 1 to 2", request.getUsername());
 
-            // Step 3: Sinh JWT token locally
+                return LoginResponse.builder()
+                        .success(false)
+                        .message("Password migration required. Please update your password.")
+                        .requiresPasswordMigration(true)
+                        .user(LoginResponse.UserInfo.builder()
+                                .username(customUser.getUsername())
+                                .email(customUser.getEmail())
+                                .build())
+                        .metadata(LoginResponse.Metadata.builder()
+                                .authProvider("Database Provider")
+                                .passwordVersion(passwordVersion)
+                                .build())
+                        .build();
+            }
+
+            // Step 4: Version 2 - Normal login flow
+            LoginResponse.UserInfo userInfo = buildUserInfo(customUser);
+
             String accessToken = jwtService.generateToken(
-                userInfo.getUsername(),
-                userInfo.getRole(),
-                userInfo.getId(),
-                userInfo.getEmail()
-            );
+                    userInfo.getUsername(),
+                    userInfo.getRole(),
+                    userInfo.getId(),
+                    userInfo.getEmail());
             String refreshToken = jwtService.generateRefreshToken(userInfo.getUsername());
 
             LocalDateTime now = LocalDateTime.now();
@@ -75,6 +102,7 @@ public class DatabaseAuthenticationStrategy implements AuthenticationStrategy {
             return LoginResponse.builder()
                     .success(true)
                     .message("Login successful")
+                    .requiresPasswordMigration(false)
                     .user(userInfo)
                     .token(LoginResponse.TokenInfo.builder()
                             .accessToken(accessToken)
@@ -87,6 +115,7 @@ public class DatabaseAuthenticationStrategy implements AuthenticationStrategy {
                             .authProvider("Database Provider (Local JWT)")
                             .issuedAt(now.format(FORMATTER))
                             .expiresAt(expiresAt.format(FORMATTER))
+                            .passwordVersion(passwordVersion)
                             .build())
                     .build();
 
@@ -99,6 +128,27 @@ public class DatabaseAuthenticationStrategy implements AuthenticationStrategy {
                     "INVALID_CREDENTIALS",
                     e);
         }
+    }
+
+    private CustomUser getUserFromDatabase(String username) {
+        try (Connection connection = dataSource.getConnection()) {
+            CustomUserRepository repository = new CustomUserRepository(connection);
+            return repository.findByUsername(username);
+        } catch (Exception e) {
+            log.warn("Could not fetch user from database: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    private LoginResponse.UserInfo buildUserInfo(CustomUser user) {
+        return LoginResponse.UserInfo.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .role(user.getRole() != null ? user.getRole() : "user")
+                .build();
     }
 
     /**
@@ -117,10 +167,10 @@ public class DatabaseAuthenticationStrategy implements AuthenticationStrategy {
 
             // Gọi API để validate - nếu thất bại sẽ throw exception
             keycloak.tokenManager().getAccessToken();
-            
+
             // Đóng connection sau khi validate
             keycloak.close();
-            
+
         } catch (Exception e) {
             log.error("Keycloak validation failed for user {}: {}", username, e.getMessage());
             throw new AuthenticationException(

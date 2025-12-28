@@ -2,7 +2,7 @@ services:
   # Comment lại Keycloak - sẽ chạy ở local
   keycloak:
     image: quay.io/keycloak/keycloak:18.0.2
-    command: ["start-dev", "--http-port=8080"]
+    command: [ "start-dev", "--http-port=8080" ]
     environment:
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
@@ -15,7 +15,7 @@ services:
       # Mount custom provider JAR
       - ./spring-boot-keycloak/target/keycloak-integration-1.0.0.jar:/opt/keycloak/providers/keycloak-integration.jar
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/realms/master"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/realms/master" ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -35,6 +35,11 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # Jaspersoft template path inside container
+      JASPER_TEMPLATE_PATH: /app/jasper-templates
+    volumes:
+      # Mount Jaspersoft workspace để load template trực tiếp
+      - /home/nguyen-phi/JaspersoftWorkspace/MyReports:/app/jasper-templates:ro
     depends_on:
       keycloak:
         condition: service_healthy
@@ -46,14 +51,14 @@ services:
       - "8082:8082"
 
   # Comment lại Angular App - sẽ chạy ở local
-#  angular-app:
-#    build:
-#      context: ./my-angular-app
-#      dockerfile: Dockerfile
-#    depends_on:
-#      - keycloak
-#    ports:
-#      - "4200:80"
+  #  angular-app:
+  #    build:
+  #      context: ./my-angular-app
+  #      dockerfile: Dockerfile
+  #    depends_on:
+  #      - keycloak
+  #    ports:
+  #      - "4200:80"
 
   # Redis - chạy bằng Docker
   redis:
@@ -65,7 +70,7 @@ services:
       - redis-data:/data
     command: redis-server --appendonly yes
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -85,7 +90,7 @@ services:
       - postgres-data:/var/lib/postgresql/data
       - ./init-db:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 10s
       timeout: 5s
       retries: 5

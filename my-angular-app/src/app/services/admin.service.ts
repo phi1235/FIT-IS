@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { KeycloakService } from './keycloak.service';
+import { AuthService } from './auth.service';
 
 export interface User {
   id?: string;
@@ -18,6 +19,16 @@ export interface RoleUpdateRequest {
   role: string;
 }
 
+export interface PagedResponse<T> {
+  content: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  last: boolean;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -27,15 +38,27 @@ export class AdminService {
 
   constructor(
     private http: HttpClient,
-    private keycloakService: KeycloakService
+    private keycloakService: KeycloakService,
+    private authService: AuthService
   ) { }
 
   /**
-   * Lấy danh sách tất cả users (chỉ admin)
+   * Lấy danh sách tất cả users (chỉ admin) - Deprecated: use getUsersPaginated
    */
   getAllUsers(): Observable<User[]> {
     const headers = this.getAuthHeaders();
     return this.http.get<User[]>(`${this.apiUrl}/admin/all`, { headers });
+  }
+
+  /**
+   * Lấy danh sách users với phân trang
+   */
+  getUsersPaginated(page: number = 0, size: number = 20, search: string = ''): Observable<PagedResponse<User>> {
+    const headers = this.getAuthHeaders();
+    return this.http.get<PagedResponse<User>>(
+      `${this.apiUrl}/admin/list?page=${page}&size=${size}&search=${encodeURIComponent(search)}`,
+      { headers }
+    );
   }
 
   /**
@@ -74,13 +97,22 @@ export class AdminService {
 
   /**
    * Tạo HTTP headers với token
+   * Ưu tiên token từ AuthService (custom auth), fallback sang KeycloakService
    */
   private getAuthHeaders(): HttpHeaders {
-    const token = this.keycloakService.getToken();
+    // Try custom auth token first (database/remote login)
+    let token: string | null = this.authService.getToken();
+
+    // Fallback to Keycloak token
+    if (!token) {
+      token = this.keycloakService.getToken() || null;
+    }
+
     return new HttpHeaders({
-      'Authorization': `Bearer ${token}`,
+      'Authorization': `Bearer ${token || ''}`,
       'Content-Type': 'application/json'
     });
   }
 }
+
 
