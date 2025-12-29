@@ -153,11 +153,17 @@
             <artifactId>jackson-databind</artifactId>
         </dependency>
 
-        <!-- JasperReports -->
+        <!-- JasperReports - Downgraded to 6.20.0 for legacy JRXML compatibility -->
         <dependency>
             <groupId>net.sf.jasperreports</groupId>
             <artifactId>jasperreports</artifactId>
-            <version>6.21.3</version>
+            <version>6.20.0</version>
+        </dependency>
+        <!-- JasperReports Fonts - includes DejaVu Sans for Vietnamese/Unicode support -->
+        <dependency>
+            <groupId>net.sf.jasperreports</groupId>
+            <artifactId>jasperreports-fonts</artifactId>
+            <version>6.20.0</version>
         </dependency>
         <dependency>
             <groupId>com.github.librepdf</groupId>

@@ -38,7 +38,7 @@ services:
       # Jaspersoft template path inside container
       JASPER_TEMPLATE_PATH: /app/jasper-templates
     volumes:
-      # Mount Jaspersoft workspace để load template trực tiếp
+      # Mount Jasper templates từ Jaspersoft Studio (dynamic editing)
       - /home/nguyen-phi/JaspersoftWorkspace/MyReports:/app/jasper-templates:ro
     depends_on:
       keycloak:
