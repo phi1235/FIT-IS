@@ -6,8 +6,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../services/auth.service';
 import { ToastService } from '../services/toast.service';
 import { CryptoService } from '../services/crypto.service';
-import { LoginResponse, UserInfo } from '../models/api.models';
-import { environment } from '../../environments/environment';
+import { UserInfo } from '../models/api.models';
 
 @Component({
     selector: 'app-login',
@@ -102,17 +101,54 @@ export class LoginComponent implements OnInit {
         this.successMessage = '';
 
         const plainPassword = this.loginForm.value.password;
-        // Note: For v1 users, send plain password. V2 migration will hash on backend.
-        // TODO: Once all users migrated to v2, re-enable client-side SHA256 hashing
-        // const hashedPassword = this.cryptoService.hashPassword(plainPassword);
+        const username = this.loginForm.value.username.trim();
 
-        const loginData = {
-            username: this.loginForm.value.username.trim(),
-            password: plainPassword // Send plain password for v1 compatibility
-        };
+        // Encrypt both username and password with RSA before sending
+        this.cryptoService.encryptPassword(username).subscribe({
+            next: (encryptedUsername: string) => {
+                this.cryptoService.encryptPassword(plainPassword).subscribe({
+                    next: (encryptedPassword: string) => {
+                        const loginData = {
+                            username: encryptedUsername,
+                            password: encryptedPassword
+                        };
+                        this.performLogin(loginData, plainPassword);
+                    },
+                    error: (err: any) => {
+                        console.warn('RSA password encryption failed, falling back to plain:', err);
+                        const loginData = {
+                            username: encryptedUsername,
+                            password: plainPassword
+                        };
+                        this.performLogin(loginData, plainPassword);
+                    }
+                });
+            },
+            error: (err: any) => {
+                console.warn('RSA username encryption failed, falling back to plain:', err);
+                this.cryptoService.encryptPassword(plainPassword).subscribe({
+                    next: (encryptedPassword: string) => {
+                        const loginData = {
+                            username: username,
+                            password: encryptedPassword
+                        };
+                        this.performLogin(loginData, plainPassword);
+                    },
+                    error: (pErr: any) => {
+                        const loginData = {
+                            username: username,
+                            password: plainPassword
+                        };
+                        this.performLogin(loginData, plainPassword);
+                    }
+                });
+            }
+        });
+    }
 
+    private performLogin(loginData: { username: string; password: string }, plainPassword: string): void {
         this.http.post<any>('/api/auth/login/database', loginData).subscribe({
-            next: (response) => {
+            next: (response: any) => {
                 this.isLoading = false;
                 console.log('Login response:', response);
 
@@ -120,7 +156,7 @@ export class LoginComponent implements OnInit {
                 if (response.requiresPasswordMigration) {
                     this.showMigrationDialog = true;
                     this.migrationUsername = loginData.username;
-                    this.migrationCurrentPassword = plainPassword; // Keep plain for migration
+                    this.migrationCurrentPassword = plainPassword;
                     this.errorMessage = 'Bạn cần cập nhật mật khẩu để sử dụng định dạng bảo mật mới.';
                     return;
                 }
@@ -189,7 +225,6 @@ export class LoginComponent implements OnInit {
 
     /**
      * Handle password migration
-     * User enters new password, which is hashed and sent to backend
      */
     migratePassword(newPassword: string): void {
         if (!newPassword || newPassword.length < 8) {
@@ -198,27 +233,33 @@ export class LoginComponent implements OnInit {
         }
 
         this.isLoading = true;
-        const hashedNewPassword = this.cryptoService.hashPassword(newPassword);
 
-        const migrateData = {
-            username: this.migrationUsername,
-            currentPassword: this.migrationCurrentPassword, // Plain password for verification
-            newPassword: hashedNewPassword // SHA256 hashed
-        };
+        // Encrypt new password with RSA
+        this.cryptoService.encryptPassword(newPassword).subscribe({
+            next: (encryptedNewPassword: string) => {
+                const migrateData = {
+                    username: this.migrationUsername,
+                    currentPassword: this.migrationCurrentPassword,
+                    newPassword: encryptedNewPassword
+                };
 
-        this.http.post<any>('/api/auth/password/migrate', migrateData).subscribe({
-            next: (response) => {
-                this.isLoading = false;
-                this.showMigrationDialog = false;
-                this.toastService.success('Mật khẩu đã được cập nhật. Vui lòng đăng nhập lại!');
-
-                // Update password in form and retry login
-                this.loginForm.patchValue({ password: newPassword });
-                this.onSubmit();
+                this.http.post<any>('/api/auth/password/migrate', migrateData).subscribe({
+                    next: () => {
+                        this.isLoading = false;
+                        this.showMigrationDialog = false;
+                        this.toastService.success('Mật khẩu đã được cập nhật. Vui lòng đăng nhập lại!');
+                        this.loginForm.patchValue({ password: newPassword });
+                        this.onSubmit();
+                    },
+                    error: (error: HttpErrorResponse) => {
+                        this.isLoading = false;
+                        this.errorMessage = error.error?.message || 'Không thể cập nhật mật khẩu';
+                    }
+                });
             },
-            error: (error: HttpErrorResponse) => {
+            error: () => {
                 this.isLoading = false;
-                this.errorMessage = error.error?.message || 'Không thể cập nhật mật khẩu';
+                this.errorMessage = 'Không thể mã hóa mật khẩu';
             }
         });
     }

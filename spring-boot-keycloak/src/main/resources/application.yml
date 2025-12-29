@@ -23,10 +23,10 @@ spring:
   
   # PostgreSQL DataSource Configuration
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5433}/${POSTGRES_DB:fis_bank}
+    url: jdbc:postgresql://${POSTGRES_HOST:postgres-db}:${POSTGRES_PORT:5432}/${POSTGRES_DB:fis_bank}
     driver-class-name: org.postgresql.Driver
     username: ${POSTGRES_USER:postgres}
-    password: ${POSTGRES_PASSWORD:postgres}
+    password: ${POSTGRES_PASSWORD}
     hikari:
       maximum-pool-size: 10
       minimum-idle: 5
@@ -55,7 +55,7 @@ spring:
   
   # Redis Configuration
   redis:
-    host: ${REDIS_HOST:localhost}
+    host: ${REDIS_HOST:redis-cache}
     port: ${REDIS_PORT:6379}
     password: ${REDIS_PASSWORD:}
     timeout: 2000ms
@@ -82,11 +82,11 @@ spring:
       namespace: spring:session
       flush-mode: on_save
 
-# Keycloak Configuration (Chỉ dùng cho validate credentials, không dùng cho token)
+# Keycloak Configuration
 keycloak:
-  realm: phi-realm
-  auth-server-url: http://localhost:8080
-  resource: spring-boot-app
+  realm: ${KEYCLOAK_REALM:phi-realm}
+  auth-server-url: ${KEYCLOAK_AUTH_SERVER_URL:http://keycloak:8080}
+  resource: ${KEYCLOAK_RESOURCE:spring-boot-app}
 
 # Security Configuration (Bank-Level)
 security:
@@ -99,13 +99,22 @@ security:
       ips: ""  # Danh sách IP được whitelist
     # IP Blacklisting (chặn các IP trong danh sách)
     # Ví dụ: "192.168.1.100,10.0.0.50"
-    blacklist: ""
+    blacklist: ${SECURITY_IP_BLACKLIST:}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
+  csp:
+    connect-src: ${CSP_CONNECT_SRC:http://localhost:8082 http://localhost:8080}
+  ratelimit:
+    ip: ${RATELIMIT_IP:100}
+    login: ${RATELIMIT_LOGIN:10}
+    user: ${RATELIMIT_USER:20}
+    report: ${RATELIMIT_REPORT:60}
 
 # JWT Configuration (Local Token Generation)
 jwt:
-  secret: ${JWT_SECRET:FISBankSecretKeyForJwtTokenGenerationMustBeAtLeast256BitsLongForSecurity2024}
-  expiration: 3600000       # 1 hour in milliseconds
-  refresh-expiration: 86400000  # 24 hours in milliseconds
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION:3600000}       # Default 1 hour
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:86400000}  # Default 24 hours
 
 # JasperReports Configuration (External Template from Jaspersoft Studio)
 jasperreports:

@@ -7,6 +7,7 @@ import com.example.keycloak.dto.MigratePasswordRequest;
 import com.example.keycloak.dto.RegisterRequest;
 import com.example.keycloak.dto.UserDTO;
 import com.example.keycloak.service.AuthenticationService;
+import com.example.keycloak.service.RsaService;
 import com.example.keycloak.service.UserService;
 import com.example.keycloak.strategy.AuthenticationException;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +25,20 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthenticationService authenticationService;
+    private final RsaService rsaService;
     private final UserService userService;
+
+    /**
+     * Get RSA public key for password encryption
+     * Frontend uses this to encrypt password before sending
+     */
+    @GetMapping("/public-key")
+    public ResponseEntity<?> getPublicKey() {
+        return ResponseEntity.ok(Map.of(
+                "publicKey", rsaService.getPublicKeyPem(),
+                "algorithm", "RSA-OAEP",
+                "keySize", 2048));
+    }
 
     /**
      * API đăng nhập sử dụng User Provider Database

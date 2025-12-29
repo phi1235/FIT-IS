@@ -1,9 +1,9 @@
 package com.example.keycloak.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -40,6 +40,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    @Value("${security.cors.allowed-origins:http://localhost:4200}")
+    private String allowedOrigins;
+
+    @Value("${security.csp.connect-src:http://localhost:8082 http://localhost:8080}")
+    private String cspConnectSrc;
+
     /**
      * BCrypt Password Encoder với work factor 12 (bank-level)
      */
@@ -59,10 +65,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 // Public endpoints - không cần authentication
                 .antMatchers("/api/auth/public/**").permitAll()
+                .antMatchers("/api/auth/public-key").permitAll()
                 .antMatchers("/api/auth/login/**").permitAll()
                 .antMatchers("/api/auth/register").permitAll()
-                .antMatchers("/api/auth/mfa/setup").permitAll()
-                .antMatchers("/api/auth/password/migrate").permitAll() // Allow password migration without auth
+                .antMatchers("/api/auth/password/migrate").permitAll()
                 // Remote User Federation API endpoints (internal use only)
                 .antMatchers(HttpMethod.GET, "/api").permitAll()
                 .antMatchers(HttpMethod.POST, "/api/login").permitAll()
@@ -93,8 +99,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .xssProtection().block(true)
                 .and()
                 .contentSecurityPolicy(
-                        "default-src 'self' http://localhost:8082 http://localhost:8080; " +
-                                "connect-src 'self' http://localhost:8082 http://localhost:8080; " +
+                        "default-src 'self' " + cspConnectSrc + "; " +
+                                "connect-src 'self' " + cspConnectSrc + "; " +
                                 "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
                                 "style-src 'self' 'unsafe-inline'; " +
                                 "img-src 'self' data:; " +
@@ -105,7 +111,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Collections.singletonList("http://localhost:4200"));
+
+        if (allowedOrigins != null && !allowedOrigins.isEmpty()) {
+            configuration.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
+        } else {
+            configuration.setAllowedOrigins(Collections.singletonList("*"));
+        }
+
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Cache-Control",
                 "X-Requested-With", "Origin", "Accept", "X-CSRF-TOKEN"));

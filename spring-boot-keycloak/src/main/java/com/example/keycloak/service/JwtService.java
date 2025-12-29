@@ -20,7 +20,7 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    @Value("${jwt.secret:mySecretKeyForJwtTokenGenerationMustBeAtLeast256BitsLong12345}")
+    @Value("${jwt.secret}")
     private String secretKey;
 
     @Value("${jwt.expiration:3600000}") // 1 hour in milliseconds
