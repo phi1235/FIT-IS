@@ -1,140 +1,38 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { TicketService, TicketDTO, TicketStatus } from '../services/ticket.service';
+import { FormsModule } from '@angular/forms';
+import { TicketService, TicketDTO, TicketStatus, PagedTicketResponse } from '../services/ticket.service';
 import { KeycloakService } from '../services/keycloak.service';
 
 @Component({
   selector: 'app-ticket-list',
   standalone: true,
-  imports: [CommonModule, RouterModule],
-  template: `
-    <div class="p-4">
-      <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h2 class="fw-bold mb-1">{{ isAdminView() ? 'Quản lý Tickets' : 'Yêu cầu của tôi' }}</h2>
-          <p class="text-muted small mb-0">{{ isAdminView() ? 'Theo dõi và xử lý các yêu cầu nghiệp vụ' : 'Danh sách các yêu cầu bạn đã gửi hệ thống' }}</p>
-        </div>
-        <div class="d-flex gap-2">
-          <div class="dropdown" *ngIf="isAdminView()">
-            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-              Xuất báo cáo
-            </button>
-            <ul class="dropdown-menu">
-              <li><a class="dropdown-item" (click)="downloadReport('pdf')">Bản PDF</a></li>
-              <li><a class="dropdown-item" (click)="downloadReport('xlsx')">Bản Excel</a></li>
-            </ul>
-          </div>
-          <a *ngIf="canCreate()" routerLink="create" class="btn btn-primary d-flex align-items-center gap-2">
-            <span>+</span> Tạo mới Ticket
-          </a>
-        </div>
-      </div>
-
-      <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white py-3">
-          <ul class="nav nav-pills card-header-pills">
-            <li class="nav-item">
-              <button class="nav-link" [class.active]="selectedStatus === 'ALL'" (click)="filterStatus('ALL')">Tất cả</button>
-            </li>
-            <li class="nav-item">
-              <button class="nav-link" [class.active]="selectedStatus === 'DRAFT'" (click)="filterStatus('DRAFT')">Bản nháp</button>
-            </li>
-            <li class="nav-item">
-              <button class="nav-link" [class.active]="selectedStatus === 'SUBMITTED'" (click)="filterStatus('SUBMITTED')">Chờ duyệt</button>
-            </li>
-            <li class="nav-item">
-              <button class="nav-link" [class.active]="selectedStatus === 'APPROVED'" (click)="filterStatus('APPROVED')">Đã duyệt</button>
-            </li>
-            <li class="nav-item">
-              <button class="nav-link" [class.active]="selectedStatus === 'REJECTED'" (click)="filterStatus('REJECTED')">Bị từ chối</button>
-            </li>
-          </ul>
-        </div>
-        <div class="card-body p-0">
-          <div class="table-responsive">
-            <table class="table table-hover mb-0">
-              <thead class="bg-light">
-                <tr>
-                  <th class="ps-4">Mã ID</th>
-                  <th>Tiêu đề</th>
-                  <th>Trạng thái</th>
-                  <th>Số tiền</th>
-                  <th>Người tạo</th>
-                  <th>Ngày tạo</th>
-                  <th class="text-end pe-4">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let ticket of filteredTickets" class="align-middle">
-                  <td class="ps-4"><span class="fw-bold text-primary">#{{ ticket.id }}</span></td>
-                  <td>
-                    <div class="fw-medium text-truncate" style="max-width: 250px;">{{ ticket.title }}</div>
-                  </td>
-                  <td>
-                    <span [class]="'badge ' + getStatusClass(ticket.status)">{{ getStatusLabel(ticket.status) }}</span>
-                  </td>
-                  <td>{{ ticket.amount | currency:'VND':'symbol':'1.0-2' }}</td>
-                  <td>
-                    <div class="d-flex align-items-center gap-2">
-                      <div class="avatar-sm">{{ ticket.maker.charAt(0).toUpperCase() }}</div>
-                      <span>{{ ticket.maker }}</span>
-                    </div>
-                  </td>
-                  <td>{{ ticket.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
-                  <td class="text-end pe-4">
-                    <a [routerLink]="[ticket.id]" class="btn btn-sm btn-light border">Chi tiết</a>
-                  </td>
-                </tr>
-                <tr *ngIf="filteredTickets.length === 0">
-                  <td colspan="7" class="text-center py-5 text-muted">
-                    <div class="mb-2" style="font-size: 2rem;">📂</div>
-                    Không tìm thấy dữ liệu ticket nào
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-  `,
-  styles: [`
-    .nav-link { 
-      color: #64748b; 
-      font-weight: 500; 
-      border-radius: 8px;
-      padding: 0.5rem 1rem;
-      border: none;
-      background: none;
-    }
-    .nav-link.active { 
-      background-color: var(--fis-primary) !important; 
-      color: white !important; 
-    }
-    .avatar-sm {
-      width: 24px;
-      height: 24px;
-      background: #e2e8f0;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.7rem;
-      font-weight: bold;
-      color: #475569;
-    }
-    .badge-draft { background-color: #f1f5f9; color: #475569; }
-    .badge-submitted { background-color: #eff6ff; color: #2563eb; }
-    .badge-approved { background-color: #f0fdf4; color: #16a34a; }
-    .badge-rejected { background-color: #fef2f2; color: #dc2626; }
-    .badge-completed { background-color: #f0f9ff; color: #0284c7; }
-  `]
+  imports: [CommonModule, RouterModule, FormsModule],
+  templateUrl: './ticket-list.component.html',
+  styleUrls: ['./ticket-list.component.css']
 })
 export class TicketListComponent implements OnInit {
   tickets: TicketDTO[] = [];
   filteredTickets: TicketDTO[] = [];
   selectedStatus: string = 'ALL';
+  loading = false;
+
+  // Pagination
+  currentPage = 0;
+  pageSize = 10;
+  pageSizeOptions = [10, 20, 50, 100];
+  totalElements = 0;
+  totalPages = 0;
+  searchQuery = '';
+  private searchTimeout: any;
+
+  // Export state
+  exporting = false;
+  exportProgress = 0;
+  exportMessage: string | null = null;
+  exportError: string | null = null;
+  exportFormat: string = '';
 
   constructor(
     private ticketService: TicketService,
@@ -147,10 +45,73 @@ export class TicketListComponent implements OnInit {
   }
 
   loadTickets(): void {
-    this.ticketService.getAllTickets().subscribe(data => {
-      this.tickets = data;
-      this.filterStatus(this.selectedStatus);
+    this.loading = true;
+    this.ticketService.getTicketsPaginated(this.currentPage, this.pageSize, this.searchQuery).subscribe({
+      next: (response: PagedTicketResponse) => {
+        this.tickets = response.content;
+        this.totalElements = response.totalElements;
+        this.totalPages = response.totalPages;
+        this.filterStatus(this.selectedStatus);
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Failed to load tickets:', err);
+        this.loading = false;
+      }
     });
+  }
+
+  onSearch(event: Event): void {
+    const query = (event.target as HTMLInputElement).value;
+    this.searchQuery = query;
+    clearTimeout(this.searchTimeout);
+    this.searchTimeout = setTimeout(() => {
+      this.currentPage = 0;
+      this.loadTickets();
+    }, 300);
+  }
+
+  goToPage(page: number): void {
+    if (page >= 0 && page < this.totalPages) {
+      this.currentPage = page;
+      this.loadTickets();
+    }
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.totalPages - 1) {
+      this.currentPage++;
+      this.loadTickets();
+    }
+  }
+
+  previousPage(): void {
+    if (this.currentPage > 0) {
+      this.currentPage--;
+      this.loadTickets();
+    }
+  }
+
+  onPageSizeChange(event: Event): void {
+    this.pageSize = Number((event.target as HTMLSelectElement).value);
+    this.currentPage = 0;
+    this.loadTickets();
+  }
+
+  getPageNumbers(): number[] {
+    const pages: number[] = [];
+    const maxVisiblePages = 5;
+    let start = Math.max(0, this.currentPage - Math.floor(maxVisiblePages / 2));
+    let end = Math.min(this.totalPages, start + maxVisiblePages);
+
+    if (end - start < maxVisiblePages) {
+      start = Math.max(0, end - maxVisiblePages);
+    }
+
+    for (let i = start; i < end; i++) {
+      pages.push(i);
+    }
+    return pages;
   }
 
   filterStatus(status: string): void {
@@ -167,17 +128,17 @@ export class TicketListComponent implements OnInit {
   }
 
   canCreate(): boolean {
-    // Cho phép tất cả user đã đăng nhập đều có thể tạo ticket
     return this.keycloakService.isAuthenticated();
   }
 
   getStatusClass(status: TicketStatus): string {
-    return 'badge-' + status.toLowerCase();
+    return 'badge badge-' + status.toLowerCase();
   }
 
   getStatusLabel(status: TicketStatus): string {
     const labels: any = {
       'DRAFT': 'Bản nháp',
+      'PENDING': 'Đang chờ',
       'SUBMITTED': 'Chờ duyệt',
       'APPROVED': 'Đã duyệt',
       'REJECTED': 'Bị từ chối',
@@ -187,6 +148,78 @@ export class TicketListComponent implements OnInit {
   }
 
   downloadReport(format: string): void {
-    this.ticketService.downloadReport(format);
+    if (this.exporting) return;
+
+    this.exporting = true;
+    this.exportProgress = 0;
+    this.exportFormat = format;
+    this.exportMessage = `Đang khởi tạo xuất báo cáo ${format.toUpperCase()}...`;
+    this.exportError = null;
+
+    this.ticketService.generateReport(format).subscribe({
+      next: (response) => {
+        const jobId = response.jobId;
+        this.exportMessage = `Đang xử lý...`;
+        this.pollJobStatus(jobId, format);
+      },
+      error: (err) => {
+        console.error('Error starting report:', err);
+        this.exportError = `Không thể bắt đầu xuất báo cáo. Lỗi: ${err.status || 'Unknown'}`;
+        this.exporting = false;
+        this.exportMessage = null;
+      }
+    });
+  }
+
+  private pollJobStatus(jobId: string, format: string): void {
+    const pollInterval = setInterval(() => {
+      this.ticketService.getReportStatus(jobId).subscribe({
+        next: (status) => {
+          this.exportProgress = status.progress || 0;
+          this.exportMessage = `Đang xử lý... ${status.progress}%`;
+
+          if (status.status === 'COMPLETED') {
+            clearInterval(pollInterval);
+            this.downloadFile(jobId, format);
+          } else if (status.status === 'FAILED') {
+            clearInterval(pollInterval);
+            this.exportError = `Xuất báo cáo thất bại: ${status.error || 'Unknown error'}`;
+            this.exporting = false;
+            this.exportMessage = null;
+          }
+        },
+        error: (err) => {
+          clearInterval(pollInterval);
+          this.exportError = `Lỗi kiểm tra trạng thái: ${err.message}`;
+          this.exporting = false;
+          this.exportMessage = null;
+        }
+      });
+    }, 2000); // Poll every 2 seconds to avoid 429
+  }
+
+  private downloadFile(jobId: string, format: string): void {
+    this.exportMessage = 'Đang tải xuống...';
+
+    this.ticketService.downloadReportFile(jobId).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `tickets_report.${format}`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+
+        this.exporting = false;
+        this.exportMessage = null;
+        this.exportProgress = 0;
+      },
+      error: (err) => {
+        console.error('Download error:', err);
+        this.exportError = 'Không thể tải xuống file báo cáo';
+        this.exporting = false;
+        this.exportMessage = null;
+      }
+    });
   }
 }

@@ -118,8 +118,14 @@ public class RemoteAuthController {
 
             String storedPasswordHash = (String) user.get("password");
 
-            // Verify password using BCrypt
-            boolean isValid = verifyBcryptPassword(password, storedPasswordHash);
+            // Get password version (default to 1 for legacy users)
+            Integer passwordVersion = user.get("password_version") != null
+                    ? ((Number) user.get("password_version")).intValue()
+                    : 1;
+            log.debug("User {} has password_version: {}", username, passwordVersion);
+
+            // Verify password using BCrypt (handling both v1 and v2)
+            boolean isValid = verifyBcryptPassword(password, storedPasswordHash, passwordVersion);
 
             if (isValid) {
                 auditLog.info("REMOTE_API_AUTH_SUCCESS | user={}", username);
@@ -141,15 +147,26 @@ public class RemoteAuthController {
 
     /**
      * Verify password using BCrypt constant-time comparison
+     * Handles both password versions:
+     * - Version 1: BCrypt(plain password)
+     * - Version 2: BCrypt(SHA256(plain password))
      */
-    private boolean verifyBcryptPassword(String plainPassword, String storedBcryptHash) {
+    private boolean verifyBcryptPassword(String plainPassword, String storedBcryptHash, Integer passwordVersion) {
         if (plainPassword == null || storedBcryptHash == null) {
             return false;
         }
 
         try {
             String trimmedHash = storedBcryptHash.trim();
-            return BCrypt.checkpw(plainPassword, trimmedHash);
+            String passwordToCheck = plainPassword;
+
+            // Version 2: Hash password với SHA256 trước khi compare với BCrypt
+            if (passwordVersion != null && passwordVersion == 2) {
+                passwordToCheck = hashSha256(plainPassword);
+                log.debug("Using SHA256 hash for password verification (version 2)");
+            }
+
+            return BCrypt.checkpw(passwordToCheck, trimmedHash);
         } catch (IllegalArgumentException e) {
             log.error("Invalid BCrypt hash format: {}", e.getMessage());
             // Fallback for legacy plaintext passwords (not recommended!)
@@ -161,8 +178,28 @@ public class RemoteAuthController {
         }
     }
 
+    /**
+     * Hash password với SHA256 (cho password version 2)
+     */
+    private String hashSha256(String input) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1)
+                    hexString.append('0');
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (Exception e) {
+            throw new RuntimeException("SHA-256 algorithm not available", e);
+        }
+    }
+
     private Map<String, Object> findUserByField(String field, String value) {
-        String sql = "SELECT id, username, email, password, first_name, last_name, enabled, role " +
+        String sql = "SELECT id, username, email, password, password_version, first_name, last_name, enabled, role " +
                 "FROM users WHERE " + field + " = ?";
 
         try {

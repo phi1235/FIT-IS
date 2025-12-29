@@ -83,15 +83,10 @@ public class UserController {
     public ResponseEntity<PagedResponse<UserDTO>> getUsersPaginated(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "") String search) {
-        try (Connection connection = dataSource.getConnection()) {
-            CustomUserRepository userRepository = new CustomUserRepository(connection);
+            @RequestParam(defaultValue = "") String search) {        try (Connection connection = dataSource.getConnection()) {            CustomUserRepository userRepository = new CustomUserRepository(connection);
 
             // Get paginated users
-            List<CustomUser> users = userRepository.searchUsersPaginated(search, page, size);
-            int totalElements = userRepository.countBySearch(search);
-
-            List<UserDTO> userDTOs = users.stream()
+            List<CustomUser> users = userRepository.searchUsersPaginated(search, page, size);            int totalElements = userRepository.countBySearch(search);            List<UserDTO> userDTOs = users.stream()
                     .map(user -> new UserDTO(
                             user.getId(),
                             user.getUsername(),
@@ -102,10 +97,8 @@ public class UserController {
                             user.isEnabled()))
                     .collect(Collectors.toList());
 
-            PagedResponse<UserDTO> response = new PagedResponse<>(userDTOs, page, size, totalElements);
-            return ResponseEntity.ok(response);
-        } catch (SQLException e) {
-            return ResponseEntity.internalServerError().build();
+            PagedResponse<UserDTO> response = new PagedResponse<>(userDTOs, page, size, totalElements);            return ResponseEntity.ok(response);
+        } catch (SQLException e) {            return ResponseEntity.internalServerError().build();
         }
     }
 

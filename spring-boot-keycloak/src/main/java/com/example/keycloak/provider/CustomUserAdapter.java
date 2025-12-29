@@ -82,44 +82,29 @@ public class CustomUserAdapter extends AbstractUserAdapterFederatedStorage {
     public void setUsername(String username) {
         user.setUsername(username);
     }
-    
-    /**
-     * Get realm roles từ database
-     * Role được lấy từ field 'role' trong CustomUser và map vào Keycloak realm roles
-     */
+
     @Override
     public Stream<RoleModel> getRealmRoleMappingsStream() {
         if (user.getRole() != null && !user.getRole().isEmpty()) {
-            // Tìm role trong realm
             RoleModel role = realm.getRole(user.getRole());
             if (role == null) {
-                // Tạo role nếu chưa tồn tại trong realm
                 role = realm.addRole(user.getRole());
             }
             return Stream.of(role);
         }
         return Stream.empty();
     }
-    
-    /**
-     * Check if user has a specific role
-     */
+
     @Override
     public boolean hasRole(RoleModel role) {
-        // Check role từ database trước
         if (user.getRole() != null && user.getRole().equals(role.getName())) {
             return true;
         }
-        // Fallback to parent implementation
         return super.hasRole(role);
     }
-    
-    /**
-     * Get all role mappings (realm + client)
-     */
+
     @Override
     public Stream<RoleModel> getRoleMappingsStream() {
         return getRealmRoleMappingsStream();
     }
 }
-

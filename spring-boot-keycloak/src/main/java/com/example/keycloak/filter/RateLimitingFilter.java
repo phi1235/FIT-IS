@@ -39,6 +39,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     private static final int IP_RATE_LIMIT = 100; // requests per minute
     private static final int LOGIN_RATE_LIMIT = 10; // requests per minute
     private static final int USER_RATE_LIMIT = 20; // requests per minute
+    private static final int REPORT_STATUS_RATE_LIMIT = 60; // requests per minute (cho polling status)
     
     @Override
     protected void doFilterInternal(HttpServletRequest request, 
@@ -49,6 +50,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         String clientIp = getClientIpAddress(request);
         String path = request.getRequestURI();
         boolean isLoginEndpoint = path.contains("/api/auth/login");
+        boolean isReportStatusEndpoint = path.contains("/api/reports/status/");
         
         // Kiểm tra rate limit cho IP
         Bucket ipBucket = getIpBucket(clientIp, isLoginEndpoint);
@@ -68,9 +70,10 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         }
         
         // Kiểm tra rate limit cho user (nếu đã authenticated)
+        // Reports status endpoint có rate limit riêng cao hơn
         String username = (String) request.getAttribute("username");
         if (username != null) {
-            Bucket userBucket = getUserBucket(username);
+            Bucket userBucket = getUserBucket(username, isReportStatusEndpoint);
             if (!userBucket.tryConsume(1)) {
                 log.warn("USER_RATE_LIMIT_EXCEEDED | user={} | ip={} | path={}", 
                         username, clientIp, path);
@@ -95,9 +98,11 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         });
     }
     
-    private Bucket getUserBucket(String username) {
-        return userBuckets.computeIfAbsent(username, k -> {
-            Bandwidth limitBandwidth = Bandwidth.simple(USER_RATE_LIMIT, Duration.ofMinutes(1));
+    private Bucket getUserBucket(String username, boolean isReportStatus) {
+        String bucketKey = isReportStatus ? username + ":reports" : username;
+        return userBuckets.computeIfAbsent(bucketKey, k -> {
+            int limit = isReportStatus ? REPORT_STATUS_RATE_LIMIT : USER_RATE_LIMIT;
+            Bandwidth limitBandwidth = Bandwidth.simple(limit, Duration.ofMinutes(1));
             return Bucket.builder().addLimit(limitBandwidth).build();
         });
     }

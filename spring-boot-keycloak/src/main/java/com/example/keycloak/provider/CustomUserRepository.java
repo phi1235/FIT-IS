@@ -84,19 +84,41 @@ public class CustomUserRepository {
 
     /**
      * Search users with pagination (LIMIT/OFFSET)
+     * Tối ưu: Nếu search rỗng, dùng query đơn giản không có WHERE clause (nhanh hơn
+     * nhiều)
      * 
      * @param search search query (can be null or empty)
      * @param page   page number (0-based)
      * @param size   page size
      */
     public List<CustomUser> searchUsersPaginated(String search, int page, int size) {
+        List<CustomUser> result = new ArrayList<>();
+
+        if (search == null || search.trim().isEmpty()) {
+            String sql = "SELECT id, username, email, password, first_name, last_name, enabled, role FROM users " +
+                    "ORDER BY username LIMIT ? OFFSET ?";
+            try (java.sql.PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                pstmt.setInt(1, size);
+                pstmt.setInt(2, page * size);
+
+                try (java.sql.ResultSet rs = pstmt.executeQuery()) {
+                    while (rs.next()) {
+                        result.add(mapUser(rs));
+                    }
+                }
+            } catch (java.sql.SQLException e) {
+                throw new RuntimeException("Error searching users with pagination", e);
+            }
+            return result;
+        }
+
+        // Có search query - dùng LIKE
         String sql = "SELECT id, username, email, password, first_name, last_name, enabled, role FROM users WHERE " +
                 "LOWER(username) LIKE ? OR LOWER(email) LIKE ? OR LOWER(first_name) LIKE ? OR LOWER(last_name) LIKE ? "
                 +
                 "ORDER BY username LIMIT ? OFFSET ?";
-        List<CustomUser> result = new ArrayList<>();
         try (java.sql.PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            String query = "%" + (search == null ? "" : search.toLowerCase()) + "%";
+            String query = "%" + search.toLowerCase() + "%";
             pstmt.setString(1, query);
             pstmt.setString(2, query);
             pstmt.setString(3, query);
@@ -115,14 +137,15 @@ public class CustomUserRepository {
         return result;
     }
 
-    /**
-     * Count total users matching search query
-     */
     public int countBySearch(String search) {
+        if (search == null || search.trim().isEmpty()) {
+            return count();
+        }
+
         String sql = "SELECT COUNT(*) FROM users WHERE " +
                 "LOWER(username) LIKE ? OR LOWER(email) LIKE ? OR LOWER(first_name) LIKE ? OR LOWER(last_name) LIKE ?";
         try (java.sql.PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            String query = "%" + (search == null ? "" : search.toLowerCase()) + "%";
+            String query = "%" + search.toLowerCase() + "%";
             pstmt.setString(1, query);
             pstmt.setString(2, query);
             pstmt.setString(3, query);

@@ -3,6 +3,7 @@ package com.example.keycloak.controller;
 import com.example.keycloak.dto.*;
 import com.example.keycloak.service.TicketService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -27,6 +28,21 @@ public class TicketController {
             return ResponseEntity.ok(ticketService.getAllTickets());
         }
         return ResponseEntity.ok(ticketService.getTicketsByMaker(authentication.getName()));
+    }
+
+    @GetMapping("/paginated")
+    public ResponseEntity<Page<TicketDTO>> getAllTicketsPaginated(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "") String search,
+            Authentication authentication) {
+
+        if (authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_admin") || a.getAuthority().equals("ROLE_checker"))) {
+            return ResponseEntity.ok(ticketService.getAllTicketsPaginated(page, size, search));
+        }
+        return ResponseEntity
+                .ok(ticketService.getTicketsByMakerPaginated(authentication.getName(), page, size, search));
     }
 
     @GetMapping("/{id}")

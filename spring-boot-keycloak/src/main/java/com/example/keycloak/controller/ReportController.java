@@ -99,14 +99,10 @@ public class ReportController {
      * GET /api/reports/status/{jobId}
      */
     @GetMapping("/status/{jobId}")
-    public ResponseEntity<Map<String, Object>> getJobStatus(@PathVariable String jobId) {
-        ReportJob job = jobService.getJob(jobId);
+    public ResponseEntity<Map<String, Object>> getJobStatus(@PathVariable String jobId) {        ReportJob job = jobService.getJob(jobId);
 
-        if (job == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        Map<String, Object> response = new HashMap<>();
+        if (job == null) {            return ResponseEntity.notFound().build();
+        }        Map<String, Object> response = new HashMap<>();
         response.put("jobId", job.getJobId());
         response.put("status", job.getStatus().name());
         response.put("progress", job.getProgress());

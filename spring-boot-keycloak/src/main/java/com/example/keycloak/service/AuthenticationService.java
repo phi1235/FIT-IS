@@ -13,8 +13,6 @@ import java.util.List;
 /**
  * Service quản lý authentication sử dụng Strategy Pattern
  * Context class trong Strategy Pattern
- * 
- * - Tích hợp MFA verification sau khi authenticate thành công
  */
 @Slf4j
 @Service
@@ -22,7 +20,6 @@ import java.util.List;
 public class AuthenticationService {
 
     private final List<AuthenticationStrategy> authenticationStrategies;
-    private final MfaService mfaService;
 
     public LoginResponse authenticate(LoginRequest request, String authType) throws AuthenticationException {
         AuthenticationStrategy strategy = findStrategy(authType);
@@ -34,26 +31,7 @@ public class AuthenticationService {
         }
 
         log.info("Using {} strategy for user {}", authType, request.getUsername());
-        LoginResponse response = strategy.authenticate(request);
-
-        // Verify MFA nếu user đã enable MFA
-        if (mfaService.isMfaEnabled(request.getUsername())) {
-            if (request.getMfaCode() == null || request.getMfaCode().isEmpty()) {
-                throw new AuthenticationException(
-                        "MFA code is required for this user",
-                        "MFA_REQUIRED");
-            }
-
-            if (!mfaService.verifyCode(request.getUsername(), request.getMfaCode())) {
-                throw new AuthenticationException(
-                        "Invalid MFA code",
-                        "INVALID_MFA_CODE");
-            }
-
-            log.info("MFA verified successfully for user {}", request.getUsername());
-        }
-
-        return response;
+        return strategy.authenticate(request);
     }
 
     /**

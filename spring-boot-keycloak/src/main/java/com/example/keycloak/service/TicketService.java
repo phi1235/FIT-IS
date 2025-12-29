@@ -8,6 +8,10 @@ import com.example.keycloak.entity.Ticket;
 import com.example.keycloak.repository.AuditLogRepository;
 import com.example.keycloak.repository.TicketRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +29,34 @@ public class TicketService {
         return ticketRepository.findAll().stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+    }
+
+    // Paginated method for admin
+    public Page<TicketDTO> getAllTicketsPaginated(int page, int size, String search) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Ticket> ticketPage;
+
+        if (search == null || search.trim().isEmpty()) {
+            ticketPage = ticketRepository.findAll(pageable);
+        } else {
+            ticketPage = ticketRepository.searchTickets(search.trim(), pageable);
+        }
+
+        return ticketPage.map(this::convertToDTO);
+    }
+
+    // Paginated method for maker (user sees only their own tickets)
+    public Page<TicketDTO> getTicketsByMakerPaginated(String username, int page, int size, String search) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Ticket> ticketPage;
+
+        if (search == null || search.trim().isEmpty()) {
+            ticketPage = ticketRepository.findByMaker(username, pageable);
+        } else {
+            ticketPage = ticketRepository.searchTicketsByMaker(username, search.trim(), pageable);
+        }
+
+        return ticketPage.map(this::convertToDTO);
     }
 
     public List<TicketDTO> getTicketsByMaker(String username) {

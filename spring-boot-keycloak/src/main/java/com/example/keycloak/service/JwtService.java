@@ -149,10 +149,12 @@ public class JwtService {
 
     /**
      * Extract all claims từ token
+     * Clock skew tolerance: 30 seconds để handle timing differences
      */
     private Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(signingKey)
+                .setAllowedClockSkewSeconds(30) // Cho phép sai lệch 30 giây
                 .build()
                 .parseClaimsJws(token)
                 .getBody();

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
+import { timeout, catchError } from 'rxjs/operators';
 import { KeycloakService } from './keycloak.service';
 import { AuthService } from './auth.service';
 
@@ -58,6 +59,13 @@ export class AdminService {
     return this.http.get<PagedResponse<User>>(
       `${this.apiUrl}/admin/list?page=${page}&size=${size}&search=${encodeURIComponent(search)}`,
       { headers }
+    ).pipe(
+      // Thêm timeout 30 giây để tránh hang vô hạn
+      timeout(30000),
+      catchError(err => {
+        console.error('getUsersPaginated error:', err);
+        return throwError(() => err);
+      })
     );
   }
 

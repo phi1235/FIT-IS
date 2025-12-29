@@ -90,7 +90,8 @@ export class AdminComponent implements OnInit {
 
   downloadReport(type: string, format: string) {
     if (type === 'tickets') {
-      this.ticketService.downloadReport(format);
+      // Redirect to ticket list for async export
+      window.location.href = '/admin/tickets';
     } else {
       const url = `/api/reports/users?format=${format}`;
       window.open(url, '_blank');

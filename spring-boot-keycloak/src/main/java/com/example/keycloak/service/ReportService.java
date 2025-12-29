@@ -177,21 +177,7 @@ public class ReportService {
      * Note: Connection, PreparedStatement và ResultSet sẽ được quản lý bởi caller
      * (trong try-with-resources block) để đảm bảo chúng không bị đóng sớm
      */
-    private JRDataSource createUsersDataSource(Connection connection) throws Exception {
-        // #region agent log
-        try {
-            java.io.FileWriter fw = new java.io.FileWriter(
-                    "/home/nguyen-phi/Downloads/angular project/.cursor/debug.log", true);
-            fw.write(
-                    "{\"location\":\"ReportService.java:101\",\"message\":\"createUsersDataSource started - using streaming\",\"data\":{},\"timestamp\":"
-                            + System.currentTimeMillis()
-                            + ",\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"B\"}\n");
-            fw.close();
-        } catch (Exception e) {
-        }
-        // #endregion
-
-        // Dùng SQL query trực tiếp với ResultSet streaming
+    private JRDataSource createUsersDataSource(Connection connection) throws Exception {        // Dùng SQL query trực tiếp với ResultSet streaming
         // JasperReports sẽ đọc từng row khi cần, không load tất cả vào memory
         String sql = "SELECT id, username, email, first_name, last_name, enabled, role FROM users ORDER BY username";
         java.sql.PreparedStatement pstmt = connection.prepareStatement(sql,
@@ -202,22 +188,7 @@ public class ReportService {
         // TỐI ƯU: Tăng fetch size lên 2000 để giảm số lần round-trip đến database
         pstmt.setFetchSize(2000); // Load 2000 rows mỗi lần từ database
 
-        java.sql.ResultSet rs = pstmt.executeQuery();
-
-        // #region agent log
-        try {
-            java.io.FileWriter fw = new java.io.FileWriter(
-                    "/home/nguyen-phi/Downloads/angular project/.cursor/debug.log", true);
-            fw.write(
-                    "{\"location\":\"ReportService.java:115\",\"message\":\"ResultSet created for streaming\",\"data\":{},\"timestamp\":"
-                            + System.currentTimeMillis()
-                            + ",\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"B\"}\n");
-            fw.close();
-        } catch (Exception e) {
-        }
-        // #endregion
-
-        // Custom StreamingResultSetDataSource sẽ stream data từ ResultSet, không load
+        java.sql.ResultSet rs = pstmt.executeQuery();        // Custom StreamingResultSetDataSource sẽ stream data từ ResultSet, không load
         // tất cả vào memory
         // Connection và PreparedStatement sẽ được giữ mở cho đến khi fillReport() hoàn
         // thành
@@ -236,7 +207,21 @@ public class ReportService {
         JRDataSource jrDataSource;
         if (reportType.equals("tickets")) {
             // Tickets thường ít hơn, có thể load vào memory
-            jrDataSource = new JRBeanCollectionDataSource(ticketRepository.findAll());
+            // Convert Ticket to TicketReportDTO để status là String (tránh
+            // ClassCastException)
+            java.time.format.DateTimeFormatter dateFormatter = java.time.format.DateTimeFormatter.ofPattern("d-M-yyyy");
+            java.util.List<com.example.keycloak.dto.TicketReportDTO> ticketDTOs = ticketRepository.findAll().stream()
+                    .map(t -> com.example.keycloak.dto.TicketReportDTO.builder()
+                            .id(t.getId())
+                            .title(t.getTitle())
+                            .status(t.getStatus() != null ? t.getStatus().name() : null)
+                            .amount(t.getAmount())
+                            .maker(t.getMaker())
+                            .checker(t.getChecker())
+                            .createdAt(t.getCreatedAt() != null ? t.getCreatedAt().format(dateFormatter) : null)
+                            .build())
+                    .collect(java.util.stream.Collectors.toList());
+            jrDataSource = new JRBeanCollectionDataSource(ticketDTOs);
         } else {
             // Users: dùng JDBC streaming để tối ưu memory
             try (Connection connection = this.dataSource.getConnection()) {
@@ -272,22 +257,7 @@ public class ReportService {
     }
 
     @Async
-    public void exportReportAsync(String jobId, String format, String reportType) {
-        // #region agent log
-        try {
-            java.io.FileWriter fw = new java.io.FileWriter(
-                    "/home/nguyen-phi/Downloads/angular project/.cursor/debug.log", true);
-            fw.write(
-                    "{\"location\":\"ReportService.java:155\",\"message\":\"exportReportAsync started\",\"data\":{\"jobId\":\""
-                            + jobId + "\",\"format\":\"" + format + "\",\"reportType\":\"" + reportType
-                            + "\"},\"timestamp\":" + System.currentTimeMillis()
-                            + ",\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"D\"}\n");
-            fw.close();
-        } catch (Exception e) {
-        }
-        // #endregion
-
-        String templateFileName = reportType.equals("users") ? usersTemplate : ticketsTemplate;
+    public void exportReportAsync(String jobId, String format, String reportType) {        String templateFileName = reportType.equals("users") ? usersTemplate : ticketsTemplate;
         String createdBy = reportType.equals("users") ? "Admin" : "Ticket System";
 
         try {
@@ -319,21 +289,7 @@ public class ReportService {
                     System.out.println("Filling report with virtualizer enabled...");
                     JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, jrDataSource);
                     jobService.updateProgress(jobId, 60);
-                    System.out.println("Report filled, exporting to file...");
-                    // #region agent log
-                    try {
-                        java.io.FileWriter fw = new java.io.FileWriter(
-                                "/home/nguyen-phi/Downloads/angular project/.cursor/debug.log", true);
-                        fw.write(
-                                "{\"location\":\"ReportService.java:181\",\"message\":\"report filled, exporting to file\",\"data\":{\"jobId\":\""
-                                        + jobId + "\",\"progress\":60},\"timestamp\":" + System.currentTimeMillis()
-                                        + ",\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"B\"}\n");
-                        fw.close();
-                    } catch (Exception e) {
-                    }
-                    // #endregion
-
-                    // 5. Export to file
+                    System.out.println("Report filled, exporting to file...");                    // 5. Export to file
                     String filePath = jobService.getFilePath(jobId, format);
                     String fileName = reportType + "_report." + format;
 
@@ -350,25 +306,26 @@ public class ReportService {
 
                     jobService.updateProgress(jobId, 90);
                     jobService.markCompleted(jobId, filePath, fileName);
-                    System.out.println("Report generated successfully: " + filePath);
-                    // #region agent log
-                    try {
-                        java.io.FileWriter fw = new java.io.FileWriter(
-                                "/home/nguyen-phi/Downloads/angular project/.cursor/debug.log", true);
-                        fw.write(
-                                "{\"location\":\"ReportService.java:200\",\"message\":\"report completed\",\"data\":{\"jobId\":\""
-                                        + jobId + "\",\"filePath\":\"" + filePath + "\"},\"timestamp\":"
-                                        + System.currentTimeMillis()
-                                        + ",\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"D\"}\n");
-                        fw.close();
-                    } catch (Exception e) {
-                    }
-                    // #endregion
-                    return; // Exit early for users
+                    System.out.println("Report generated successfully: " + filePath);                    return; // Exit early for users
                 }
             } else {
                 // Tickets: load vào memory (thường ít hơn)
-                jrDataSource = new JRBeanCollectionDataSource(ticketRepository.findAll());
+                // Convert to DTO to avoid ClassCastException with enum status
+                java.time.format.DateTimeFormatter dateFormatter = java.time.format.DateTimeFormatter
+                        .ofPattern("d-M-yyyy");
+                java.util.List<com.example.keycloak.dto.TicketReportDTO> ticketDTOs = ticketRepository.findAll()
+                        .stream()
+                        .map(t -> com.example.keycloak.dto.TicketReportDTO.builder()
+                                .id(t.getId())
+                                .title(t.getTitle())
+                                .status(t.getStatus() != null ? t.getStatus().name() : null)
+                                .amount(t.getAmount())
+                                .maker(t.getMaker())
+                                .checker(t.getChecker())
+                                .createdAt(t.getCreatedAt() != null ? t.getCreatedAt().format(dateFormatter) : null)
+                                .build())
+                        .collect(java.util.stream.Collectors.toList());
+                jrDataSource = new JRBeanCollectionDataSource(ticketDTOs);
             }
 
             // 4. Fill report with data (for tickets)
@@ -398,22 +355,7 @@ public class ReportService {
             System.out.println("Report generated successfully: " + filePath);
 
         } catch (Exception e) {
-            e.printStackTrace();
-            // #region agent log
-            try {
-                java.io.FileWriter fw = new java.io.FileWriter(
-                        "/home/nguyen-phi/Downloads/angular project/.cursor/debug.log", true);
-                fw.write(
-                        "{\"location\":\"ReportService.java:234\",\"message\":\"report generation failed\",\"data\":{\"jobId\":\""
-                                + jobId + "\",\"error\":\"" + e.getMessage().replace("\"", "\\\"")
-                                + "\",\"errorClass\":\"" + e.getClass().getName() + "\"},\"timestamp\":"
-                                + System.currentTimeMillis()
-                                + ",\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"D\"}\n");
-                fw.close();
-            } catch (Exception logEx) {
-            }
-            // #endregion
-            jobService.markFailed(jobId, e.getMessage());
+            e.printStackTrace();            jobService.markFailed(jobId, e.getMessage());
         }
     }
 }

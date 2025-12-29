@@ -62,6 +62,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/auth/login/**").permitAll()
                 .antMatchers("/api/auth/register").permitAll()
                 .antMatchers("/api/auth/mfa/setup").permitAll()
+                .antMatchers("/api/auth/password/migrate").permitAll() // Allow password migration without auth
                 // Remote User Federation API endpoints (internal use only)
                 .antMatchers(HttpMethod.GET, "/api").permitAll()
                 .antMatchers(HttpMethod.POST, "/api/login").permitAll()

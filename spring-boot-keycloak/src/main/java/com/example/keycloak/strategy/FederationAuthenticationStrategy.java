@@ -52,7 +52,7 @@ public class FederationAuthenticationStrategy implements AuthenticationStrategy 
         try {
             log.info("Authenticating user {} with Federation Provider", request.getUsername());
 
-            // Step 1: Validate với Remote User Federation Provider
+            // Validate với Remote User Federation Provider
             boolean isValid = remoteFederationService.validateCredentials(
                     request.getUsername(),
                     request.getPassword());
@@ -63,7 +63,7 @@ public class FederationAuthenticationStrategy implements AuthenticationStrategy 
                         "FEDERATION_AUTH_FAILED");
             }
 
-            // Step 2: Validate với Keycloak (optional - có thể bỏ nếu không cần)
+            // Validate với Keycloak
             try {
                 validateWithKeycloak(request.getUsername(), request.getPassword());
                 log.info("Keycloak validated credentials for user: {}", request.getUsername());
@@ -72,16 +72,15 @@ public class FederationAuthenticationStrategy implements AuthenticationStrategy 
                 // Continue - federation validation đã pass
             }
 
-            // Step 3: Lấy user info từ database
+            // Lấy user info từ database
             LoginResponse.UserInfo userInfo = getUserInfoFromDatabase(request.getUsername());
 
-            // Step 4: Sinh JWT token locally
+            // Sinh JWT token locally
             String accessToken = jwtService.generateToken(
-                userInfo.getUsername(),
-                userInfo.getRole(),
-                userInfo.getId(),
-                userInfo.getEmail()
-            );
+                    userInfo.getUsername(),
+                    userInfo.getRole(),
+                    userInfo.getId(),
+                    userInfo.getEmail());
             String refreshToken = jwtService.generateRefreshToken(userInfo.getUsername());
 
             LocalDateTime now = LocalDateTime.now();

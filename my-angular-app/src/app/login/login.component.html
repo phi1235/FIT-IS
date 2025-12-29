@@ -50,4 +50,45 @@
             <a routerLink="/home" class="back-link">Quay về trang chủ</a>
         </div>
     </div>
+
+    <!-- Password Migration Dialog -->
+    <div class="modal-overlay" *ngIf="showMigrationDialog" (click)="closeMigrationDialog()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+            <h2>Cập nhật mật khẩu</h2>
+            <p>Bạn cần cập nhật mật khẩu để sử dụng định dạng bảo mật mới.</p>
+            <p class="migration-info">Vui lòng nhập mật khẩu mới (tối thiểu 8 ký tự):</p>
+            
+            <div class="form-group">
+                <label for="newPassword">Mật khẩu mới</label>
+                <input 
+                    type="password" 
+                    id="newPassword" 
+                    #newPasswordInput
+                    placeholder="Nhập mật khẩu mới"
+                    minlength="8"
+                    class="form-control" />
+                <div class="error-message" *ngIf="errorMessage && showMigrationDialog">
+                    {{ errorMessage }}
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button 
+                    type="button" 
+                    class="btn-primary" 
+                    (click)="migratePassword(newPasswordInput.value)"
+                    [disabled]="isLoading || !newPasswordInput.value || newPasswordInput.value.length < 8">
+                    <span *ngIf="!isLoading">Cập nhật</span>
+                    <span *ngIf="isLoading">Đang xử lý...</span>
+                </button>
+                <button 
+                    type="button" 
+                    class="btn-secondary" 
+                    (click)="closeMigrationDialog()"
+                    [disabled]="isLoading">
+                    Hủy
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
