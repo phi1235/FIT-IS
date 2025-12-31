@@ -3,11 +3,12 @@ package com.example.keycloak.service;
 import com.example.keycloak.dto.TicketDTO;
 import com.example.keycloak.dto.TicketRequest;
 import com.example.keycloak.dto.TicketStatus;
-import com.example.keycloak.entity.AuditLog;
 import com.example.keycloak.entity.Ticket;
-import com.example.keycloak.repository.AuditLogRepository;
+import com.example.keycloak.event.TicketCreatedEvent;
+import com.example.keycloak.event.TicketStatusChangedEvent;
 import com.example.keycloak.repository.TicketRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,12 +19,17 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Service quản lý Ticket với Event-Driven Audit Logging
+ * Sử dụng ApplicationEventPublisher để publish events
+ * AuditEventListener sẽ handle audit logging async
+ */
 @Service
 @RequiredArgsConstructor
 public class TicketService {
 
     private final TicketRepository ticketRepository;
-    private final AuditLogRepository auditLogRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public List<TicketDTO> getAllTickets() {
         return ticketRepository.findAll().stream()
@@ -88,7 +94,12 @@ public class TicketService {
                 .build();
 
         Ticket savedTicket = ticketRepository.save(ticket);
-        logAudit("CREATE", savedTicket.getId().toString(), username, "Created ticket in DRAFT status");
+        
+        // Publish event instead of direct audit call
+        eventPublisher.publishEvent(new TicketCreatedEvent(
+            this, savedTicket.getId(), savedTicket.getTitle(), 
+            savedTicket.getAmount(), username));
+        
         return convertToDTO(savedTicket);
     }
 
@@ -105,9 +116,14 @@ public class TicketService {
             throw new RuntimeException("Only DRAFT or REJECTED tickets can be submitted");
         }
 
+        TicketStatus previousStatus = ticket.getStatus();
         ticket.setStatus(TicketStatus.SUBMITTED);
         Ticket savedTicket = ticketRepository.save(ticket);
-        logAudit("SUBMIT", savedTicket.getId().toString(), username, "Submitted ticket for approval");
+        
+        // Publish event
+        eventPublisher.publishEvent(new TicketStatusChangedEvent(
+            this, savedTicket.getId(), previousStatus, TicketStatus.SUBMITTED, username));
+        
         return convertToDTO(savedTicket);
     }
 
@@ -124,10 +140,15 @@ public class TicketService {
             throw new RuntimeException("Only SUBMITTED tickets can be approved");
         }
 
+        TicketStatus previousStatus = ticket.getStatus();
         ticket.setStatus(TicketStatus.APPROVED);
         ticket.setChecker(checkerUsername);
         Ticket savedTicket = ticketRepository.save(ticket);
-        logAudit("APPROVE", savedTicket.getId().toString(), checkerUsername, "Approved ticket");
+        
+        // Publish event
+        eventPublisher.publishEvent(new TicketStatusChangedEvent(
+            this, savedTicket.getId(), previousStatus, TicketStatus.APPROVED, checkerUsername));
+        
         return convertToDTO(savedTicket);
     }
 
@@ -144,23 +165,17 @@ public class TicketService {
             throw new RuntimeException("Only SUBMITTED tickets can be rejected");
         }
 
+        TicketStatus previousStatus = ticket.getStatus();
         ticket.setStatus(TicketStatus.REJECTED);
         ticket.setChecker(checkerUsername);
         ticket.setRejectionReason(reason);
         Ticket savedTicket = ticketRepository.save(ticket);
-        logAudit("REJECT", savedTicket.getId().toString(), checkerUsername, "Rejected ticket with reason: " + reason);
+        
+        // Publish event with reason
+        eventPublisher.publishEvent(new TicketStatusChangedEvent(
+            this, savedTicket.getId(), previousStatus, TicketStatus.REJECTED, checkerUsername, reason));
+        
         return convertToDTO(savedTicket);
-    }
-
-    private void logAudit(String action, String entityId, String userId, String details) {
-        AuditLog auditLog = AuditLog.builder()
-                .action(action)
-                .entityType("TICKET")
-                .entityId(entityId)
-                .userId(userId)
-                .details(details)
-                .build();
-        auditLogRepository.save(auditLog);
     }
 
     private TicketDTO convertToDTO(Ticket ticket) {

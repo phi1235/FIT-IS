@@ -2,6 +2,8 @@ package com.example.keycloak.strategy;
 
 import com.example.keycloak.dto.LoginRequest;
 import com.example.keycloak.dto.LoginResponse;
+import com.example.keycloak.event.AuthenticationFailedEvent;
+import com.example.keycloak.event.AuthenticationSuccessEvent;
 import com.example.keycloak.provider.CustomUser;
 import com.example.keycloak.provider.CustomUserRepository;
 import com.example.keycloak.service.JwtService;
@@ -10,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
@@ -20,7 +23,6 @@ import java.time.format.DateTimeFormatter;
 /**
  * Strategy cho Database Authentication với RSA password encryption
  * 
- * Flow:
  * 1. Frontend encrypts password with RSA public key
  * 2. Backend decrypts to get plain password
  * 3. Verify against stored BCrypt hash
@@ -40,6 +42,9 @@ public class DatabaseAuthenticationStrategy implements AuthenticationStrategy {
 
     @Autowired
     private RsaService rsaService;
+
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
 
     @Value("${keycloak.auth-server-url}")
     private String keycloakServerUrl;
@@ -94,6 +99,10 @@ public class DatabaseAuthenticationStrategy implements AuthenticationStrategy {
 
             log.info("Generated local JWT token for user: {}", plainUsername);
 
+            // Publish success event
+            eventPublisher.publishEvent(new AuthenticationSuccessEvent(
+                this, plainUsername, "database", userInfo.getRole(), null));
+
             return LoginResponse.builder()
                     .success(true)
                     .message("Login successful")
@@ -113,9 +122,14 @@ public class DatabaseAuthenticationStrategy implements AuthenticationStrategy {
                     .build();
 
         } catch (AuthenticationException e) {
+            // Publish failed event
+            eventPublisher.publishEvent(new AuthenticationFailedEvent(
+                this, request.getUsername(), "database", e.getErrorCode(), null));
             throw e;
         } catch (Exception e) {
             log.error("Database authentication failed: {}", e.getMessage());
+            eventPublisher.publishEvent(new AuthenticationFailedEvent(
+                this, request.getUsername(), "database", "UNKNOWN_ERROR", null));
             throw new AuthenticationException(
                     "Invalid credentials",
                     "INVALID_CREDENTIALS",
