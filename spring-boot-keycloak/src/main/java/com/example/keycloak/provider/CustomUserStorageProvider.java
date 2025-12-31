@@ -123,19 +123,18 @@ public class CustomUserStorageProvider implements
 
             String inputPassword = credentialInput.getChallengeResponse();
             String storedHash = customUser.getPassword();
-            int passwordVersion = customUser.getPasswordVersion();
 
-            log.info("Password validation for user: {}, version: {}, hash length: {}",
-                    username, passwordVersion, storedHash != null ? storedHash.length() : 0);
+            log.info("Password validation for user: {}, hash length: {}",
+                    username, storedHash != null ? storedHash.length() : 0);
 
-            boolean isValid = verifyPasswordWithVersion(inputPassword, storedHash, passwordVersion);
+            boolean isValid = verifyPassword(inputPassword, storedHash);
 
             if (isValid) {
-                auditLog.info("AUTH_SUCCESS | user={} | version={} | ip={}", username, passwordVersion, clientIp);
+                auditLog.info("AUTH_SUCCESS | user={} | ip={}", username, clientIp);
                 return true;
             } else {
-                auditLog.warn("AUTH_FAILED | user={} | reason=INVALID_PASSWORD | version={} | ip={}",
-                        username, passwordVersion, clientIp);
+                auditLog.warn("AUTH_FAILED | user={} | reason=INVALID_PASSWORD | ip={}",
+                        username, clientIp);
                 return false;
             }
 
@@ -148,34 +147,20 @@ public class CustomUserStorageProvider implements
     }
 
     /**
-     * Verify password based on version
-     * Version 1: BCrypt(plain_password) - OLD format
-     * Version 2: BCrypt(SHA256(password)) - NEW format (client sends SHA256)
+     * Verify password using BCrypt
      */
-    private boolean verifyPasswordWithVersion(String inputPassword, String storedHash, int version) {
+    private boolean verifyPassword(String inputPassword, String storedHash) {
         if (inputPassword == null || storedHash == null) {
             log.warn("Password verification failed: null password or hash");
             return false;
         }
 
         String trimmedHash = storedHash.trim();
-        log.info("verifyPasswordWithVersion - version: {}, input length: {}, hash length: {}",
-                version, inputPassword.length(), trimmedHash.length());
+        log.info("verifyPassword - input length: {}, hash length: {}",
+                inputPassword.length(), trimmedHash.length());
 
         try {
-            if (version == 2) {
-                // New format: input is already SHA256 hashed from client
-                // Verify: BCrypt.check(SHA256_input, stored_BCrypt_hash)
-                if (inputPassword.length() != 64) {
-                    log.warn("Version 2 expects SHA256 input (64 chars), got: {}", inputPassword.length());
-                    return false;
-                }
-                return BCrypt.checkpw(inputPassword, trimmedHash);
-            } else {
-                // Old format (version 1): input is plain password
-                // Verify: BCrypt.check(plain_input, stored_BCrypt_hash)
-                return BCrypt.checkpw(inputPassword, trimmedHash);
-            }
+            return BCrypt.checkpw(inputPassword, trimmedHash);
         } catch (IllegalArgumentException e) {
             log.error("Invalid password hash format. Error: {}", e.getMessage());
             return false;
@@ -183,24 +168,10 @@ public class CustomUserStorageProvider implements
     }
 
     /**
-     * Legacy verifyPassword for backward compatibility
+     * Hash password with BCrypt
      */
-    private boolean verifyPassword(String plainPassword, String hashedPassword) {
-        return verifyPasswordWithVersion(plainPassword, hashedPassword, 1);
-    }
-
-    /**
-     * Hash password for new format (expects SHA256 input from client)
-     */
-    public static String hashPassword(String sha256Password) {
-        return BCrypt.hashpw(sha256Password, BCrypt.gensalt(BCRYPT_WORK_FACTOR));
-    }
-
-    /**
-     * Hash plain password (for migration or direct use)
-     */
-    public static String hashPlainPassword(String plainPassword) {
-        return BCrypt.hashpw(plainPassword, BCrypt.gensalt(BCRYPT_WORK_FACTOR));
+    public static String hashPassword(String password) {
+        return BCrypt.hashpw(password, BCrypt.gensalt(BCRYPT_WORK_FACTOR));
     }
 
     /**

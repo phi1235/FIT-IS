@@ -13,8 +13,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.sql.Connection;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -25,10 +23,8 @@ import java.time.format.DateTimeFormatter;
  * Flow:
  * 1. Frontend encrypts password with RSA public key
  * 2. Backend decrypts to get plain password
- * 3. Verify against stored BCrypt hash (with backward compatibility for v2
- * users)
- * 4. If v2 user verified, migrate to v1 format (simple BCrypt)
- * 5. Generate local JWT token
+ * 3. Verify against stored BCrypt hash
+ * 4. Generate local JWT token
  */
 @Slf4j
 @Component
@@ -44,9 +40,6 @@ public class DatabaseAuthenticationStrategy implements AuthenticationStrategy {
 
     @Autowired
     private RsaService rsaService;
-
-    @Autowired
-    private com.example.keycloak.service.UserService userService;
 
     @Value("${keycloak.auth-server-url}")
     private String keycloakServerUrl;
@@ -75,30 +68,14 @@ public class DatabaseAuthenticationStrategy implements AuthenticationStrategy {
             // Decrypt RSA password if encrypted, otherwise use plain
             String plainPassword = decryptFieldIfNeeded(request.getPassword(), "Password");
 
-            int passwordVersion = customUser.getPasswordVersion();
-            log.info("User {} has password version: {}", plainUsername, passwordVersion);
-
-            // Verify password with backward compatibility
-            boolean isValid = verifyPassword(plainPassword, customUser.getPassword(), passwordVersion);
+            // Verify password with BCrypt
+            boolean isValid = verifyPassword(plainPassword, customUser.getPassword());
 
             if (!isValid) {
                 throw new AuthenticationException("Invalid credentials", "INVALID_CREDENTIALS");
             }
 
             log.info("Password verified for user: {}", plainUsername);
-
-            // Migrate v2 users to v1 (simple BCrypt) on successful login
-            if (passwordVersion == 2) {
-                try {
-                    boolean migrated = migrateToSimpleBcrypt(plainUsername, plainPassword);
-                    if (migrated) {
-                        log.info("User {} migrated from v2 to v1 (simple BCrypt)", plainUsername);
-                        passwordVersion = 1;
-                    }
-                } catch (Exception e) {
-                    log.warn("Failed to migrate user {} to v1: {}", plainUsername, e.getMessage());
-                }
-            }
 
             // Generate JWT token
             LoginResponse.UserInfo userInfo = buildUserInfo(customUser);
@@ -120,7 +97,6 @@ public class DatabaseAuthenticationStrategy implements AuthenticationStrategy {
             return LoginResponse.builder()
                     .success(true)
                     .message("Login successful")
-                    .requiresPasswordMigration(false)
                     .user(userInfo)
                     .token(LoginResponse.TokenInfo.builder()
                             .accessToken(accessToken)
@@ -133,7 +109,6 @@ public class DatabaseAuthenticationStrategy implements AuthenticationStrategy {
                             .authProvider("Database Provider (Local JWT + RSA)")
                             .issuedAt(now.format(FORMATTER))
                             .expiresAt(expiresAt.format(FORMATTER))
-                            .passwordVersion(passwordVersion)
                             .build())
                     .build();
 
@@ -161,62 +136,14 @@ public class DatabaseAuthenticationStrategy implements AuthenticationStrategy {
     }
 
     /**
-     * Verify password with backward compatibility for v2 users
-     * v1: BCrypt(plain_password)
-     * v2: BCrypt(SHA256(plain_password))
+     * Verify password using BCrypt
      */
-    private boolean verifyPassword(String plainPassword, String storedHash, int passwordVersion) {
+    private boolean verifyPassword(String plainPassword, String storedHash) {
         try {
-            if (passwordVersion == 2) {
-                // v2: SHA256 + BCrypt
-                String sha256Hash = hashSha256(plainPassword);
-                return BCrypt.checkpw(sha256Hash, storedHash);
-            } else {
-                // v1: Simple BCrypt
-                return BCrypt.checkpw(plainPassword, storedHash);
-            }
+            return BCrypt.checkpw(plainPassword, storedHash);
         } catch (Exception e) {
             log.error("Password verification failed: {}", e.getMessage());
             return false;
-        }
-    }
-
-    /**
-     * Migrate v2 user to v1 format (simple BCrypt)
-     */
-    private boolean migrateToSimpleBcrypt(String username, String plainPassword) {
-        try (Connection connection = dataSource.getConnection()) {
-            String newHash = BCrypt.hashpw(plainPassword, BCrypt.gensalt(12));
-            String sql = "UPDATE users SET password = ?, password_version = 1 WHERE username = ?";
-            try (var stmt = connection.prepareStatement(sql)) {
-                stmt.setString(1, newHash);
-                stmt.setString(2, username);
-                int updated = stmt.executeUpdate();
-                return updated > 0;
-            }
-        } catch (Exception e) {
-            log.error("Failed to migrate password for user {}: {}", username, e.getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * Hash string with SHA-256
-     */
-    private String hashSha256(String input) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
-            StringBuilder hexString = new StringBuilder();
-            for (byte b : hash) {
-                String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1)
-                    hexString.append('0');
-                hexString.append(hex);
-            }
-            return hexString.toString();
-        } catch (Exception e) {
-            throw new RuntimeException("SHA-256 not available", e);
         }
     }
 

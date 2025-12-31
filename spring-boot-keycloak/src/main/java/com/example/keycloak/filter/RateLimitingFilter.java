@@ -65,7 +65,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
 
         if (!ipBucket.tryConsume(1)) {
             log.warn("RATE_LIMIT_EXCEEDED | ip={} | path={} | limit={}/min",
-                    clientIp, path, isLoginEndpoint ? LOGIN_RATE_LIMIT : IP_RATE_LIMIT);
+                    clientIp, path, isLoginEndpoint ? loginRateLimit : ipRateLimit);
 
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setContentType("application/json");

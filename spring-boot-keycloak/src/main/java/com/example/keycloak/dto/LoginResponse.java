@@ -17,7 +17,6 @@ public class LoginResponse {
 
     private boolean success;
     private String message;
-    private boolean requiresPasswordMigration; // True if user needs to migrate password to new format
     private UserInfo user;
     private TokenInfo token;
     private Metadata metadata;
@@ -55,6 +54,5 @@ public class LoginResponse {
         private String authProvider;
         private String issuedAt;
         private String expiresAt;
-        private Integer passwordVersion; // 1 = old format, 2 = new SHA256 format
     }
 }

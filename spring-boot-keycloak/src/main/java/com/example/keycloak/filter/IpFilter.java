@@ -24,6 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * - Chặn các IP trong blacklist
  * - Chỉ cho phép IP trong whitelist (nếu whitelist được bật)
+ * - Chưa phát triển chức năng này
  * - Hỗ trợ CIDR notation cho IP ranges
  */
 @Slf4j

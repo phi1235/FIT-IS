@@ -16,7 +16,7 @@ public class CustomUserRepository {
     }
 
     public CustomUser findByUsername(String username) {
-        String sql = "SELECT id, username, email, password, first_name, last_name, enabled, role, COALESCE(password_version, 1) as password_version FROM users WHERE username = ?";
+        String sql = "SELECT id, username, email, password, first_name, last_name, enabled, role FROM users WHERE username = ?";
         try (java.sql.PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, username);
             try (java.sql.ResultSet rs = pstmt.executeQuery()) {
@@ -31,7 +31,7 @@ public class CustomUserRepository {
     }
 
     public CustomUser findByEmail(String email) {
-        String sql = "SELECT id, username, email, password, first_name, last_name, enabled, role, COALESCE(password_version, 1) as password_version FROM users WHERE email = ?";
+        String sql = "SELECT id, username, email, password, first_name, last_name, enabled, role FROM users WHERE email = ?";
         try (java.sql.PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, email);
             try (java.sql.ResultSet rs = pstmt.executeQuery()) {
@@ -46,7 +46,7 @@ public class CustomUserRepository {
     }
 
     public CustomUser findById(String id) {
-        String sql = "SELECT id, username, email, password, first_name, last_name, enabled, role, COALESCE(password_version, 1) as password_version FROM users WHERE id = ?";
+        String sql = "SELECT id, username, email, password, first_name, last_name, enabled, role FROM users WHERE id = ?";
         try (java.sql.PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, id);
             try (java.sql.ResultSet rs = pstmt.executeQuery()) {
@@ -84,8 +84,7 @@ public class CustomUserRepository {
 
     /**
      * Search users with pagination (LIMIT/OFFSET)
-     * Tối ưu: Nếu search rỗng, dùng query đơn giản không có WHERE clause (nhanh hơn
-     * nhiều)
+     * Nếu search rỗng, dùng query đơn giản không có WHERE clause
      * 
      * @param search search query (can be null or empty)
      * @param page   page number (0-based)
@@ -186,18 +185,7 @@ public class CustomUserRepository {
                     "WARNING: Password hash seems truncated! Length: " + password.length() + ", Hash: " + password);
         }
 
-        // Get password version, default to 1 (old format) if column doesn't exist
-        int passwordVersion = 1;
-        try {
-            passwordVersion = rs.getInt("password_version");
-            if (rs.wasNull()) {
-                passwordVersion = 1;
-            }
-        } catch (java.sql.SQLException e) {
-            // Column doesn't exist, use default
-        }
-
-        CustomUser user = new CustomUser(
+        return new CustomUser(
                 rs.getString("id"),
                 rs.getString("username"),
                 rs.getString("email"),
@@ -206,8 +194,6 @@ public class CustomUserRepository {
                 rs.getString("last_name"),
                 rs.getBoolean("enabled"),
                 role);
-        user.setPasswordVersion(passwordVersion);
-        return user;
     }
 
     /**
@@ -226,15 +212,13 @@ public class CustomUserRepository {
     }
 
     /**
-     * Update password with new hash and version
-     * Used during password migration from old to new format
+     * Update password with new hash
      */
-    public boolean updatePasswordWithVersion(String username, String hashedPassword, int version) {
-        String sql = "UPDATE users SET password = ?, password_version = ? WHERE username = ?";
+    public boolean updatePassword(String username, String hashedPassword) {
+        String sql = "UPDATE users SET password = ? WHERE username = ?";
         try (java.sql.PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, hashedPassword);
-            pstmt.setInt(2, version);
-            pstmt.setString(3, username);
+            pstmt.setString(2, username);
             int rowsAffected = pstmt.executeUpdate();
             return rowsAffected > 0;
         } catch (java.sql.SQLException e) {

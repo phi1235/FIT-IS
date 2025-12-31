@@ -34,9 +34,6 @@ public class AuthenticationService {
         return strategy.authenticate(request);
     }
 
-    /**
-     * Authenticate với database strategy (default)
-     */
     public LoginResponse authenticateWithDatabase(LoginRequest request) throws AuthenticationException {
         return authenticate(request, "database");
     }

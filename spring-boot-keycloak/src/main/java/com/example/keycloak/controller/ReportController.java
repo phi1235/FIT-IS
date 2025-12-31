@@ -25,8 +25,6 @@ public class ReportController {
     @Autowired
     private ReportJobService jobService;
 
-    // ========== SYNC ENDPOINTS (giữ lại cho backward compatibility) ==========
-
     @GetMapping("/users")
     public ResponseEntity<byte[]> downloadUserReport(@RequestParam String format) {
         return processReport(format, "users_report", () -> reportService.exportReport(format));

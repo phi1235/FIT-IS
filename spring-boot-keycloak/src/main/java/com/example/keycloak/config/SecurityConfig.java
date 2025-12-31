@@ -61,9 +61,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
                 // Authorization rules
                 .authorizeRequests()
-                // Cho phép preflight OPTIONS cho tất cả endpoint
                 .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                // Public endpoints - không cần authentication
                 .antMatchers("/api/auth/public/**").permitAll()
                 .antMatchers("/api/auth/public-key").permitAll()
                 .antMatchers("/api/auth/login/**").permitAll()
@@ -78,7 +76,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 // Report endpoints - cần authentication
                 .antMatchers("/api/reports/users/**").hasRole("admin")
                 .antMatchers("/api/reports/tickets/**").authenticated()
-                // Tất cả các request khác cần authentication
                 .anyRequest().authenticated()
                 .and()
 
@@ -88,7 +85,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 // Tắt CSRF cho REST API
                 .csrf().disable()
 
-                // STATELESS session - không dùng session, chỉ dùng JWT
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
