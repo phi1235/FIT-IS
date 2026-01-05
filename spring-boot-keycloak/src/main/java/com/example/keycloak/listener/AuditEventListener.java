@@ -86,19 +86,6 @@ public class AuditEventListener {
         );
     }
     
-    @Async
-    @EventListener
-    public void handlePasswordChanged(PasswordChangedEvent event) {
-        log.info("AUDIT: Password {} for user: {}", event.getChangeType(), event.getUsername());
-        saveAuditLog(
-            "PASSWORD_" + event.getChangeType(),
-            "USER",
-            event.getUsername(),
-            event.getUsername(),
-            String.format("Password %s successfully", event.getChangeType().toLowerCase())
-        );
-    }
-    
     private void saveAuditLog(String action, String entityType, String entityId, 
                               String userId, String details) {
         try {

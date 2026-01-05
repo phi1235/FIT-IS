@@ -46,12 +46,12 @@ export class TicketListComponent implements OnInit {
 
   loadTickets(): void {
     this.loading = true;
-    this.ticketService.getTicketsPaginated(this.currentPage, this.pageSize, this.searchQuery).subscribe({
+    this.ticketService.getTicketsPaginated(this.currentPage, this.pageSize, this.searchQuery, this.selectedStatus).subscribe({
       next: (response: PagedTicketResponse) => {
         this.tickets = response.content;
+        this.filteredTickets = response.content;
         this.totalElements = response.totalElements;
         this.totalPages = response.totalPages;
-        this.filterStatus(this.selectedStatus);
         this.loading = false;
       },
       error: (err) => {
@@ -116,11 +116,8 @@ export class TicketListComponent implements OnInit {
 
   filterStatus(status: string): void {
     this.selectedStatus = status;
-    if (status === 'ALL') {
-      this.filteredTickets = this.tickets;
-    } else {
-      this.filteredTickets = this.tickets.filter(t => t.status === status);
-    }
+    this.currentPage = 0; // Reset to first page when changing status
+    this.loadTickets();
   }
 
   isAdminView(): boolean {
@@ -138,8 +135,8 @@ export class TicketListComponent implements OnInit {
   getStatusLabel(status: TicketStatus): string {
     const labels: any = {
       'DRAFT': 'Bản nháp',
-      'PENDING': 'Đang chờ',
-      'SUBMITTED': 'Chờ duyệt',
+      'PENDING': 'Chờ duyệt',
+      'SUBMITTED': 'Đã gửi',
       'APPROVED': 'Đã duyệt',
       'REJECTED': 'Bị từ chối',
       'COMPLETED': 'Hoàn tất'

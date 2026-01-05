@@ -67,27 +67,15 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     }
 
     loadUsers() {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/279bac12-da11-4138-8ef4-bb71ff9814ec',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'user-management.component.ts:69',message:'loadUsers started',data:{currentPage:this.currentPage,pageSize:this.pageSize,searchQuery:this.searchQuery},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'F'})}).catch(()=>{});
-        // #endregion
-
         this.loading = true;
         this.adminService.getUsersPaginated(this.currentPage, this.pageSize, this.searchQuery).subscribe({
             next: (response: PagedResponse<User>) => {
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/279bac12-da11-4138-8ef4-bb71ff9814ec',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'user-management.component.ts:72',message:'loadUsers success',data:{totalElements:response.totalElements,totalPages:response.totalPages,usersCount:response.content.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'F'})}).catch(()=>{});
-                // #endregion
-
                 this.users = response.content;
                 this.totalElements = response.totalElements;
                 this.totalPages = response.totalPages;
                 this.loading = false;
             },
             error: (err) => {
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/279bac12-da11-4138-8ef4-bb71ff9814ec',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'user-management.component.ts:78',message:'loadUsers error',data:{errStatus:err.status,errStatusText:err.statusText,errMessage:err.message,errUrl:err.url,fullError:JSON.stringify(err)},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'F'})}).catch(()=>{});
-                // #endregion
-
                 console.error('Failed to load users:', err);
                 this.error = `Không thể tải danh sách users. Lỗi: ${err.status || 0}`;
                 this.loading = false;
@@ -179,6 +167,7 @@ export class UserManagementComponent implements OnInit, OnDestroy {
             }
         });
     }
+
     // Export state
     exportProgress = 0;
     private pollingInterval: any = null;
@@ -198,28 +187,16 @@ export class UserManagementComponent implements OnInit, OnDestroy {
         });
 
         // Step 1: Start async generation
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/279bac12-da11-4138-8ef4-bb71ff9814ec',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'user-management.component.ts:189',message:'starting report generation',data:{format},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
-
         this.http.post<any>('/api/reports/users/generate', null, {
             headers,
             params: { format }
         }).subscribe({
             next: (response) => {
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/279bac12-da11-4138-8ef4-bb71ff9814ec',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'user-management.component.ts:193',message:'report generation started',data:{jobId:response.jobId,status:response.status},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-                // #endregion
-
                 const jobId = response.jobId;
                 this.exportMessage = `Đang xử lý... 0%`;
                 this.pollJobStatus(jobId, format, headers);
             },
             error: (err) => {
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/279bac12-da11-4138-8ef4-bb71ff9814ec',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'user-management.component.ts:198',message:'report generation start error',data:{errStatus:err.status,errStatusText:err.statusText,errMessage:err.message,fullError:JSON.stringify(err)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-                // #endregion
-
                 console.error('Error starting report:', err);
                 this.error = `Không thể bắt đầu xuất báo cáo. Lỗi: ${err.status}`;
                 this.exporting = false;
@@ -231,23 +208,11 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     private pollJobStatus(jobId: string, format: string, headers: HttpHeaders) {
         let retryCount = 0;
         const maxRetries = 3;
-
-        // #region agent log
         const statusUrl = `/api/reports/status/${jobId}`;
-        fetch('http://127.0.0.1:7242/ingest/279bac12-da11-4138-8ef4-bb71ff9814ec',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'user-management.component.ts:207',message:'pollJobStatus started',data:{jobId,format,statusUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
 
         this.pollingInterval = setInterval(() => {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/279bac12-da11-4138-8ef4-bb71ff9814ec',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'user-management.component.ts:212',message:'polling status request',data:{jobId,statusUrl,retryCount},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-            // #endregion
-
             this.http.get<any>(statusUrl, { headers }).subscribe({
                 next: (status) => {
-                    // #region agent log
-                    fetch('http://127.0.0.1:7242/ingest/279bac12-da11-4138-8ef4-bb71ff9814ec',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'user-management.component.ts:213',message:'status response received',data:{jobId,status:status.status,progress:status.progress},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-                    // #endregion
-
                     retryCount = 0; // Reset on success
                     this.exportProgress = status.progress || 0;
                     this.exportMessage = `Đang xử lý... ${this.exportProgress}%`;
@@ -263,10 +228,6 @@ export class UserManagementComponent implements OnInit, OnDestroy {
                     }
                 },
                 error: (err) => {
-                    // #region agent log
-                    fetch('http://127.0.0.1:7242/ingest/279bac12-da11-4138-8ef4-bb71ff9814ec',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'user-management.component.ts:228',message:'status request error',data:{jobId,statusUrl,errStatus:err.status,errStatusText:err.statusText,errMessage:err.message,errUrl:err.url,fullError:JSON.stringify(err)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-                    // #endregion
-
                     // Handle 429 Too Many Requests - just skip this poll
                     if (err.status === 429) {
                         retryCount++;
@@ -282,7 +243,7 @@ export class UserManagementComponent implements OnInit, OnDestroy {
                     this.exportMessage = null;
                 }
             });
-        }, 10000); // Poll every 10 seconds (tăng để tránh rate limit)
+        }, 10000); // Poll every 10 seconds
     }
 
     private downloadFile(jobId: string, format: string, headers: HttpHeaders) {

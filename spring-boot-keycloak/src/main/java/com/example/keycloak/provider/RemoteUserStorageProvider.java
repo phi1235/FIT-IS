@@ -21,7 +21,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
@@ -229,24 +228,10 @@ public class RemoteUserStorageProvider implements
     }
 
     /**
-     * Hash password before transmission
-     * Uses SHA-256 for one-way hashing
-     */
-    private String hashForTransmission(String password) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(password.getBytes(StandardCharsets.UTF_8));
-            return Base64.getEncoder().encodeToString(hash);
-        } catch (Exception e) {
-            log.error("Error hashing password for transmission: {}", e.getMessage());
-            throw new RuntimeException("Password hashing failed", e);
-        }
-    }
-
-    /**
      * Generate unique request ID for tracing
      */
     private String generateRequestId() {
+
         return java.util.UUID.randomUUID().toString();
     }
 

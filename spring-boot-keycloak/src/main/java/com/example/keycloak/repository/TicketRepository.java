@@ -30,4 +30,18 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
     @Query("SELECT t FROM Ticket t WHERE t.maker = :maker AND (" +
             "LOWER(t.title) LIKE LOWER(CONCAT('%', :search, '%')))")
     Page<Ticket> searchTicketsByMaker(@Param("maker") String maker, @Param("search") String search, Pageable pageable);
+
+    // Paginated queries with status filter
+    Page<Ticket> findByStatus(TicketStatus status, Pageable pageable);
+
+    Page<Ticket> findByMakerAndStatus(String maker, TicketStatus status, Pageable pageable);
+
+    @Query("SELECT t FROM Ticket t WHERE t.status = :status AND (" +
+            "LOWER(t.title) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+            "LOWER(t.maker) LIKE LOWER(CONCAT('%', :search, '%')))")
+    Page<Ticket> searchTicketsByStatus(@Param("status") TicketStatus status, @Param("search") String search, Pageable pageable);
+
+    @Query("SELECT t FROM Ticket t WHERE t.maker = :maker AND t.status = :status AND (" +
+            "LOWER(t.title) LIKE LOWER(CONCAT('%', :search, '%')))")
+    Page<Ticket> searchTicketsByMakerAndStatus(@Param("maker") String maker, @Param("status") TicketStatus status, @Param("search") String search, Pageable pageable);
 }

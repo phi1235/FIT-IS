@@ -9,11 +9,6 @@ import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.time.Instant;
 import java.util.*;
 
 /**
@@ -32,11 +27,6 @@ public class RemoteAuthController {
     private static final Logger log = LoggerFactory.getLogger(RemoteAuthController.class);
     private static final Logger auditLog = LoggerFactory.getLogger("AUDIT");
 
-    // Should match the secret in RemoteUserStorageProvider
-    private static final String API_SECRET = "default-secret-change-in-production";
-    private static final String HMAC_ALGORITHM = "HmacSHA256";
-    private static final long REQUEST_VALIDITY_SECONDS = 300; // 5 minutes
-
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
@@ -48,9 +38,7 @@ public class RemoteAuthController {
     public ResponseEntity<?> getUser(
             @RequestParam(required = false) String username,
             @RequestParam(required = false) String email,
-            @RequestParam(required = false) String id,
-            @RequestHeader(value = "X-Timestamp", required = false) String timestamp,
-            @RequestHeader(value = "X-Signature", required = false) String signature) {
+            @RequestParam(required = false) String id) {
 
         log.info("Remote API: getUser called with username={}, email={}, id={}", username, email, id);
 
@@ -86,9 +74,7 @@ public class RemoteAuthController {
      * Called by RemoteUserStorageProvider.isValid() for password verification
      */
     @PostMapping(value = "/login", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> validateCredentials(@RequestBody Map<String, String> request,
-            @RequestHeader(value = "X-Timestamp", required = false) String timestamp,
-            @RequestHeader(value = "X-Signature", required = false) String signature) {
+    public ResponseEntity<?> validateCredentials(@RequestBody Map<String, String> request) {
 
         String username = request.get("username");
         // Plain password sent from RemoteUserStorageProvider (over HTTPS in production)
@@ -170,44 +156,6 @@ public class RemoteAuthController {
         } catch (Exception e) {
             log.debug("User not found by {}: {}", field, value);
             return null;
-        }
-    }
-
-    /**
-     * Validate HMAC signature for request authenticity
-     */
-    private boolean validateSignature(String method, String url, String body,
-            String timestamp, String signature) {
-        if (timestamp == null || signature == null) {
-            log.warn("Missing timestamp or signature in request. Timestamp: {}, Signature: {}", timestamp, signature);
-            return false;
-        }
-
-        try {
-            // Check timestamp validity (prevent replay attacks)
-            long requestTime = Long.parseLong(timestamp);
-            long currentTime = Instant.now().getEpochSecond();
-            if (Math.abs(currentTime - requestTime) > REQUEST_VALIDITY_SECONDS) {
-                log.warn("Request timestamp expired");
-                return false;
-            }
-
-            // Verify HMAC signature
-            String dataToSign = method + "|" + url + "|" + body + "|" + timestamp;
-            Mac mac = Mac.getInstance(HMAC_ALGORITHM);
-            SecretKeySpec keySpec = new SecretKeySpec(
-                    API_SECRET.getBytes(StandardCharsets.UTF_8), HMAC_ALGORITHM);
-            mac.init(keySpec);
-            byte[] hmacBytes = mac.doFinal(dataToSign.getBytes(StandardCharsets.UTF_8));
-            String expectedSignature = Base64.getEncoder().encodeToString(hmacBytes);
-
-            return MessageDigest.isEqual(
-                    expectedSignature.getBytes(StandardCharsets.UTF_8),
-                    signature.getBytes(StandardCharsets.UTF_8));
-
-        } catch (Exception e) {
-            log.error("Signature validation error: {}", e.getMessage());
-            return false;
         }
     }
 }

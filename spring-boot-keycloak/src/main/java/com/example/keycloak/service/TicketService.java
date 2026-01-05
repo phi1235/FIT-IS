@@ -77,6 +77,54 @@ public class TicketService {
                 .collect(Collectors.toList());
     }
 
+    // Paginated method for admin with status filter
+    public Page<TicketDTO> getAllTicketsPaginatedWithStatus(int page, int size, String search, TicketStatus status) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Ticket> ticketPage;
+
+        if (status == null) {
+            // No status filter - use existing methods
+            if (search == null || search.trim().isEmpty()) {
+                ticketPage = ticketRepository.findAll(pageable);
+            } else {
+                ticketPage = ticketRepository.searchTickets(search.trim(), pageable);
+            }
+        } else {
+            // With status filter
+            if (search == null || search.trim().isEmpty()) {
+                ticketPage = ticketRepository.findByStatus(status, pageable);
+            } else {
+                ticketPage = ticketRepository.searchTicketsByStatus(status, search.trim(), pageable);
+            }
+        }
+
+        return ticketPage.map(this::convertToDTO);
+    }
+
+    // Paginated method for maker with status filter
+    public Page<TicketDTO> getTicketsByMakerPaginatedWithStatus(String username, int page, int size, String search, TicketStatus status) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Ticket> ticketPage;
+
+        if (status == null) {
+            // No status filter - use existing methods
+            if (search == null || search.trim().isEmpty()) {
+                ticketPage = ticketRepository.findByMaker(username, pageable);
+            } else {
+                ticketPage = ticketRepository.searchTicketsByMaker(username, search.trim(), pageable);
+            }
+        } else {
+            // With status filter
+            if (search == null || search.trim().isEmpty()) {
+                ticketPage = ticketRepository.findByMakerAndStatus(username, status, pageable);
+            } else {
+                ticketPage = ticketRepository.searchTicketsByMakerAndStatus(username, status, search.trim(), pageable);
+            }
+        }
+
+        return ticketPage.map(this::convertToDTO);
+    }
+
     public TicketDTO getTicketById(Long id) {
         return ticketRepository.findById(id)
                 .map(this::convertToDTO)
@@ -117,12 +165,12 @@ public class TicketService {
         }
 
         TicketStatus previousStatus = ticket.getStatus();
-        ticket.setStatus(TicketStatus.SUBMITTED);
+        ticket.setStatus(TicketStatus.PENDING);
         Ticket savedTicket = ticketRepository.save(ticket);
         
         // Publish event
         eventPublisher.publishEvent(new TicketStatusChangedEvent(
-            this, savedTicket.getId(), previousStatus, TicketStatus.SUBMITTED, username));
+            this, savedTicket.getId(), previousStatus, TicketStatus.PENDING, username));
         
         return convertToDTO(savedTicket);
     }
@@ -136,8 +184,8 @@ public class TicketService {
             throw new RuntimeException("Maker and Checker must be different");
         }
 
-        if (ticket.getStatus() != TicketStatus.SUBMITTED) {
-            throw new RuntimeException("Only SUBMITTED tickets can be approved");
+        if (ticket.getStatus() != TicketStatus.PENDING) {
+            throw new RuntimeException("Only PENDING tickets can be approved");
         }
 
         TicketStatus previousStatus = ticket.getStatus();
@@ -161,8 +209,8 @@ public class TicketService {
             throw new RuntimeException("Maker and Checker must be different");
         }
 
-        if (ticket.getStatus() != TicketStatus.SUBMITTED) {
-            throw new RuntimeException("Only SUBMITTED tickets can be rejected");
+        if (ticket.getStatus() != TicketStatus.PENDING) {
+            throw new RuntimeException("Only PENDING tickets can be rejected");
         }
 
         TicketStatus previousStatus = ticket.getStatus();

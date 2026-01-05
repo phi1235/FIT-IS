@@ -33,8 +33,6 @@ public class CustomUserStorageProvider implements
     private final ComponentModel model;
     private final CustomUserRepository userRepository;
 
-    private static final int BCRYPT_WORK_FACTOR = 12;
-
     public CustomUserStorageProvider(KeycloakSession session, ComponentModel model,
             CustomUserRepository userRepository) {
         this.session = session;
@@ -165,13 +163,6 @@ public class CustomUserStorageProvider implements
             log.error("Invalid password hash format. Error: {}", e.getMessage());
             return false;
         }
-    }
-
-    /**
-     * Hash password with BCrypt
-     */
-    public static String hashPassword(String password) {
-        return BCrypt.hashpw(password, BCrypt.gensalt(BCRYPT_WORK_FACTOR));
     }
 
     /**

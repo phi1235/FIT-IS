@@ -297,7 +297,7 @@
 .avatar-sm {
     width: 28px;
     height: 28px;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background:#eaac66;
     border-radius: 50%;
     display: inline-flex;
     align-items: center;

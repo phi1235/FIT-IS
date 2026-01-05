@@ -20,7 +20,6 @@ import java.util.List;
 
 /**
  * Filter để validate JWT token trong mỗi request
- * Thay thế Keycloak token validation
  */
 @Slf4j
 @Component

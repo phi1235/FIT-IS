@@ -35,14 +35,19 @@ public class TicketController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "") String search,
+            @RequestParam(required = false) TicketStatus status,
             Authentication authentication) {
+
+        System.out.println("========== DEBUG /paginated ==========");
+        System.out.println("page=" + page + ", size=" + size + ", search=" + search + ", status=" + status);
+        System.out.println("======================================");
 
         if (authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_admin") || a.getAuthority().equals("ROLE_checker"))) {
-            return ResponseEntity.ok(ticketService.getAllTicketsPaginated(page, size, search));
+            return ResponseEntity.ok(ticketService.getAllTicketsPaginatedWithStatus(page, size, search, status));
         }
         return ResponseEntity
-                .ok(ticketService.getTicketsByMakerPaginated(authentication.getName(), page, size, search));
+                .ok(ticketService.getTicketsByMakerPaginatedWithStatus(authentication.getName(), page, size, search, status));
     }
 
     @GetMapping("/{id}")

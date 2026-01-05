@@ -59,6 +59,7 @@ export class AuthService {
         return user?.username || 'User';
     }
 
+    // fe luu token
     setAuth(token: string, refreshToken: string, userInfo: UserInfo): void {
         localStorage.setItem('access_token', token);
         localStorage.setItem('refresh_token', refreshToken);

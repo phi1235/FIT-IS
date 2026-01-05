@@ -9,14 +9,7 @@ import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
 import java.util.Hashtable;
 
-/**
- * LDAP Federation Strategy
- * Strategy Pattern Implementation cho LDAP Authentication
- * 
- * - Actual LDAP bind authentication
- * - Audit logging
- * - Secure connection handling
- */
+
 @Component
 public class LdapFederationStrategy extends BaseFederationStrategy {
 

@@ -103,7 +103,7 @@ export class LoginComponent implements OnInit {
         const plainPassword = this.loginForm.value.password;
         const username = this.loginForm.value.username.trim();
 
-        // Encrypt both username and password with RSA before sending
+        // Encrypt both username and password with RSA before sending(ma hoa)
         this.cryptoService.encryptPassword(username).subscribe({
             next: (encryptedUsername: string) => {
                 this.cryptoService.encryptPassword(plainPassword).subscribe({

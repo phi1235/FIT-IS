@@ -46,9 +46,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Value("${security.csp.connect-src:http://localhost:8082 http://localhost:8080}")
     private String cspConnectSrc;
 
-    /**
-     * BCrypt Password Encoder với work factor 12 (bank-level)
-     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(12);

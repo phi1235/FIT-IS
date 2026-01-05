@@ -21,8 +21,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Strategy cho Database Authentication với RSA password encryption
- * 
  * 1. Frontend encrypts password with RSA public key
  * 2. Backend decrypts to get plain password
  * 3. Verify against stored BCrypt hash
@@ -58,31 +56,28 @@ public class DatabaseAuthenticationStrategy implements AuthenticationStrategy {
     @Override
     public LoginResponse authenticate(LoginRequest request) throws AuthenticationException {
         try {
-            // Decrypt RSA username if encrypted, otherwise use plain
+            // Decrypt RSA username if encrypted, otherwise use plain(giai ma)
             String plainUsername = decryptFieldIfNeeded(request.getUsername(), "Username");
 
             log.info("Authenticating user {} with Database Provider", plainUsername);
 
-            // Get user info
+            // Get user info db
             CustomUser customUser = getUserFromDatabase(plainUsername);
 
             if (customUser == null) {
                 throw new AuthenticationException("User not found", "USER_NOT_FOUND");
             }
-
-            // Decrypt RSA password if encrypted, otherwise use plain
+            // Decrypt RSA pw if encrypted
             String plainPassword = decryptFieldIfNeeded(request.getPassword(), "Password");
-
-            // Verify password with BCrypt
+            // Verify BCrypt password
             boolean isValid = verifyPassword(plainPassword, customUser.getPassword());
-
             if (!isValid) {
                 throw new AuthenticationException("Invalid credentials", "INVALID_CREDENTIALS");
             }
 
             log.info("Password verified for user: {}", plainUsername);
 
-            // Generate JWT token
+            // Generate JWT token accessToken/refreshToken
             LoginResponse.UserInfo userInfo = buildUserInfo(customUser);
 
             String accessToken = jwtService.generateToken(
@@ -115,7 +110,7 @@ public class DatabaseAuthenticationStrategy implements AuthenticationStrategy {
                             .refreshExpiresIn(refreshExpiresInSeconds)
                             .build())
                     .metadata(LoginResponse.Metadata.builder()
-                            .authProvider("Database Provider (Local JWT + RSA)")
+                            .authProvider("Database Provider")
                             .issuedAt(now.format(FORMATTER))
                             .expiresAt(expiresAt.format(FORMATTER))
                             .build())

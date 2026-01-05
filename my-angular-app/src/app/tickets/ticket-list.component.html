@@ -58,8 +58,9 @@
                 cả</button>
             <button class="status-tab" [class.active]="selectedStatus === 'DRAFT'" (click)="filterStatus('DRAFT')">Bản
                 nháp</button>
-            <button class="status-tab" [class.active]="selectedStatus === 'SUBMITTED'"
-                (click)="filterStatus('SUBMITTED')">Chờ duyệt</button>
+            <button class="status-tab" [class.active]="selectedStatus === 'PENDING'"
+                (click)="filterStatus('PENDING')">Chờ duyệt</button>
+            
             <button class="status-tab" [class.active]="selectedStatus === 'APPROVED'"
                 (click)="filterStatus('APPROVED')">Đã duyệt</button>
             <button class="status-tab" [class.active]="selectedStatus === 'REJECTED'"

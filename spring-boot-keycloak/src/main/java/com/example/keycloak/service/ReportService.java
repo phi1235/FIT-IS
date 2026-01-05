@@ -243,7 +243,8 @@ public class ReportService {
     }
 
     @Async
-    public void exportReportAsync(String jobId, String format, String reportType) {        String templateFileName = reportType.equals("users") ? usersTemplate : ticketsTemplate;
+    public void exportReportAsync(String jobId, String format, String reportType) {
+        String templateFileName = reportType.equals("users") ? usersTemplate : ticketsTemplate;
         String createdBy = reportType.equals("users") ? "Admin" : "Ticket System";
 
         try {

@@ -65,10 +65,12 @@ export class TicketService {
         return this.http.get<TicketDTO[]>(this.apiUrl);
     }
 
-    getTicketsPaginated(page: number, size: number, search: string = ''): Observable<PagedTicketResponse> {
-        return this.http.get<PagedTicketResponse>(`${this.apiUrl}/paginated`, {
-            params: { page: page.toString(), size: size.toString(), search }
-        });
+    getTicketsPaginated(page: number, size: number, search: string = '', status: string = ''): Observable<PagedTicketResponse> {
+        let params: any = { page: page.toString(), size: size.toString(), search };
+        if (status && status !== 'ALL') {
+            params.status = status;
+        }
+        return this.http.get<PagedTicketResponse>(`${this.apiUrl}/paginated`, { params });
     }
 
     getTicketById(id: number): Observable<TicketDTO> {

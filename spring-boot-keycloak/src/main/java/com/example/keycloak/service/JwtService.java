@@ -108,6 +108,7 @@ public class JwtService {
      * Extract username từ token
      */
     public String extractUsername(String token) {
+
         return extractClaim(token, Claims::getSubject);
     }
 
@@ -115,6 +116,7 @@ public class JwtService {
      * Extract role từ token
      */
     public String extractRole(String token) {
+
         return extractClaim(token, claims -> claims.get("role", String.class));
     }
 
@@ -136,6 +138,7 @@ public class JwtService {
      * Extract expiration date từ token
      */
     public Date extractExpiration(String token) {
+
         return extractClaim(token, Claims::getExpiration);
     }
 
@@ -149,7 +152,6 @@ public class JwtService {
 
     /**
      * Extract all claims từ token
-     * Clock skew tolerance: 30 seconds để handle timing differences
      */
     private Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
@@ -160,23 +162,14 @@ public class JwtService {
                 .getBody();
     }
 
-    /**
-     * Check if token is expired
-     */
     private boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
 
-    /**
-     * Get expiration time in seconds
-     */
     public long getExpirationTimeInSeconds() {
         return jwtExpiration / 1000;
     }
 
-    /**
-     * Get refresh expiration time in seconds
-     */
     public long getRefreshExpirationTimeInSeconds() {
         return refreshExpiration / 1000;
     }
