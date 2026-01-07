@@ -9,11 +9,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.util.Base64;
 
-/**
- * RSA Service for secure password encryption/decryption
- * Uses RSA/ECB/PKCS1Padding for compatibility with jsencrypt library
- * 
- */
 @Slf4j
 @Service
 public class RsaService {
@@ -117,7 +112,6 @@ public class RsaService {
         }
         try {
             byte[] decoded = Base64.getDecoder().decode(value);
-            // RSA 2048-bit encrypted data is 256 bytes
             return decoded.length == 256;
         } catch (IllegalArgumentException e) {
             return false;

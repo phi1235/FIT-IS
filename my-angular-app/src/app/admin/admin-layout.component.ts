@@ -82,11 +82,9 @@ export class AdminLayoutComponent implements OnInit {
   }
 
   logout() {
-    // Logout from custom auth
     if (this.authService.isAuthenticated) {
       this.authService.logout();
     } else if (this.keycloakService.isAuthenticated()) {
-      // Only logout from Keycloak if using Keycloak auth
       this.keycloakService.logout();
     } else {
       this.router.navigate(['/home']);

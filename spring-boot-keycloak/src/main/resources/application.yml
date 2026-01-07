@@ -23,9 +23,9 @@ spring:
   
   # PostgreSQL DataSource Configuration
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:postgres-db}:${POSTGRES_PORT:5432}/${POSTGRES_DB:fis_bank}
+    url: jdbc:postgresql://${POSTGRES_HOST:postgres-db}:${POSTGRES_PORT:5432}/${POSTGRES_DB}
     driver-class-name: org.postgresql.Driver
-    username: ${POSTGRES_USER:postgres}
+    username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
     hikari:
       maximum-pool-size: 10
@@ -55,9 +55,9 @@ spring:
   
   # Redis Configuration
   redis:
-    host: ${REDIS_HOST:redis-cache}
-    port: ${REDIS_PORT:6379}
-    password: ${REDIS_PASSWORD:}
+    host: ${REDIS_HOST}
+    port: ${REDIS_PORT}
+    password: ${REDIS_PASSWORD}
     timeout: 2000ms
     lettuce:
       pool:
@@ -84,21 +84,16 @@ spring:
 
 # Keycloak Configuration
 keycloak:
-  realm: ${KEYCLOAK_REALM:phi-realm}
+  realm: ${KEYCLOAK_REALM}
   auth-server-url: ${KEYCLOAK_AUTH_SERVER_URL:http://keycloak:8080}
-  resource: ${KEYCLOAK_RESOURCE:spring-boot-app}
+  resource: ${KEYCLOAK_RESOURCE}
 
 # Security Configuration (Bank-Level)
 security:
   ip:
-    # IP Whitelisting (chỉ cho phép IP trong danh sách)
     whitelist:
-      enabled: false  # Set true để bật whitelist mode
-      # Ví dụ: "192.168.1.1,10.0.0.0/8,172.16.0.0/12"
-      # Hỗ trợ CIDR notation: "192.168.1.0/24"
-      ips: ""  # Danh sách IP được whitelist
-    # IP Blacklisting (chặn các IP trong danh sách)
-    # Ví dụ: "192.168.1.100,10.0.0.50"
+      enabled: false
+      ips: ""  
     blacklist: ${SECURITY_IP_BLACKLIST:}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}

@@ -32,7 +32,7 @@ public class CustomUserStorageProviderFactory implements UserStorageProviderFact
             CustomUserRepository userRepository = new CustomUserRepository(connection);
             return new CustomUserStorageProvider(session, model, userRepository);
         } catch (ClassNotFoundException e) {
-            throw new RuntimeException("PostgreSQL driver not found. Ensure postgresql-42.3.8.jar is in /opt/keycloak/providers", e);
+            throw new RuntimeException("PostgreSQL driver not found.", e);
         } catch (java.sql.SQLException e) {
             throw new RuntimeException("Failed to connect to database: " + dbUrl, e);
         }

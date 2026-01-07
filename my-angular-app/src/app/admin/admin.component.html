@@ -68,6 +68,13 @@
             <div class="stat-label">Chờ phê duyệt</div>
           </div>
         </div>
+         <div class="stat-card t-draft">
+          <div class="stat-icon t-icon"></div>
+          <div class="stat-info">
+            <div class="stat-value">{{ draftTickets }}</div>
+            <div class="stat-label">Bản nháp</div>
+          </div>
+        </div>
         <div class="stat-card t-approved">
           <div class="stat-icon t-icon"></div>
           <div class="stat-info">
@@ -85,25 +92,6 @@
       </div>
     </div>
 
-    <!-- Quick Reports Section -->
-    <div class="reports-section mb-4" *ngIf="!loading">
-      <h3 class="stats-title"> Báo cáo Nhanh</h3>
-      <div class="reports-grid">
-        <div class="report-card" *ngIf="isAdmin">
-          <h4>Báo cáo Users</h4>
-          <div class="report-actions">
-            <button class="btn-report pdf" (click)="downloadReport('users', 'pdf')">PDF</button>
-            <button class="btn-report excel" (click)="downloadReport('users', 'xlsx')">Excel</button>
-          </div>
-        </div>
-        <div class="report-card">
-          <h4>Báo cáo Tickets</h4>
-          <div class="report-actions">
-            <button class="btn-report pdf" (click)="downloadReport('tickets', 'pdf')">PDF</button>
-            <button class="btn-report excel" (click)="downloadReport('tickets', 'xlsx')">Excel</button>
-          </div>
-        </div>
-      </div>
-    </div>
+   
   </main>
 </div>

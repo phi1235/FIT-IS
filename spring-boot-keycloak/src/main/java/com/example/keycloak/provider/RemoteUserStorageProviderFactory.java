@@ -33,7 +33,7 @@ public class RemoteUserStorageProviderFactory implements UserStorageProviderFact
     public List<ProviderConfigProperty> getConfigProperties() {
         return List.of(
                 new ProviderConfigProperty("apiUrl", "API URL",
-                        "Base URL of the remote API. If Keycloak is in Docker and Backend on Host, use http://host.docker.internal:8082/api or http://172.17.0.1:8082/api",
+                        "Base URL of the remote API. If Keycloak is in Docker and Backend on Host",
                         ProviderConfigProperty.STRING_TYPE,
                         "http://host.docker.internal:8082/api"));
     }

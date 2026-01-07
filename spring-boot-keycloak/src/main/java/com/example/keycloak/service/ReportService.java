@@ -44,10 +44,7 @@ public class ReportService {
     @Autowired
     private TicketRepository ticketRepository;
 
-    // Template cache để tránh compile lại mỗi lần 
     private final Map<String, JasperReport> templateCache = new ConcurrentHashMap<>();
-
-    // Track file modification time để invalidate cache khi template thay đổi
     private final Map<String, Long> templateLastModified = new ConcurrentHashMap<>();
 
     /**
@@ -80,7 +77,6 @@ public class ReportService {
                 System.out.println("Using cached template: " + templateFileName);
                 return templateCache.get(cacheKey);
             } else {
-                // Template đã thay đổi, invalidate cache
                 templateCache.remove(cacheKey);
                 templateLastModified.remove(cacheKey);
             }
@@ -109,11 +105,6 @@ public class ReportService {
         }
     }
 
-    /**
-     * Custom DataSource để stream data từ ResultSet
-     * Thay vì load tất cả 1 triệu users vào memory (gây hang/OutOfMemory)
-     * DataSource này sẽ stream từng row khi JasperReports cần
-     */
     private static class StreamingResultSetDataSource implements JRDataSource {
         private final java.sql.ResultSet resultSet;
 
@@ -166,11 +157,6 @@ public class ReportService {
         }
     }
 
-    /**
-     * Dùng custom StreamingResultSetDataSource để stream data trực tiếp từ database
-     * Thay vì load tất cả 1 triệu users vào memory (gây hang/OutOfMemory)
-     * DataSource này sẽ stream từng row khi JasperReports cần
-     */
     private JRDataSource createUsersDataSource(Connection connection) throws Exception {        // Dùng SQL query trực tiếp với ResultSet streaming
         // JasperReports sẽ đọc từng row khi cần, không load tất cả vào memory
         String sql = "SELECT id, username, email, first_name, last_name, enabled, role FROM users ORDER BY username";
@@ -179,7 +165,7 @@ public class ReportService {
                 java.sql.ResultSet.CONCUR_READ_ONLY);
 
         pstmt.setFetchSize(2000); 
-        // Load 2000 rows mỗi lần từ database 
+        // Load 2000 rows mỗi lần
 
         java.sql.ResultSet rs = pstmt.executeQuery();
         return new StreamingResultSetDataSource(rs);
@@ -248,10 +234,9 @@ public class ReportService {
         String createdBy = reportType.equals("users") ? "Admin" : "Ticket System";
 
         try {
-            // Update status: PROCESSING
             jobService.updateProgress(jobId, 10);
 
-            // 1. Load template (cached nếu có) - TỐI ƯU: không compile lại mỗi lần
+            // 1. Load template (không compile lại mỗi lần)
             JasperReport jasperReport = getOrCompileTemplate(templateFileName);
             jobService.updateProgress(jobId, 20);
 
@@ -259,16 +244,13 @@ public class ReportService {
             Map<String, Object> parameters = new HashMap<>();
             parameters.put("createdBy", createdBy);
 
-            // 3. Prepare data source - TỐI ƯU: dùng JDBC streaming cho users
             JRDataSource jrDataSource;
             if (reportType.equals("users")) {
                 // Dùng JRFileVirtualizer để swap pages ra disk
-                // Giữ tối đa 100 pages trong memory, còn lại swap ra disk
                 JRFileVirtualizer virtualizer = new JRFileVirtualizer(100, System.getProperty("java.io.tmpdir"));
                 parameters.put(JRParameter.REPORT_VIRTUALIZER, virtualizer);
 
                 try (Connection connection = this.dataSource.getConnection()) {
-                    // dùng JDBC ResultSet streaming thay vì load tất cả vào memory
                     jrDataSource = createUsersDataSource(connection);
 
                     // 4. Fill report with data
@@ -293,11 +275,10 @@ public class ReportService {
 
                     jobService.updateProgress(jobId, 90);
                     jobService.markCompleted(jobId, filePath, fileName);
-                    System.out.println("Report generated successfully: " + filePath);                    return; // Exit early for users
+                    System.out.println("Report generated successfully: " + filePath);                  
+                    return; // Exit early for users
                 }
             } else {
-                // load vào memory (thường ít hơn)
-                // Convert to DTO to avoid ClassCastException with enum status
                 java.time.format.DateTimeFormatter dateFormatter = java.time.format.DateTimeFormatter
                         .ofPattern("d-M-yyyy");
                 java.util.List<com.example.keycloak.dto.TicketReportDTO> ticketDTOs = ticketRepository.findAll()
@@ -315,7 +296,7 @@ public class ReportService {
                 jrDataSource = new JRBeanCollectionDataSource(ticketDTOs);
             }
 
-            // 4. Fill report with data (for tickets)
+            // 4. Fill report with data
             jobService.updateProgress(jobId, 30);
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, jrDataSource);
             jobService.updateProgress(jobId, 60);

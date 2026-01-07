@@ -72,7 +72,9 @@
 .t-total {
   border-bottom: 4px solid #4299e1;
 }
-
+.t-draft {
+  border-bottom: 4px solid #13971a;
+}
 .t-pending {
   border-bottom: 4px solid #ecc94b;
 }

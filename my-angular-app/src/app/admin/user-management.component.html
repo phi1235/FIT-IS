@@ -48,6 +48,7 @@
         <table class="users-table">
             <thead>
                 <tr>
+                    <th>STT</th>
                     <th>Username</th>
                     <th>Email</th>
                     <th>Họ Tên</th>
@@ -57,7 +58,10 @@
                 </tr>
             </thead>
             <tbody>
-                <tr *ngFor="let user of users" [class.disabled]="!user.enabled">
+
+
+            <tr *ngFor="let user of users; let i = index" [class.disabled]="!user.enabled">
+                    <td>{{ currentPage * pageSize + i + 1 }}</td>
                     <td><strong>{{ user.username }}</strong></td>
                     <td>{{ user.email }}</td>
                     <td>{{ (user.firstName || '') + ' ' + (user.lastName || '') }}</td>
@@ -78,7 +82,7 @@
                     </td>
                 </tr>
                 <tr *ngIf="users.length === 0">
-                    <td colspan="6" class="no-data">Không có dữ liệu</td>
+                    <td colspan="7" class="no-data">Không có dữ liệu</td>
                 </tr>
             </tbody>
         </table>

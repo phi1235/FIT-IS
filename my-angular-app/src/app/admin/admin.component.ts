@@ -24,6 +24,7 @@ export class AdminComponent implements OnInit {
 
   // Ticket Stats
   totalTickets = 0;
+  draftTickets = 0;
   pendingTickets = 0;
   approvedTickets = 0;
   rejectedTickets = 0;
@@ -75,7 +76,8 @@ export class AdminComponent implements OnInit {
     this.ticketService.getAllTickets().subscribe({
       next: (tickets: TicketDTO[]) => {
         this.totalTickets = tickets.length;
-        this.pendingTickets = tickets.filter(t => t.status === TicketStatus.SUBMITTED).length;
+        this.draftTickets = tickets.filter(t => t.status === TicketStatus.DRAFT).length;
+        this.pendingTickets = tickets.filter(t => t.status === TicketStatus.PENDING).length;
         this.approvedTickets = tickets.filter(t => t.status === TicketStatus.APPROVED).length;
         this.rejectedTickets = tickets.filter(t => t.status === TicketStatus.REJECTED).length;
         this.loading = false;

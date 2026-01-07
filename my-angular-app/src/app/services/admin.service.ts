@@ -34,7 +34,6 @@ export interface PagedResponse<T> {
   providedIn: 'root'
 })
 export class AdminService {
-  // Dùng proxy Angular: /api -> http://localhost:8082
   private apiUrl = '/api/users';
 
   constructor(
@@ -108,7 +107,6 @@ export class AdminService {
    * Ưu tiên token từ AuthService (custom auth), fallback sang KeycloakService
    */
   private getAuthHeaders(): HttpHeaders {
-    // Try custom auth token first (database/remote login)
     let token: string | null = this.authService.getToken();
 
     // Fallback to Keycloak token
