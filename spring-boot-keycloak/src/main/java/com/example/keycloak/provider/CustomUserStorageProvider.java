@@ -75,7 +75,6 @@ public class CustomUserStorageProvider implements
         return null;
     }
 
-    // ========== CredentialInputValidator Implementation ==========
 
     @Override
     public boolean supportsCredentialType(String credentialType) {
@@ -181,7 +180,6 @@ public class CustomUserStorageProvider implements
         return "unknown";
     }
 
-    // ========== UserQueryProvider Implementation ==========
 
     @Override
     public int getUsersCount(RealmModel realm) {

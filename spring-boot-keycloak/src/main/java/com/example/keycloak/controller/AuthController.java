@@ -50,7 +50,6 @@ public class AuthController {
 
     /**
      * API đăng nhập sử dụng Remote User Federation
-     * Sử dụng Strategy Pattern - FederationAuthenticationStrategy
      */
     @PostMapping("/login/federation")
     public ResponseEntity<LoginResponse> loginWithFederation(

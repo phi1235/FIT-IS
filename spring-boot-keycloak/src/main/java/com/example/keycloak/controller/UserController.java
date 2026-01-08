@@ -74,9 +74,6 @@ public class UserController {
     /**
      * Admin endpoint - Lấy danh sách users với phân trang
      * 
-     * @param page   số trang (0-based)
-     * @param size   số lượng items mỗi trang
-     * @param search từ khóa tìm kiếm (optional)
      */
     @GetMapping("/admin/list")
     @PreAuthorize("hasRole('admin')")

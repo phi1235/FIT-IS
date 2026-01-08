@@ -21,11 +21,6 @@ import java.util.Arrays;
 import java.util.Collections;
 
 /**
- * Security Configuration cho Local JWT Authentication
- * 
- * KHÔNG sử dụng Keycloak adapter để validate token
- * Thay vào đó sử dụng JwtAuthenticationFilter để validate local JWT
- * 
  * Security Features:
  * - JWT Authentication Filter cho local token
  * - STATELESS session (không dùng session)
@@ -40,10 +35,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    @Value("${security.cors.allowed-origins:http://localhost:4200}")
+    @Value("${security.cors.allowed-origins}")
     private String allowedOrigins;
 
-    @Value("${security.csp.connect-src:http://localhost:8082 http://localhost:8080}")
+    @Value("${security.csp.connect-src}")
     private String cspConnectSrc;
 
     @Bean
@@ -78,10 +73,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
                 // Thêm JWT Authentication Filter
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-
-                // Tắt CSRF cho REST API
                 .csrf().disable()
-
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()

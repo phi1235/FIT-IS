@@ -57,7 +57,6 @@ public class RemoteUserStorageProvider implements
             rawApiUrl = rawApiUrl.substring(0, rawApiUrl.length() - 1);
         }
         this.apiUrl = rawApiUrl;
-        // In production, this should come from secure configuration (Vault, HSM, etc.)
         this.apiSecret = model.get("apiSecret", "default-secret-change-in-production");
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(REQUEST_TIMEOUT_SECONDS))
@@ -137,7 +136,6 @@ public class RemoteUserStorageProvider implements
         }
     }
 
-    // ========== CredentialInputValidator ==========
 
     @Override
     public boolean supportsCredentialType(String credentialType) {

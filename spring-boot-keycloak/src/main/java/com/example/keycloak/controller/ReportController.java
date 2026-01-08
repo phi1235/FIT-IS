@@ -58,7 +58,6 @@ public class ReportController {
         }
     }
 
-    // ========== ASYNC ENDPOINTS ==========
 
     /**
      * Bắt đầu generate report (async)
@@ -97,7 +96,8 @@ public class ReportController {
      * GET /api/reports/status/{jobId}
      */
     @GetMapping("/status/{jobId}")
-    public ResponseEntity<Map<String, Object>> getJobStatus(@PathVariable String jobId) {        ReportJob job = jobService.getJob(jobId);
+    public ResponseEntity<Map<String, Object>> getJobStatus(@PathVariable String jobId) {      
+        ReportJob job = jobService.getJob(jobId);
 
         if (job == null) {            return ResponseEntity.notFound().build();
         }        Map<String, Object> response = new HashMap<>();

@@ -90,8 +90,8 @@ public class ReportService {
             templateLastModified.put(cacheKey, lastModified);
             return jasperReport;
         } catch (Exception e) {
-            // Log chi tiết để debug
-            System.err.println("=== JASPER REPORT COMPILE ERROR ===");
+            // Log debug
+            System.err.println(" JASPER REPORT COMPILE ERROR");
             System.err.println("Template file: " + templateFile.getAbsolutePath());
             System.err.println("Error message: " + e.getMessage());
             if (e.getCause() != null) {
@@ -152,7 +152,7 @@ public class ReportService {
         }
 
         public void moveFirst() throws JRException {
-            // JasperReports có thể gọi method này, nhưng với streaming data source thì không cần
+            // JasperReports có thể gọi method(streaming data source thì không cần) 
             throw new UnsupportedOperationException("ResultSet does not support moveFirst - use streaming mode");
         }
     }
@@ -170,7 +170,9 @@ public class ReportService {
         java.sql.ResultSet rs = pstmt.executeQuery();
         return new StreamingResultSetDataSource(rs);
     }
-
+    /**
+     * map dữ liệu từ repository sang DTO
+     */
     private byte[] exportReportFromExternal(String format, String templateFileName, String reportType)
             throws Exception {
         // Load template cached nếu có
@@ -193,9 +195,10 @@ public class ReportService {
                             .createdAt(t.getCreatedAt() != null ? t.getCreatedAt().format(dateFormatter) : null)
                             .build())
                     .collect(java.util.stream.Collectors.toList());
+            // Tạo DataSource từ danh sách DTO
             jrDataSource = new JRBeanCollectionDataSource(ticketDTOs);
         } else {
-            // Users: dùng JDBC streaming để tối ưu memory
+            // dùng JDBC streaming để tối ưu memory
             try (Connection connection = this.dataSource.getConnection()) {
                 jrDataSource = createUsersDataSource(connection);
                 JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, jrDataSource);
@@ -213,7 +216,7 @@ public class ReportService {
             }
         }
 
-        // Fallback cho tickets
+        // Đổ dữ liệu vào template để tạo file JasperPrint
         JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, jrDataSource);
         if (format.equalsIgnoreCase("pdf")) {
             return JasperExportManager.exportReportToPdf(jasperPrint);
@@ -227,7 +230,9 @@ public class ReportService {
         }
         throw new IllegalArgumentException("Unsupported format: " + format);
     }
-
+    /**
+     * Tạo job xuất report chạy nền
+     */
     @Async
     public void exportReportAsync(String jobId, String format, String reportType) {
         String templateFileName = reportType.equals("users") ? usersTemplate : ticketsTemplate;
@@ -236,29 +241,29 @@ public class ReportService {
         try {
             jobService.updateProgress(jobId, 10);
 
-            // 1. Load template (không compile lại mỗi lần)
+            // Load template (không compile lại mỗi lần)
             JasperReport jasperReport = getOrCompileTemplate(templateFileName);
             jobService.updateProgress(jobId, 20);
 
-            // 2. Prepare parameters
+            // Prepare parameters
             Map<String, Object> parameters = new HashMap<>();
             parameters.put("createdBy", createdBy);
 
             JRDataSource jrDataSource;
             if (reportType.equals("users")) {
-                // Dùng JRFileVirtualizer để swap pages ra disk
+                // swap pages ra disk
                 JRFileVirtualizer virtualizer = new JRFileVirtualizer(100, System.getProperty("java.io.tmpdir"));
                 parameters.put(JRParameter.REPORT_VIRTUALIZER, virtualizer);
 
                 try (Connection connection = this.dataSource.getConnection()) {
                     jrDataSource = createUsersDataSource(connection);
 
-                    // 4. Fill report with data
+                    // Fill report with data
                     jobService.updateProgress(jobId, 30);
                     System.out.println("Filling report with virtualizer enabled...");
                     JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, jrDataSource);
                     jobService.updateProgress(jobId, 60);
-                    System.out.println("Report filled, exporting to file...");                    // 5. Export to file
+                    System.out.println("Report filled, exporting to file...");                    // Export to file
                     String filePath = jobService.getFilePath(jobId, format);
                     String fileName = reportType + "_report." + format;
 
@@ -296,12 +301,12 @@ public class ReportService {
                 jrDataSource = new JRBeanCollectionDataSource(ticketDTOs);
             }
 
-            // 4. Fill report with data
+            // Fill report with data
             jobService.updateProgress(jobId, 30);
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, jrDataSource);
             jobService.updateProgress(jobId, 60);
 
-            // 5. Export to file
+            // Export to file
             String filePath = jobService.getFilePath(jobId, format);
             String fileName = reportType + "_report." + format;
 
@@ -318,7 +323,7 @@ public class ReportService {
 
             jobService.updateProgress(jobId, 90);
 
-            // 6. Mark completed
+            // Mark completed
             jobService.markCompleted(jobId, filePath, fileName);
             System.out.println("Report generated successfully: " + filePath);
 
