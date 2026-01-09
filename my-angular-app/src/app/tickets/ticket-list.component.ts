@@ -12,11 +12,12 @@ import { KeycloakService } from '../services/keycloak.service';
   templateUrl: './ticket-list.component.html',
   styleUrls: ['./ticket-list.component.css']
 })
-export class TicketListComponent implements OnInit {
+export class TicketListMainComponent implements OnInit {
   tickets: TicketDTO[] = [];
   filteredTickets: TicketDTO[] = [];
   selectedStatus: string = 'ALL';
   loading = false;
+  error: string | null = null;
 
   // Pagination
   currentPage = 0;
@@ -38,7 +39,9 @@ export class TicketListComponent implements OnInit {
     private ticketService: TicketService,
     private keycloakService: KeycloakService,
     private router: Router
-  ) { }
+  ) { 
+    console.log('TicketListComponent initialized');
+  }
 
   ngOnInit(): void {
     this.loadTickets();
@@ -46,6 +49,7 @@ export class TicketListComponent implements OnInit {
 
   loadTickets(): void {
     this.loading = true;
+    this.error = null;
     this.ticketService.getTicketsPaginated(this.currentPage, this.pageSize, this.searchQuery, this.selectedStatus).subscribe({
       next: (response: PagedTicketResponse) => {
         this.tickets = response.content;
@@ -56,6 +60,7 @@ export class TicketListComponent implements OnInit {
       },
       error: (err) => {
         console.error('Failed to load tickets:', err);
+        this.error = 'Không thể tải danh sách tickets. Vui lòng thử lại.';
         this.loading = false;
       }
     });

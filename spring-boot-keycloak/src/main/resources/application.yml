@@ -13,6 +13,16 @@ server:
 spring:
   application:
     name: ${SPRING_APPLICATION_NAME}
+
+  flyway:
+    enabled: true
+    # DB was initialized externally (docker init script). Flyway should baseline it.
+    baseline-on-migrate: true
+    baseline-version: 0
+    # Track schema history in public schema
+    default-schema: public
+    # We manage multiple schemas inside one DB for now
+    schemas: public,auth,usr,ticket,workflow,audit
   # Request body size limiting
   servlet:
     multipart:
@@ -36,7 +46,8 @@ spring:
   
   jpa:
     hibernate:
-      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO}
+      # Bank-level: do NOT allow Hibernate to manage schema
+      ddl-auto: none
     show-sql: ${SPRING_JPA_SHOW_SQL}
     properties:
       hibernate:
@@ -120,8 +131,8 @@ jasperreports:
 
 logging:
   level:
-    org.keycloak: ${LOGGING_LEVEL_ORG_KEYCLOAK}
-    org.springframework.security: ${LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY}
+    org.keycloak: ${LOGGING_LEVEL_ORG_KEYCLOAK:INFO}
+    org.springframework.security: ${LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY:INFO}
     # Audit logging
-    AUDIT: ${LOGGING_LEVEL_AUDIT}
+    AUDIT: ${LOGGING_LEVEL_AUDIT:INFO}
 

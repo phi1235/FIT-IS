@@ -18,13 +18,16 @@ export interface TicketRequest {
 }
 
 export interface TicketDTO {
-    id: number;
+    id: string; // Changed to string for UUID
+    code: string;
     title: string;
     description?: string;
     status: TicketStatus;
     amount?: number;
-    maker: string;
-    checker?: string;
+    makerUserId: string;
+    checkerUserId?: string;
+    makerName: string;
+    checkerName?: string;
     rejectionReason?: string;
     createdAt: string;
     updatedAt: string;
@@ -49,7 +52,9 @@ export interface PagedTicketResponse {
     totalElements: number;
     totalPages: number;
     size: number;
-    number: number;
+    number: number; // Spring Data 'Page' uses 'number' for current page
+    first: boolean;
+    last: boolean;
 }
 
 @Injectable({
@@ -73,7 +78,7 @@ export class TicketService {
         return this.http.get<PagedTicketResponse>(`${this.apiUrl}/paginated`, { params });
     }
 
-    getTicketById(id: number): Observable<TicketDTO> {
+    getTicketById(id: string): Observable<TicketDTO> {
         return this.http.get<TicketDTO>(`${this.apiUrl}/${id}`);
     }
 
@@ -85,15 +90,15 @@ export class TicketService {
         return this.http.post<TicketDTO>(this.apiUrl, request);
     }
 
-    submitTicket(id: number): Observable<TicketDTO> {
+    submitTicket(id: string): Observable<TicketDTO> {
         return this.http.post<TicketDTO>(`${this.apiUrl}/${id}/submit`, {});
     }
 
-    approveTicket(id: number): Observable<TicketDTO> {
+    approveTicket(id: string): Observable<TicketDTO> {
         return this.http.post<TicketDTO>(`${this.apiUrl}/${id}/approve`, {});
     }
 
-    rejectTicket(id: number, reason: string): Observable<TicketDTO> {
+    rejectTicket(id: string, reason: string): Observable<TicketDTO> {
         return this.http.post<TicketDTO>(`${this.apiUrl}/${id}/reject`, { reason });
     }
 

@@ -1,0 +1,41 @@
+# Workflow Service Configuration - Bank Level Security
+# All values MUST be provided via environment variables (.env file)
+
+server:
+  port: ${WORKFLOW_SERVICE_PORT}
+
+spring:
+  application:
+    name: workflow-service
+  
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: workflow
+    show-sql: false
+  
+  flyway:
+    enabled: false
+
+security:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS}
+
+logging:
+  level:
+    com.example.workflow: ${LOG_LEVEL}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

@@ -1,0 +1,10 @@
+rootProject.name = 'bank-microservices'
+
+include 'shared-lib'
+include 'gateway-service'
+include 'auth-service'
+include 'user-service'
+include 'ticket-service'
+include 'workflow-service'
+include 'audit-service'
+include 'report-service'

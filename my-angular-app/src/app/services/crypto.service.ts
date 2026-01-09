@@ -7,6 +7,12 @@ import JSEncrypt from 'jsencrypt';
 /**
  * Service for cryptographic operations
  * Uses RSA encryption for secure password transmission
+ * 
+ * Format: KEY|PASSWORD|USERNAME (có thể đảo thứ tự theo config)
+ * - KEY: Random key để tăng độ phức tạp
+ * - PASSWORD: Mật khẩu người dùng  
+ * - USERNAME: Tên đăng nhập
+ * Được mã hóa RSA thành 1 chuỗi duy nhất
  */
 @Injectable({
     providedIn: 'root'
@@ -14,6 +20,12 @@ import JSEncrypt from 'jsencrypt';
 export class CryptoService {
     private publicKey: string | null = null;
     private encryptor: JSEncrypt | null = null;
+
+    // Delimiter để tách các phần (có thể thay đổi)
+    private readonly DELIMITER = '|';
+    
+    // Độ dài random key
+    private readonly KEY_LENGTH = 16;
 
     constructor(private http: HttpClient) {
         this.initializeRsa();
@@ -52,34 +64,96 @@ export class CryptoService {
                 console.log('RSA encryptor initialized');
             }),
             catchError(err => {
-                // Silently log error - don't propagate to global error handler
                 console.warn('Failed to fetch RSA public key, will use plain password:', err.status);
-                return of(''); // Return empty string, encryption will fail and fallback to plain
+                return of('');
             })
         );
     }
 
     /**
-     * Encrypt password using RSA
-     * @param password Plain text password
-     * @returns RSA encrypted password (Base64 encoded)
+     * Generate random key for encryption
      */
-    encryptPassword(password: string): Observable<string> {
-        // Ensure we have the public key
+    private generateRandomKey(length: number = this.KEY_LENGTH): string {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let result = '';
+        const cryptoObj = window.crypto || (window as any).msCrypto;
+        if (cryptoObj) {
+            const values = new Uint32Array(length);
+            cryptoObj.getRandomValues(values);
+            for (let i = 0; i < length; i++) {
+                result += chars[values[i] % chars.length];
+            }
+        } else {
+            for (let i = 0; i < length; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Encrypt login credentials using RSA
+     * Format: KEY|PASSWORD|USERNAME
+     * 
+     * @param username Tên đăng nhập
+     * @param password Mật khẩu
+     * @returns RSA encrypted string (Base64 encoded)
+     */
+    encryptCredentials(username: string, password: string): Observable<string> {
         if (this.encryptor && this.publicKey) {
-            const encrypted = this.encryptor.encrypt(password);
+            const encrypted = this.doEncryptCredentials(username, password);
             if (encrypted) {
                 return of(encrypted);
             }
         }
 
-        // If not initialized, fetch key first then encrypt
         return this.fetchPublicKey().pipe(
             map(() => {
                 if (!this.encryptor) {
                     throw new Error('RSA encryptor not initialized');
                 }
-                const encrypted = this.encryptor.encrypt(password);
+                const encrypted = this.doEncryptCredentials(username, password);
+                if (!encrypted) {
+                    throw new Error('RSA encryption failed');
+                }
+                return encrypted;
+            })
+        );
+    }
+
+    /**
+     * Internal method to perform encryption
+     */
+    private doEncryptCredentials(username: string, password: string): string | false {
+        if (!this.encryptor) return false;
+
+        const key = this.generateRandomKey();
+        
+        // Định dạng chuẩn duy nhất: KEY|PASSWORD|USERNAME
+        const combined = `${key}${this.DELIMITER}${password}${this.DELIMITER}${username}`;
+
+        return this.encryptor.encrypt(combined);
+    }
+
+    /**
+     * Encrypt single value using RSA (backward compatible)
+     * @param value Plain text value
+     * @returns RSA encrypted string (Base64 encoded)
+     */
+    encryptPassword(value: string): Observable<string> {
+        if (this.encryptor && this.publicKey) {
+            const encrypted = this.encryptor.encrypt(value);
+            if (encrypted) {
+                return of(encrypted);
+            }
+        }
+
+        return this.fetchPublicKey().pipe(
+            map(() => {
+                if (!this.encryptor) {
+                    throw new Error('RSA encryptor not initialized');
+                }
+                const encrypted = this.encryptor.encrypt(value);
                 if (!encrypted) {
                     throw new Error('RSA encryption failed');
                 }
@@ -90,17 +164,16 @@ export class CryptoService {
 
     /**
      * Synchronous encrypt - use only if key is already loaded
-     * Falls back to plain password if RSA not available
      */
-    encryptPasswordSync(password: string): string {
+    encryptPasswordSync(value: string): string {
         if (this.encryptor && this.publicKey) {
-            const encrypted = this.encryptor.encrypt(password);
+            const encrypted = this.encryptor.encrypt(value);
             if (encrypted) {
                 return encrypted;
             }
         }
-        console.warn('RSA not available, returning plain password');
-        return password;
+        console.warn('RSA not available, returning plain value');
+        return value;
     }
 
     /**

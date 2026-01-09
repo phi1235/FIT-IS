@@ -10,100 +10,77 @@ import { KeycloakService } from '../services/keycloak.service';
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule],
   template: `
-    <div class="p-4">
+    <div class="container-fluid py-4">
       <div *ngIf="ticket" class="row justify-content-center">
-        <div class="col-md-10">
-          <!-- Header Actions -->
+        <div class="col-xl-9">
+          <!-- Action Bar -->
           <div class="d-flex justify-content-between align-items-center mb-4">
-            <a [routerLink]="router.url.startsWith('/admin') ? '/admin/tickets' : '/tickets'" class="btn btn-light border d-flex align-items-center gap-2">
-              <span>←</span> Quay lại danh sách
+            <a [routerLink]="router.url.startsWith('/admin') ? '/admin/tickets' : '/tickets'" class="btn btn-outline-secondary btn-sm">
+              <i class="bi bi-arrow-left"></i> Quay lại danh sách
             </a>
             <div class="d-flex gap-2">
-              <button *ngIf="canSubmit()" (click)="submit()" class="btn btn-success shadow-sm">Gửi phê duyệt</button>
-              <button *ngIf="canApproveOrReject()" (click)="approve()" class="btn btn-primary shadow-sm">Phê duyệt</button>
-              <button *ngIf="canApproveOrReject()" (click)="showRejectForm = !showRejectForm" class="btn btn-danger shadow-sm">Từ chối</button>
+              <button *ngIf="canSubmit()" (click)="submit()" class="btn btn-success btn-sm">Gửi phê duyệt</button>
+              <button *ngIf="canApproveOrReject()" (click)="approve()" class="btn btn-primary btn-sm">Phê duyệt</button>
+              <button *ngIf="canApproveOrReject()" (click)="showRejectForm = !showRejectForm" class="btn btn-danger btn-sm">Từ chối</button>
             </div>
           </div>
 
-          <div class="card border-0 shadow-sm overflow-hidden mb-4">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 border-bottom">
+          <!-- Main Info -->
+          <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
               <div>
-                <span class="text-muted small text-uppercase fw-bold ls-1">Thông tin Ticket</span>
-                <h3 class="mb-0 fw-bold">#{{ ticket.id }} - {{ ticket.title }}</h3>
+                <h5 class="mb-0 fw-bold">{{ ticket.title }}</h5>
+                <span class="text-muted small">Mã: {{ ticket.code }} | ID: #{{ ticket.id.substring(0,8) }}</span>
               </div>
-              <span [class]="'badge ' + getStatusClass(ticket.status)">{{ getStatusLabel(ticket.status) }}</span>
+              <span class="badge" [ngClass]="'badge-' + ticket.status.toLowerCase()">{{ getStatusLabel(ticket.status) }}</span>
             </div>
-            
-            <div class="card-body p-4">
-              <div class="row g-4">
-                <!-- Main Info -->
-                <div class="col-md-8">
-                  <div class="mb-4">
-                    <h6 class="text-uppercase text-muted fw-bold small mb-2">Mô tả chi tiết</h6>
-                    <div class="p-3 bg-light rounded text-dark" style="min-height: 100px; white-space: pre-wrap;">
-                      {{ ticket.description || 'Không có mô tả chi tiết cho ticket này.' }}
-                    </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-lg-8">
+                  <h6 class="fw-bold mb-3 text-secondary text-uppercase small">Mô tả</h6>
+                  <p class="text-dark bg-light p-3 rounded" style="white-space: pre-wrap; min-height: 120px;">
+                    {{ ticket.description || 'Không có mô tả.' }}
+                  </p>
+
+                  <div *ngIf="ticket.rejectionReason" class="alert alert-danger mt-4">
+                    <h6 class="alert-heading fw-bold">Lý do từ chối:</h6>
+                    <p class="mb-0">{{ ticket.rejectionReason }}</p>
                   </div>
 
-                  <div *ngIf="ticket.rejectionReason" class="mt-4">
-                    <div class="alert alert-danger border-0 shadow-sm">
-                      <h6 class="alert-heading fw-bold d-flex align-items-center gap-2">
-                        <span>⚠️</span> Lý do từ chối:
-                      </h6>
-                      <p class="mb-0">{{ ticket.rejectionReason }}</p>
-                    </div>
-                  </div>
-
-                  <!-- Rejection Form -->
-                  <div *ngIf="showRejectForm" class="mt-4 p-4 border rounded-3 bg-light-danger shadow-sm">
-                    <h6 class="fw-bold mb-3">Nhập lý do từ chối</h6>
-                    <div class="mb-3">
-                      <textarea class="form-control border-danger-subtle" rows="3" 
-                                [(ngModel)]="rejectionReason" 
-                                placeholder="Vui lòng cung cấp lý do cụ thể để Maker điều chỉnh..."></textarea>
-                    </div>
-                    <div class="d-flex justify-content-end gap-2">
-                      <button (click)="showRejectForm = false" class="btn btn-sm btn-light border">Hủy</button>
-                      <button (click)="reject()" class="btn btn-sm btn-danger" [disabled]="!rejectionReason">Xác nhận từ chối</button>
+                  <!-- Reject Form -->
+                  <div *ngIf="showRejectForm" class="card border-danger mt-4">
+                    <div class="card-body">
+                      <h6 class="fw-bold mb-3">Lý do từ chối</h6>
+                      <textarea class="form-control mb-3" rows="3" [(ngModel)]="rejectionReason" placeholder="Nhập lý do chi tiết..."></textarea>
+                      <div class="d-flex justify-content-end gap-2">
+                        <button (click)="showRejectForm = false" class="btn btn-light btn-sm">Hủy</button>
+                        <button (click)="reject()" class="btn btn-danger btn-sm" [disabled]="!rejectionReason">Xác nhận từ chối</button>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <!-- Meta Info -->
-                <div class="col-md-4">
-                  <div class="p-4 bg-light rounded-3 shadow-none border">
+                <div class="col-lg-4 border-start">
+                  <div class="ps-lg-3">
                     <div class="mb-4">
-                      <h6 class="text-uppercase text-muted fw-bold small mb-3">Thông số tài chính</h6>
-                      <h2 class="fw-bold text-primary mb-0">{{ ticket.amount | currency:'VND':'symbol':'1.0-0' }}</h2>
-                      <span class="text-muted small">Tổng giá trị yêu cầu</span>
-                    </div>
-
-                    <div class="mb-3 border-top pt-3">
-                      <h6 class="text-uppercase text-muted fw-bold small mb-2">Người lập (Maker)</h6>
-                      <div class="d-flex align-items-center gap-2">
-                        <div class="avatar-sm">{{ ticket.maker.charAt(0).toUpperCase() }}</div>
-                        <span class="fw-semibold">{{ ticket.maker }}</span>
-                      </div>
+                      <h6 class="fw-bold mb-1 text-secondary text-uppercase small">Số tiền yêu cầu</h6>
+                      <h3 class="fw-bold text-primary">{{ ticket.amount | currency:'VND':'symbol':'1.0-0' }}</h3>
                     </div>
 
                     <div class="mb-3">
-                      <h6 class="text-uppercase text-muted fw-bold small mb-2">Người duyệt (Checker)</h6>
-                      <div class="d-flex align-items-center gap-2" *ngIf="ticket.checker; else noChecker">
-                        <div class="avatar-sm bg-primary-subtle text-primary">{{ ticket.checker.charAt(0).toUpperCase() }}</div>
-                        <span class="fw-semibold">{{ ticket.checker }}</span>
-                      </div>
-                      <ng-template #noChecker><span class="text-muted italic small">Chưa phân công</span></ng-template>
+                      <h6 class="fw-bold mb-1 text-secondary text-uppercase small">Người lập (Maker)</h6>
+                      <p class="mb-0 fw-semibold">{{ ticket.makerName }}</p>
+                      <span class="text-muted small">Lúc {{ ticket.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
                     </div>
 
-                    <div class="mb-0 border-top pt-3">
-                      <div class="d-flex justify-content-between mb-2">
-                        <span class="text-muted small">Ngày tạo:</span>
-                        <span class="small">{{ ticket.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
-                      </div>
-                      <div class="d-flex justify-content-between">
-                        <span class="text-muted small">Cập nhật lúc:</span>
-                        <span class="small">{{ ticket.updatedAt | date:'dd/MM/yyyy HH:mm' }}</span>
-                      </div>
+                    <div class="mb-3">
+                      <h6 class="fw-bold mb-1 text-secondary text-uppercase small">Người duyệt (Checker)</h6>
+                      <p class="mb-0 fw-semibold" *ngIf="ticket.checkerName; else noChecker">{{ ticket.checkerName }}</p>
+                      <ng-template #noChecker><span class="text-muted italic small">Chưa duyệt</span></ng-template>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-top">
+                      <span class="text-muted small">Cập nhật lúc: {{ ticket.updatedAt | date:'dd/MM/yyyy HH:mm' }}</span>
                     </div>
                   </div>
                 </div>
@@ -115,33 +92,18 @@ import { KeycloakService } from '../services/keycloak.service';
     </div>
   `,
   styles: [`
-    .ls-1 { letter-spacing: 0.05rem; }
-    .bg-light-danger { background-color: #fff5f5; border: 1px solid #feb2b2; }
-    .avatar-sm {
-      width: 28px;
-      height: 28px;
-      background: #e2e8f0;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.8rem;
-      font-weight: bold;
-      color: #475569;
-    }
-    .badge { font-size: 0.85rem; padding: 0.5em 0.8em; }
-    .badge-draft { background-color: #f1f5f9; color: #475569; }
-    .badge-submitted { background-color: #eff6ff; color: #2563eb; }
-    .badge-approved { background-color: #f0fdf4; color: #16a34a; }
-    .badge-rejected { background-color: #fef2f2; color: #dc2626; }
-    .badge-completed { background-color: #f0f9ff; color: #0284c7; }
+    .badge { padding: 0.5em 1em; font-weight: 700; }
+    .badge-draft { background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
+    .badge-pending { background-color: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+    .badge-approved { background-color: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+    .badge-rejected { background-color: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
   `]
 })
 export class TicketDetailComponent implements OnInit {
   ticket?: TicketDTO;
   rejectionReason: string = '';
   showRejectForm: boolean = false;
-  username: string = '';
+  userId: string = '';
 
   constructor(
     private route: ActivatedRoute,
@@ -151,12 +113,15 @@ export class TicketDetailComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
-    this.username = this.keycloakService.getUsername();
-    this.loadTicket(id);
+    const id = this.route.snapshot.paramMap.get('id');
+    const authUser = this.keycloakService.getUserInfo();
+    this.userId = authUser?.id || '';
+    if (id) {
+      this.loadTicket(id);
+    }
   }
 
-  loadTicket(id: number): void {
+  loadTicket(id: string): void {
     this.ticketService.getTicketById(id).subscribe({
       next: (data) => this.ticket = data,
       error: (err) => alert('Không thể tải thông tin ticket: ' + err.message)
@@ -166,13 +131,13 @@ export class TicketDetailComponent implements OnInit {
   canSubmit(): boolean {
     if (!this.ticket) return false;
     return (this.ticket.status === TicketStatus.DRAFT || this.ticket.status === TicketStatus.REJECTED)
-      && this.ticket.maker === this.username;
+      && this.ticket.makerUserId === this.userId;
   }
 
   canApproveOrReject(): boolean {
     if (!this.ticket) return false;
     const isChecker = this.keycloakService.hasRole('checker') || this.keycloakService.hasRole('admin');
-    return this.ticket.status === TicketStatus.SUBMITTED && isChecker && this.ticket.maker !== this.username;
+    return this.ticket.status === TicketStatus.PENDING && isChecker && this.ticket.makerUserId !== this.userId;
   }
 
   submit(): void {
@@ -208,10 +173,10 @@ export class TicketDetailComponent implements OnInit {
   getStatusLabel(status: TicketStatus): string {
     const labels: any = {
       'DRAFT': 'Bản nháp',
-      'SUBMITTED': 'Chờ duyệt',
+      'PENDING': 'Chờ duyệt',
       'APPROVED': 'Đã duyệt',
       'REJECTED': 'Bị từ chối',
-      'COMPLETED': 'Hoàn tất'
+      'CLOSED': 'Hoàn tất'
     };
     return labels[status] || status;
   }

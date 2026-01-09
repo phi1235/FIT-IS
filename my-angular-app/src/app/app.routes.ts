@@ -18,7 +18,7 @@ export const routes: Routes = [
   {
     path: 'tickets',
     children: [
-      { path: '', loadComponent: () => import('./tickets/ticket-list.component').then(m => m.TicketListComponent) },
+      { path: '', loadComponent: () => import('./tickets/ticket-list.component').then(m => m.TicketListMainComponent) },
       { path: 'create', loadComponent: () => import('./tickets/ticket-create.component').then(m => m.TicketCreateComponent) },
       { path: ':id', loadComponent: () => import('./tickets/ticket-detail.component').then(m => m.TicketDetailComponent) }
     ]
@@ -34,7 +34,7 @@ export const routes: Routes = [
       {
         path: 'tickets',
         children: [
-          { path: '', loadComponent: () => import('./tickets/ticket-list.component').then(m => m.TicketListComponent) },
+          { path: '', loadComponent: () => import('./tickets/ticket-list.component').then(m => m.TicketListMainComponent) },
           { path: 'create', loadComponent: () => import('./tickets/ticket-create.component').then(m => m.TicketCreateComponent) },
           { path: ':id', loadComponent: () => import('./tickets/ticket-detail.component').then(m => m.TicketDetailComponent) }
         ]

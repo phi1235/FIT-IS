@@ -186,6 +186,22 @@ export class KeycloakService {
   }
 
   /**
+   * Get parsed user info from token
+   */
+  getUserInfo(): any {
+    if (this.keycloak?.tokenParsed) {
+      const token = this.keycloak.tokenParsed as any;
+      return {
+        id: token.userId || token.sub,
+        username: token.preferred_username || token.sub,
+        email: token.email,
+        roles: this.getUserRoles()
+      };
+    }
+    return null;
+  }
+
+  /**
    * Update token
    */
   async updateToken(minValidity: number = 5): Promise<boolean> {

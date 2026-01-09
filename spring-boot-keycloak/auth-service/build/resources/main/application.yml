@@ -1,0 +1,62 @@
+# Auth Service Configuration - Bank Level Security
+# All values MUST be provided via environment variables (.env file)
+# DO NOT hardcode any sensitive values!
+
+server:
+  port: ${AUTH_SERVICE_PORT}
+
+spring:
+  application:
+    name: auth-service
+  
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: auth
+    show-sql: false
+  
+  redis:
+    host: ${REDIS_HOST}
+    port: ${REDIS_PORT}
+    password: ${REDIS_PASSWORD}
+  
+  flyway:
+    enabled: false
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION}
+
+security:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS}
+  csp:
+    connect-src: ${CSP_CONNECT_SRC}
+
+keycloak:
+  auth-server-url: ${KEYCLOAK_AUTH_SERVER_URL}
+  realm: ${KEYCLOAK_REALM}
+  resource: ${KEYCLOAK_RESOURCE}
+  credentials:
+    secret: ${KEYCLOAK_CLIENT_SECRET}
+
+logging:
+  level:
+    com.example.auth: ${LOG_LEVEL}
+    org.springframework.security: ${LOG_LEVEL_SPRING_SECURITY}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

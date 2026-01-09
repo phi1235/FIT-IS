@@ -1,47 +1,58 @@
 <div class="ticket-list-container">
+    <!-- Page Header -->
     <div class="page-header">
         <div>
-            <h1>📋 {{ isAdminView() ? 'Quản lý Tickets' : 'Yêu cầu của tôi' }}</h1>
-            <p>{{ isAdminView() ? 'Theo dõi và xử lý các yêu cầu nghiệp vụ' : 'Danh sách các yêu cầu bạn đã gửi hệ
-                thống' }}</p>
+            <h1>🎫 Quản lý Tickets</h1>
+            <p>Theo dõi và xử lý các yêu cầu nghiệp vụ</p>
         </div>
         <div class="header-actions">
-            <div class="export-buttons" *ngIf="isAdminView()">
-                <button class="btn-export pdf" (click)="downloadReport('pdf')" [disabled]="exporting" title="Xuất PDF">
-                    PDF
-                </button>
-                <button class="btn-export excel" (click)="downloadReport('xlsx')" [disabled]="exporting"
-                    title="Xuất Excel">
-                    Excel
-                </button>
-            </div>
-            <a *ngIf="canCreate()" routerLink="create" class="btn-create">
-                <span>+</span> Tạo mới Ticket
-            </a>
+            <button class="btn-export pdf" (click)="downloadReport('pdf')" [disabled]="exporting">
+                PDF
+            </button>
+            <button class="btn-export excel" (click)="downloadReport('excel')" [disabled]="exporting">
+                Excel
+            </button>
             <button class="btn-refresh" (click)="loadTickets()" [disabled]="loading">
                 Làm mới
             </button>
+            <a *ngIf="canCreate()" routerLink="create" class="btn-create">
+                + Tạo mới
+            </a>
         </div>
     </div>
 
     <!-- Search Box -->
     <div class="search-box">
-        <input type="text" placeholder="Tìm kiếm theo tiêu đề, người tạo..." [value]="searchQuery"
-            (input)="onSearch($event)" class="search-input" />
+        <input type="text" 
+               placeholder="Tìm kiếm theo mã, tiêu đề, người tạo..." 
+               [value]="searchQuery"
+               (input)="onSearch($event)" 
+               class="search-input" />
         <span class="search-info">Tổng: {{ totalElements }} tickets</span>
     </div>
 
-    <!-- Export Message with Progress Bar -->
-    <div *ngIf="exportMessage" class="export-message" [class.exporting]="exporting">
-        <div class="export-text">{{ exportMessage }}</div>
-        <div *ngIf="exporting && exportProgress > 0" class="progress-bar-container">
-            <div class="progress-bar" [style.width.%]="exportProgress"></div>
-        </div>
+    <!-- Status Tabs -->
+    <div class="status-tabs">
+        <button class="status-tab" 
+                [class.active]="selectedStatus === 'ALL'"
+                (click)="filterStatus('ALL')">Tất cả</button>
+        <button class="status-tab" 
+                [class.active]="selectedStatus === 'DRAFT'"
+                (click)="filterStatus('DRAFT')">Bản nháp</button>
+        <button class="status-tab" 
+                [class.active]="selectedStatus === 'PENDING'"
+                (click)="filterStatus('PENDING')">Chờ duyệt</button>
+        <button class="status-tab" 
+                [class.active]="selectedStatus === 'APPROVED'"
+                (click)="filterStatus('APPROVED')">Đã duyệt</button>
+        <button class="status-tab" 
+                [class.active]="selectedStatus === 'REJECTED'"
+                (click)="filterStatus('REJECTED')">Bị từ chối</button>
     </div>
 
     <!-- Error Message -->
-    <div *ngIf="exportError" class="error-message">
-        {{ exportError }}
+    <div *ngIf="error" class="error-message">
+        {{ error }}
     </div>
 
     <!-- Loading -->
@@ -52,25 +63,10 @@
 
     <!-- Tickets Table -->
     <div *ngIf="!loading" class="table-container">
-        <!-- Status Tabs -->
-        <div class="status-tabs">
-            <button class="status-tab" [class.active]="selectedStatus === 'ALL'" (click)="filterStatus('ALL')">Tất
-                cả</button>
-            <button class="status-tab" [class.active]="selectedStatus === 'DRAFT'" (click)="filterStatus('DRAFT')">Bản
-                nháp</button>
-            <button class="status-tab" [class.active]="selectedStatus === 'PENDING'"
-                (click)="filterStatus('PENDING')">Chờ duyệt</button>
-            
-            <button class="status-tab" [class.active]="selectedStatus === 'APPROVED'"
-                (click)="filterStatus('APPROVED')">Đã duyệt</button>
-            <button class="status-tab" [class.active]="selectedStatus === 'REJECTED'"
-                (click)="filterStatus('REJECTED')">Bị từ chối</button>
-        </div>
-
         <table class="tickets-table">
             <thead>
                 <tr>
-                    <th>Mã ID</th>
+                    <th>Mã Ticket</th>
                     <th>Tiêu đề</th>
                     <th>Trạng thái</th>
                     <th>Số tiền</th>
@@ -81,28 +77,32 @@
             </thead>
             <tbody>
                 <tr *ngFor="let ticket of filteredTickets">
-                    <td><span class="ticket-id">#{{ ticket.id }}</span></td>
                     <td>
-                        <div class="ticket-title">{{ ticket.title }}</div>
+                        <strong>{{ ticket.code }}</strong>
+                        <br>
+                        <small style="color: #9ca3af;">#{{ ticket.id.substring(0,8) }}</small>
+                    </td>
+                    <td>{{ ticket.title }}</td>
+                    <td>
+                        <span class="badge" [ngClass]="'badge-' + ticket.status.toLowerCase()">
+                            {{ getStatusLabel(ticket.status) }}
+                        </span>
+                    </td>
+                    <td class="amount">
+                        {{ ticket.amount | currency:'VND':'symbol':'1.0-0' }}
+                    </td>
+                    <td>{{ ticket.makerName }}</td>
+                    <td>
+                        {{ ticket.createdAt | date:'dd/MM/yyyy' }}
+                        <br>
+                        <small style="color: #9ca3af;">{{ ticket.createdAt | date:'HH:mm' }}</small>
                     </td>
                     <td>
-                        <span [class]="getStatusClass(ticket.status)">{{ getStatusLabel(ticket.status) }}</span>
-                    </td>
-                    <td>{{ ticket.amount | currency:'VND':'symbol':'1.0-0' }}</td>
-                    <td>
-                        <span class="avatar-sm">{{ ticket.maker.charAt(0).toUpperCase() }}</span>
-                        {{ ticket.maker }}
-                    </td>
-                    <td>{{ ticket.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
-                    <td>
-                        <a [routerLink]="[ticket.id]" class="btn-detail">Chi tiết</a>
+                        <a [routerLink]="[ticket.id]" class="btn-action">Chi tiết</a>
                     </td>
                 </tr>
                 <tr *ngIf="filteredTickets.length === 0">
-                    <td colspan="7" class="no-data">
-                        <div class="no-data-icon">📂</div>
-                        Không tìm thấy dữ liệu ticket nào
-                    </td>
+                    <td colspan="7" class="no-data">Không có dữ liệu</td>
                 </tr>
             </tbody>
         </table>
@@ -110,9 +110,7 @@
         <!-- Pagination Controls -->
         <div class="pagination-controls" *ngIf="totalPages > 0">
             <div class="pagination-info">
-                Hiển thị {{ currentPage * pageSize + 1 }} - {{ (currentPage + 1) * pageSize > totalElements ?
-                totalElements : (currentPage + 1) * pageSize }}
-                trong tổng số {{ totalElements }} tickets
+                Hiển thị trang {{ currentPage + 1 }} / {{ totalPages }}
             </div>
 
             <div class="pagination-nav">
@@ -139,6 +137,17 @@
                 </select>
                 <span>/ trang</span>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Overlay -->
+<div *ngIf="exporting" class="export-overlay">
+    <div class="export-card">
+        <div class="spinner" style="width: 40px; height: 40px; margin: 0 auto 15px;"></div>
+        <div class="export-text">{{ exportMessage }}</div>
+        <div class="progress-bar-container">
+            <div class="progress-bar" [style.width.%]="exportProgress"></div>
         </div>
     </div>
 </div>

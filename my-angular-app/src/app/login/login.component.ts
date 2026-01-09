@@ -103,50 +103,28 @@ export class LoginComponent implements OnInit {
         const plainPassword = this.loginForm.value.password;
         const username = this.loginForm.value.username.trim();
 
-        // Encrypt both username and password with RSA before sending(ma hoa)
-        this.cryptoService.encryptPassword(username).subscribe({
-            next: (encryptedUsername: string) => {
-                this.cryptoService.encryptPassword(plainPassword).subscribe({
-                    next: (encryptedPassword: string) => {
-                        const loginData = {
-                            username: encryptedUsername,
-                            password: encryptedPassword
-                        };
-                        this.performLogin(loginData, plainPassword);
-                    },
-                    error: (err: any) => {
-                        console.warn('RSA password encryption failed, falling back to plain:', err);
-                        const loginData = {
-                            username: encryptedUsername,
-                            password: plainPassword
-                        };
-                        this.performLogin(loginData, plainPassword);
-                    }
-                });
+        // Encrypt credentials using combined format: KEY|PASSWORD|USERNAME
+        // Backend will decrypt and parse to extract username and password
+        this.cryptoService.encryptCredentials(username, plainPassword).subscribe({
+            next: (encryptedCredentials: string) => {
+                const loginData = {
+                    credentials: encryptedCredentials  // Single encrypted field containing KEY|PASSWORD|USERNAME
+                };
+                this.performLogin(loginData, plainPassword);
             },
             error: (err: any) => {
-                console.warn('RSA username encryption failed, falling back to plain:', err);
-                this.cryptoService.encryptPassword(plainPassword).subscribe({
-                    next: (encryptedPassword: string) => {
-                        const loginData = {
-                            username: username,
-                            password: encryptedPassword
-                        };
-                        this.performLogin(loginData, plainPassword);
-                    },
-                    error: (pErr: any) => {
-                        const loginData = {
-                            username: username,
-                            password: plainPassword
-                        };
-                        this.performLogin(loginData, plainPassword);
-                    }
-                });
+                console.warn('RSA encryption failed, falling back to plain credentials:', err);
+                // Fallback to plain credentials
+                const loginData = {
+                    username: username,
+                    password: plainPassword
+                };
+                this.performLogin(loginData, plainPassword);
             }
         });
     }
 
-    private performLogin(loginData: { username: string; password: string }, plainPassword: string): void {
+    private performLogin(loginData: { credentials?: string; username?: string; password?: string }, plainPassword: string): void {
         this.http.post<any>('/api/auth/login/database', loginData).subscribe({
             next: (response: any) => {
                 this.isLoading = false;
@@ -155,7 +133,7 @@ export class LoginComponent implements OnInit {
                 // Check if password migration is required
                 if (response.requiresPasswordMigration) {
                     this.showMigrationDialog = true;
-                    this.migrationUsername = loginData.username;
+                    this.migrationUsername = loginData.username || '';
                     this.migrationCurrentPassword = plainPassword;
                     this.errorMessage = 'Bạn cần cập nhật mật khẩu để sử dụng định dạng bảo mật mới.';
                     return;

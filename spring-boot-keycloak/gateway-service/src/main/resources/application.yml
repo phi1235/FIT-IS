@@ -1,0 +1,41 @@
+# Gateway Service Configuration - Bank Level Security
+# All values MUST be provided via environment variables (.env file)
+
+server:
+  port: ${GATEWAY_PORT}
+  compression:
+    enabled: false
+  tomcat:
+    max-http-response-header-size: 8KB
+
+spring:
+  application:
+    name: gateway-service
+  
+  redis:
+    host: ${REDIS_HOST}
+    port: ${REDIS_PORT}
+    password: ${REDIS_PASSWORD}
+
+security:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS}
+
+rate-limit:
+  ip:
+    capacity: ${RATE_LIMIT_IP_CAPACITY}
+  user:
+    capacity: ${RATE_LIMIT_USER_CAPACITY}
+  login:
+    capacity: ${RATE_LIMIT_LOGIN_CAPACITY}
+
+logging:
+  level:
+    com.example.gateway: ${LOG_LEVEL}
+    org.springframework.security: ${LOG_LEVEL_SPRING_SECURITY}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
