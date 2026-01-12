@@ -1,0 +1,74 @@
+<div class="template-list-container">
+  <div class="header-actions">
+    <h1>Quản lý Email Templates</h1>
+    <button class="primary-btn" (click)="createNewTemplate()">
+      <span class="icon">+</span> Thêm Template mới
+    </button>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="search-box">
+        <input type="text" placeholder="Tìm kiếm template...">
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Mã Template</th>
+            <th>Tên Hiển Thị</th>
+            <th>Tiêu Đề</th>
+            <th>Phiên Bản</th>
+            <th>Trạng Thái</th>
+            <th>Cập Nhật Lần Cuối</th>
+            <th>Thao Tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="loading">
+            <td colspan="7" class="loading-state">Đang tải dữ liệu...</td>
+          </tr>
+          <tr *ngIf="!loading && templates.length === 0">
+            <td colspan="7" class="empty-state">Không tìm thấy template nào.</td>
+          </tr>
+          <tr *ngFor="let template of templates">
+            <td class="code-cell">{{ template.templateCode }}</td>
+            <td>{{ template.templateName }}</td>
+            <td class="subject-cell">{{ template.subject }}</td>
+            <td>v{{ template.version }}</td>
+            <td>
+              <span class="badge" [ngClass]="template.active ? 'badge-success' : 'badge-danger'">
+                {{ template.active ? 'Hoạt động' : 'Vô hiệu hóa' }}
+              </span>
+            </td>
+            <td>{{ template.updatedAt | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td class="actions-cell">
+              <button class="icon-btn edit-btn" (click)="editTemplate(template.id!)" title="Chỉnh sửa">
+                ✏️
+              </button>
+              <button class="icon-btn status-btn" (click)="toggleTemplateStatus(template)" 
+                      [title]="template.active ? 'Vô hiệu hóa' : 'Kích hoạt'">
+                {{ template.active ? '🔒' : '🔓' }}
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination" *ngIf="totalPages > 1">
+      <button class="page-btn" [disabled]="currentPage === 0" (click)="onPageChange(currentPage - 1)">Trước</button>
+      <div class="page-numbers">
+        <button *ngFor="let p of getPageNumbers()" 
+                class="page-btn" 
+                [class.active]="p === currentPage" 
+                (click)="onPageChange(p)">
+          {{ p + 1 }}
+        </button>
+      </div>
+      <button class="page-btn" [disabled]="currentPage === totalPages - 1" (click)="onPageChange(currentPage + 1)">Sau</button>
+    </div>
+  </div>
+</div>

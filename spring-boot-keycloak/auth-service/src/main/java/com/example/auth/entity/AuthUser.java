@@ -42,6 +42,15 @@ public class AuthUser {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
+    @Column(name = "password")
+    private String password;
+
+    @Column(name = "password_changed_at")
+    private LocalDateTime passwordChangedAt;
+
+    @Column(name = "force_password_change")
+    private Boolean forcePasswordChange = false;
+
     @Column(nullable = false)
     private boolean enabled = true;
 
@@ -70,5 +79,20 @@ public class AuthUser {
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<Role> roles;
+
+    /**
+     * Get the full name of the user
+     */
+    @Transient
+    public String getFullName() {
+        if (firstName != null && lastName != null) {
+            return firstName + " " + lastName;
+        } else if (firstName != null) {
+            return firstName;
+        } else if (lastName != null) {
+            return lastName;
+        }
+        return username;
+    }
 }
 

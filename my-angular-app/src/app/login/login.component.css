@@ -196,6 +196,15 @@
     font-size: 0.8rem;
 }
 
+.forgot-password-link {
+    color: #ef4444;
+    font-weight: 600;
+}
+
+.forgot-password-link:hover {
+    color: #dc2626;
+}
+
 /* Password Migration Modal */
 .modal-overlay {
     position: fixed;

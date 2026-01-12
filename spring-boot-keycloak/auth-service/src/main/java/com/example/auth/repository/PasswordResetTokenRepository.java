@@ -17,7 +17,7 @@ public interface PasswordResetTokenRepository extends JpaRepository<PasswordRese
     
     Optional<PasswordResetToken> findByTokenHash(String tokenHash);
     
-    Optional<PasswordResetToken> findByIdAndNotConsumed(UUID id);
+    Optional<PasswordResetToken> findByIdAndConsumedFalse(UUID id);
     
     @Query("SELECT COUNT(t) FROM PasswordResetToken t WHERE t.user.id = :userId " +
            "AND t.tokenType = :tokenType AND t.createdAt > :after")

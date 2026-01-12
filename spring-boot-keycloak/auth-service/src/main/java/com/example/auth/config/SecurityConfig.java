@@ -50,6 +50,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/auth/register").permitAll()
                 .antMatchers("/api/auth/public/**").permitAll()
                 .antMatchers("/api/auth/public-key").permitAll()
+                .antMatchers("/api/auth/forgot-password").permitAll()
+                .antMatchers("/api/auth/verify-reset-code").permitAll()
+                .antMatchers("/api/auth/set-new-password").permitAll()
                 .antMatchers("/actuator/health").permitAll()
                 // Admin endpoints for RBAC
                 .antMatchers("/api/roles/**").hasRole("admin")

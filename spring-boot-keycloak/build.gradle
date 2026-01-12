@@ -88,6 +88,10 @@ project(':gateway-service') {
         implementation 'com.bucket4j:bucket4j-core:8.7.0'
         implementation 'com.github.ben-manes.caffeine:caffeine'
     }
+    
+    bootJar {
+        mainClass.set('com.example.gateway.GatewayServiceApplication')
+    }
 }
 
 // Auth service configuration
@@ -114,8 +118,19 @@ project(':auth-service') {
         // Password hashing
         implementation 'org.mindrot:jbcrypt:0.4'
         
+        // Email and templates
+        implementation 'org.springframework.boot:spring-boot-starter-mail'
+        implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+        
         // Keycloak (optional integration)
         implementation 'org.keycloak:keycloak-admin-client:18.0.2'
+        
+        // Hibernate types for JSONB
+        implementation 'com.vladmihalcea:hibernate-types-52:2.21.1'
+    }
+    
+    bootJar {
+        mainClass.set('com.example.auth.AuthServiceApplication')
     }
 }
 
@@ -130,6 +145,10 @@ project(':user-service') {
         implementation 'org.springframework.boot:spring-boot-starter-validation'
         
         runtimeOnly 'org.postgresql:postgresql'
+    }
+    
+    bootJar {
+        mainClass.set('com.example.user.UserServiceApplication')
     }
 }
 
@@ -151,6 +170,10 @@ project(':ticket-service') {
         runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
         runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
     }
+    
+    bootJar {
+        mainClass.set('com.example.ticket.TicketServiceApplication')
+    }
 }
 
 // Workflow service configuration (Camunda-ready)
@@ -168,6 +191,10 @@ project(':workflow-service') {
         // Hibernate types for JSONB
         implementation 'com.vladmihalcea:hibernate-types-52:2.21.1'
     }
+    
+    bootJar {
+        mainClass.set('com.example.workflow.WorkflowServiceApplication')
+    }
 }
 
 // Audit service configuration
@@ -183,6 +210,10 @@ project(':audit-service') {
         
         // Hibernate types for JSONB
         implementation 'com.vladmihalcea:hibernate-types-52:2.21.1'
+    }
+    
+    bootJar {
+        mainClass.set('com.example.audit.AuditServiceApplication')
     }
 }
 
@@ -211,5 +242,9 @@ project(':report-service') {
         implementation 'net.sf.barcode4j:barcode4j:2.1'
         implementation 'com.google.zxing:core:3.5.2'
         implementation 'com.google.zxing:javase:3.5.2'
+    }
+    
+    bootJar {
+        mainClass.set('com.example.report.ReportServiceApplication')
     }
 }

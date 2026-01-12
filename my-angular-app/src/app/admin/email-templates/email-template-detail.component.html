@@ -1,0 +1,89 @@
+<div class="template-detail-container">
+  <div class="breadcrumb">
+    <a routerLink="/admin/email-templates">Email Templates</a> / 
+    <strong>{{ isEditMode ? 'Chỉnh sửa Template' : 'Thêm Template mới' }}</strong>
+  </div>
+
+  <div class="header-actions">
+    <h1>{{ isEditMode ? templateForm.value.templateName : 'Template mới' }}</h1>
+    <div class="buttons">
+      <button class="secondary-btn" (click)="cancel()">Hủy</button>
+      <button class="primary-btn" (click)="onSubmit()" [disabled]="templateForm.invalid || saving">
+        {{ saving ? 'Đang lưu...' : 'Lưu Thay Đổi' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="detail-grid">
+    <div class="editor-section card">
+      <div class="tabs">
+        <button [class.active]="activeTab === 'edit'" (click)="onTabChange('edit')">Chỉnh sửa</button>
+        <button [class.active]="activeTab === 'preview'" (click)="onTabChange('preview')">Xem trước</button>
+        <button [class.active]="activeTab === 'html'" (click)="onTabChange('html')">Mã HTML</button>
+      </div>
+
+      <div class="tab-content">
+        <form [formGroup]="templateForm" *ngIf="activeTab === 'edit' || activeTab === 'html'">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Mã Template</label>
+              <input type="text" formControlName="templateCode" placeholder="vd: WELCOME_EMAIL">
+            </div>
+            <div class="form-group">
+              <label>Tên Hiển Thị</label>
+              <input type="text" formControlName="templateName" placeholder="vd: Email chào mừng">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Tiêu Đề Email</label>
+            <input type="text" formControlName="subject" placeholder="Tiêu đề email">
+          </div>
+
+          <div class="form-group full-width">
+            <label>{{ activeTab === 'edit' ? 'Nội dung Email (HTML)' : 'Source Code HTML' }}</label>
+            <textarea formControlName="htmlBody" rows="15" placeholder="Nhập mã HTML tại đây..."></textarea>
+          </div>
+        </form>
+
+        <div class="preview-container" *ngIf="activeTab === 'preview'">
+          <div class="preview-header">
+            <div class="preview-item"><strong>Từ:</strong> FIS Portal &lt;noreply&#64;fis.com&gt;</div>
+            <div class="preview-item"><strong>Đến:</strong> {{ '{{userEmail}}' }}</div>
+            <div class="preview-item"><strong>Tiêu đề:</strong> {{ templateForm.value.subject }}</div>
+          </div>
+          <div class="preview-body" [innerHTML]="previewHtml"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="card property-card">
+        <h3>Thuộc tính Template</h3>
+        <div class="prop-list">
+          <div class="prop-item">
+            <label>Biến bắt buộc:</label>
+            <div class="variable-tags">
+              <span class="tag" *ngFor="let v of templateForm.value.requiredVariables">{{ v }}</span>
+            </div>
+          </div>
+          <div class="prop-item" *ngIf="isEditMode">
+            <label>Lần cập nhật cuối:</label>
+            <span>v.{{ templateForm.value.version || 1 }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card help-card">
+        <h3>Hướng dẫn</h3>
+        <p>Sử dụng <code>{{ '{{variableName}}' }}</code> để chèn dữ liệu động vào email.</p>
+        <p>Các biến thông dụng:</p>
+        <ul>
+          <li><code>{{ '{{userName}}' }}</code>: Tên người dùng</li>
+          <li><code>{{ '{{resetCode}}' }}</code>: Mã reset mật khẩu</li>
+          <li><code>{{ '{{expiryTime}}' }}</code>: Thời gian hết hạn</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

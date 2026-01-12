@@ -26,6 +26,28 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorDetails, HttpStatus.UNAUTHORIZED);
     }
 
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorDetails> handleResourceNotFoundException(ResourceNotFoundException ex) {
+        log.error("Resource not found: {} - {}", ex.getErrorCode(), ex.getMessage());
+        ErrorDetails errorDetails = new ErrorDetails(
+                LocalDateTime.now(),
+                ex.getErrorCode(),
+                ex.getMessage()
+        );
+        return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(PasswordManagementException.class)
+    public ResponseEntity<ErrorDetails> handlePasswordManagementException(PasswordManagementException ex) {
+        log.error("Password management error: {} - {}", ex.getErrorCode(), ex.getMessage());
+        ErrorDetails errorDetails = new ErrorDetails(
+                LocalDateTime.now(),
+                ex.getErrorCode(),
+                ex.getMessage()
+        );
+        return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorDetails> handleGlobalException(Exception ex) {
         log.error("Unexpected error occurred: ", ex);

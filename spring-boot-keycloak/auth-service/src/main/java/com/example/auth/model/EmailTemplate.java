@@ -4,6 +4,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.Type;
+import com.example.auth.entity.AuthUser;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -27,7 +28,7 @@ public class EmailTemplate {
     @GeneratedValue(generator = "UUID")
     private UUID id;
     
-    @Column(unique = true, nullable = false, length = 100)
+    @Column(name = "template_code", unique = true, nullable = false, length = 100)
     private String templateCode;
     
     @Column(nullable = false, length = 255)
@@ -49,7 +50,7 @@ public class EmailTemplate {
     @Column(nullable = false)
     private int version = 1;
     
-    @Column(nullable = false)
+    @Column(name = "is_active", nullable = false)
     private boolean active = true;
     
     @ManyToOne(fetch = FetchType.LAZY)
@@ -61,7 +62,7 @@ public class EmailTemplate {
     private AuthUser updatedBy;
     
     @CreationTimestamp
-    @Column(nullable = false)
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
     
     @UpdateTimestamp

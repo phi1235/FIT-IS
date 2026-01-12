@@ -3,6 +3,7 @@ package com.example.auth.model;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import com.example.auth.entity.AuthUser;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -31,7 +32,7 @@ public class PasswordResetToken {
     @JoinColumn(name = "user_id", nullable = false)
     private AuthUser user;
     
-    @Column(nullable = false, unique = true, length = 255)
+    @Column(name = "token_hash", nullable = false, unique = true, length = 255)
     private String tokenHash;
     
     @Column(nullable = false, length = 10)
@@ -44,10 +45,10 @@ public class PasswordResetToken {
     @Column(nullable = false, length = 20)
     private TokenType tokenType;
     
-    @Column(nullable = false)
+    @Column(name = "is_verified", nullable = false)
     private boolean verified = false;
     
-    @Column(nullable = false)
+    @Column(name = "is_consumed", nullable = false)
     private boolean consumed = false;
     
     @Column
@@ -68,11 +69,11 @@ public class PasswordResetToken {
     @Column(nullable = false)
     private int maxAttempts = 5;
     
-    @Column(nullable = false)
+    @Column(name = "expires_at", nullable = false)
     private LocalDateTime expiresAt;
     
     @CreationTimestamp
-    @Column(nullable = false)
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
     
     @Column(name = "created_by")

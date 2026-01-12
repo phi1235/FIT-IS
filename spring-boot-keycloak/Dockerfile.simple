@@ -1,0 +1,9 @@
+# Simple Dockerfile - assumes JAR is pre-built locally
+FROM eclipse-temurin:17-jre
+WORKDIR /app
+
+# Copy the gateway-service JAR (entry point to the microservices)
+COPY gateway-service/build/libs/gateway-service-1.0.0.jar /app/app.jar
+
+EXPOSE 8081
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]

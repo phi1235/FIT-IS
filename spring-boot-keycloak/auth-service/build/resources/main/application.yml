@@ -29,6 +29,23 @@ spring:
     port: ${REDIS_PORT}
     password: ${REDIS_PASSWORD}
   
+  mail:
+    host: ${SPRING_MAIL_HOST:smtp.gmail.com}
+    port: ${SPRING_MAIL_PORT:587}
+    username: ${SPRING_MAIL_USERNAME}
+    password: ${SPRING_MAIL_PASSWORD}
+    from: ${SPRING_MAIL_FROM:noreply@banking.com}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+  
   flyway:
     enabled: false
 

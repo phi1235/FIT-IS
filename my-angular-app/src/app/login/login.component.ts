@@ -21,6 +21,7 @@ export class LoginComponent implements OnInit {
     errorMessage = '';
     successMessage = '';
     showPassword = false;
+    private retryCount = 0;
 
     // Password migration state
     showMigrationDialog = false;
@@ -191,7 +192,22 @@ export class LoginComponent implements OnInit {
                     const messages = Object.values(details).join(', ');
                     this.errorMessage = messages;
                 } else if (error.status === 401) {
-                    this.errorMessage = error.error?.message || 'Tên đăng nhập hoặc mật khẩu không đúng';
+                    const errorMsg = error.error?.message || '';
+                    if (errorMsg.includes('Invalid credential format') && this.retryCount < 1) {
+                        console.warn('Decryption failed, refreshing public key and retrying...');
+                        this.retryCount++;
+                        this.cryptoService.fetchPublicKey(true).subscribe({
+                            next: () => {
+                                this.onSubmit();
+                            },
+                            error: () => {
+                                this.errorMessage = 'Lỗi xác thực (Định dạng không hợp lệ). Vui lòng tải lại trang.';
+                            }
+                        });
+                    } else {
+                        this.errorMessage = errorMsg || 'Tên đăng nhập hoặc mật khẩu không đúng';
+                        this.retryCount = 0; // Reset after showing error
+                    }
                 } else if (error.status === 0) {
                     this.errorMessage = 'Không thể kết nối đến server. Vui lòng kiểm tra backend đang chạy.';
                 } else {

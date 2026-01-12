@@ -1,55 +1,48 @@
 services:
-  # Comment lại Keycloak - sẽ chạy ở local
+  # Keycloak - Identity Provider
   keycloak:
     image: quay.io/keycloak/keycloak:18.0.2
     command: [ "start-dev", "--http-port=8080" ]
     environment:
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
-      JAVA_OPTS_APPEND: "-Xms512m -Xmx1024m"
+      JAVA_OPTS_APPEND: "-Xms256m -Xmx512m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
     ports:
       - "8080:8080"
     volumes:
-      # Mount all custom themes; inside contains /custom/login/...
       - ./keycloak-theme:/opt/keycloak/themes
-      # Mount custom provider JAR
       - ./spring-boot-keycloak/target/keycloak-integration-1.0.0.jar:/opt/keycloak/providers/keycloak-integration.jar
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8080/realms/master" ]
-      interval: 10s
-      timeout: 5s
-      retries: 10
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 120s
+    cpus: 1.0
+    mem_limit: 768m
 
-  # Spring API - chạy bằng Docker
+  # Spring API - Main API Gateway
   spring-api:
     build:
       context: ./spring-boot-keycloak
       dockerfile: Dockerfile
+    env_file:
+      - .env
     environment:
       KEYCLOAK_AUTH_SERVER_URL: http://keycloak:8080
-      SERVER_PORT: ${SERVER_PORT}
-      REDIS_HOST: ${REDIS_HOST}
-      REDIS_PORT: ${REDIS_PORT}
-      POSTGRES_HOST: ${POSTGRES_HOST}
-      POSTGRES_PORT: ${POSTGRES_PORT}
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_EXPIRATION: ${JWT_EXPIRATION}
-      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION}
-      KEYCLOAK_REALM: ${KEYCLOAK_REALM}
-      KEYCLOAK_RESOURCE: ${KEYCLOAK_RESOURCE}
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
-      CSP_CONNECT_SRC: ${CSP_CONNECT_SRC}
-      RATELIMIT_IP: ${RATELIMIT_IP}
-      RATELIMIT_LOGIN: ${RATELIMIT_LOGIN}
-      RATELIMIT_USER: ${RATELIMIT_USER}
-      RATELIMIT_REPORT: ${RATELIMIT_REPORT}
-      # Jaspersoft template path inside container
       JASPER_TEMPLATE_PATH: /app/jasper-templates
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_REDIS_HOST: redis
+      REDIS_HOST: redis
+      # Service URLs for gateway routing
+      AUTH_SERVICE_URL: http://auth-service:8082
+      USER_SERVICE_URL: http://user-service:8083
+      TICKET_SERVICE_URL: http://ticket-service:8084
+      REPORT_SERVICE_URL: http://report-service:8087
+      JAVA_OPTS: "-Xms128m -Xmx384m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
     volumes:
-      # Mount Jasper templates từ Jaspersoft Studio (dynamic editing)
       - /home/nguyen-phi/JaspersoftWorkspace/MyReports:/app/jasper-templates:ro
     depends_on:
       keycloak:
@@ -58,20 +51,21 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
+      auth-service:
+        condition: service_started
+      user-service:
+        condition: service_started
+      ticket-service:
+        condition: service_started
+      report-service:
+        condition: service_started
     ports:
-      - "8082:8082"
+      - "8081:8081"
+    cpus: 0.5
+    mem_limit: 512m
+    restart: on-failure:3
 
-  # Comment lại Angular App - sẽ chạy ở local
-  #  angular-app:
-  #    build:
-  #      context: ./my-angular-app
-  #      dockerfile: Dockerfile
-  #    depends_on:
-  #      - keycloak
-  #    ports:
-  #      - "4200:80"
-
-  # Redis - chạy bằng Docker
+  # Redis - Cache Server
   redis:
     image: redis:7-alpine
     container_name: redis-cache
@@ -79,14 +73,16 @@ services:
       - "6379:6379"
     volumes:
       - redis-data:/data
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy allkeys-lru
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
+    cpus: 0.25
+    mem_limit: 192m
 
-  # PostgreSQL - Database chính của ứng dụng
+  # PostgreSQL - Primary Database
   postgres:
     image: postgres:16-alpine
     container_name: postgres-db
@@ -106,8 +102,10 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    cpus: 0.5
+    mem_limit: 512m
 
-  # pgAdmin - Web interface để quản lý PostgreSQL
+  # pgAdmin - PostgreSQL Web Admin
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: pgadmin
@@ -124,6 +122,166 @@ services:
       postgres:
         condition: service_healthy
     restart: unless-stopped
+    cpus: 0.25
+    mem_limit: 256m
+
+  # Auth Service
+  auth-service:
+    build:
+      context: ./spring-boot-keycloak
+      dockerfile: Dockerfile.auth
+    env_file:
+      - .env
+    environment:
+      KEYCLOAK_AUTH_SERVER_URL: http://keycloak:8080
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_REDIS_HOST: redis
+      JAVA_OPTS: "-Xms128m -Xmx384m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8082:8082"
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    extra_hosts:
+      - "smtp.gmail.com:74.125.200.108"
+    cpus: 0.5
+    mem_limit: 512m
+    restart: on-failure:3
+
+  # User Service
+  user-service:
+    build:
+      context: ./spring-boot-keycloak
+      dockerfile: Dockerfile.user
+    env_file:
+      - .env
+    environment:
+      KEYCLOAK_AUTH_SERVER_URL: http://keycloak:8080
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_REDIS_HOST: redis
+      JAVA_OPTS: "-Xms128m -Xmx384m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8083:8083"
+    cpus: 0.5
+    mem_limit: 512m
+    restart: on-failure:3
+
+  # Ticket Service
+  ticket-service:
+    build:
+      context: ./spring-boot-keycloak
+      dockerfile: Dockerfile.ticket
+    env_file:
+      - .env
+    environment:
+      KEYCLOAK_AUTH_SERVER_URL: http://keycloak:8080
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_REDIS_HOST: redis
+      JAVA_OPTS: "-Xms128m -Xmx384m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8084:8084"
+    cpus: 0.5
+    mem_limit: 512m
+    restart: on-failure:3
+
+  # Workflow Service
+  workflow-service:
+    build:
+      context: ./spring-boot-keycloak
+      dockerfile: Dockerfile.workflow
+    env_file:
+      - .env
+    environment:
+      KEYCLOAK_AUTH_SERVER_URL: http://keycloak:8080
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_REDIS_HOST: redis
+      JAVA_OPTS: "-Xms128m -Xmx384m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8085:8085"
+    cpus: 0.5
+    mem_limit: 512m
+    restart: on-failure:3
+
+  # Audit Service
+  audit-service:
+    build:
+      context: ./spring-boot-keycloak
+      dockerfile: Dockerfile.audit
+    env_file:
+      - .env
+    environment:
+      KEYCLOAK_AUTH_SERVER_URL: http://keycloak:8080
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_REDIS_HOST: redis
+      JAVA_OPTS: "-Xms128m -Xmx384m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8086:8086"
+    cpus: 0.5
+    mem_limit: 512m
+    restart: on-failure:3
+
+  # Report Service
+  report-service:
+    build:
+      context: ./spring-boot-keycloak
+      dockerfile: Dockerfile.report
+    env_file:
+      - .env
+    environment:
+      KEYCLOAK_AUTH_SERVER_URL: http://keycloak:8080
+      JASPER_TEMPLATE_PATH: /app/jasper-templates
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_REDIS_HOST: redis
+      JAVA_OPTS: "-Xms128m -Xmx384m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
+    volumes:
+      - /home/nguyen-phi/JaspersoftWorkspace/MyReports:/app/jasper-templates:ro
+    depends_on:
+      keycloak:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8087:8087"
+    cpus: 0.5
+    mem_limit: 512m
+    restart: on-failure:3
 
 networks:
   default:

@@ -47,9 +47,10 @@ export class CryptoService {
 
     /**
      * Fetch RSA public key from server
+     * @param forceRefresh If true, bypass cache and fetch from server
      */
-    fetchPublicKey(): Observable<string> {
-        if (this.publicKey) {
+    fetchPublicKey(forceRefresh: boolean = false): Observable<string> {
+        if (this.publicKey && !forceRefresh) {
             return of(this.publicKey);
         }
 
@@ -61,13 +62,22 @@ export class CryptoService {
                 this.publicKey = key;
                 this.encryptor = new JSEncrypt();
                 this.encryptor.setPublicKey(key);
-                console.log('RSA encryptor initialized');
+                console.log('RSA encryptor ' + (forceRefresh ? 'refreshed' : 'initialized'));
             }),
             catchError(err => {
                 console.warn('Failed to fetch RSA public key, will use plain password:', err.status);
                 return of('');
             })
         );
+    }
+
+    /**
+     * Clear cached public key
+     */
+    clearCache(): void {
+        this.publicKey = null;
+        this.encryptor = null;
+        console.log('RSA cache cleared');
     }
 
     /**
