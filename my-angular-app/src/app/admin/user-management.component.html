@@ -14,6 +14,9 @@
             <button class="btn-refresh" (click)="loadUsers()" [disabled]="loading">
                 Làm mới
             </button>
+            <button class="btn-primary" (click)="openCreateModal()">
+                + Thêm User
+            </button>
         </div>
     </div>
 
@@ -66,9 +69,8 @@
                     <td>{{ user.email }}</td>
                     <td>{{ (user.firstName || '') + ' ' + (user.lastName || '') }}</td>
                     <td>
-                        <span class="badge" [class.badge-admin]="user.role === 'admin'"
-                            [class.badge-user]="user.role === 'user'">
-                            {{ user.role === 'admin' ? ' Admin' : ' User' }}
+                        <span class="badge" [ngClass]="'badge-' + (user.role || 'user').toLowerCase()">
+                            {{ user.role | uppercase }}
                         </span>
                     </td>
                     <td>
@@ -78,7 +80,18 @@
                         </span>
                     </td>
                     <td>
-                        <button class="btn-action" (click)="openRoleModal(user)">Đổi Role</button>
+                        <div class="actions-group">
+                            <button class="btn-icon" (click)="openEditModal(user)" title="Chỉnh sửa">
+                                ✏️
+                            </button>
+                            <button class="btn-icon" (click)="toggleUserStatus(user)" 
+                                    [title]="user.enabled ? 'Khóa' : 'Mở khóa'">
+                                {{ user.enabled ? '🔒' : '🔓' }}
+                            </button>
+                            <button class="btn-icon btn-delete" (click)="deleteUser(user)" title="Xóa">
+                                🗑️
+                            </button>
+                        </div>
                     </td>
                 </tr>
                 <tr *ngIf="users.length === 0">
@@ -122,31 +135,51 @@
         </div>
     </div>
 
-    <!-- Role Update Modal -->
-    <div *ngIf="showRoleModal" class="modal-overlay" (click)="closeRoleModal()">
+    <!-- User Create/Edit Modal -->
+    <div *ngIf="showUserModal" class="modal-overlay" (click)="closeUserModal()">
         <div class="modal-content" (click)="$event.stopPropagation()">
             <div class="modal-header">
-                <h3>Đổi Role cho User</h3>
-                <button class="btn-close" (click)="closeRoleModal()">×</button>
+                <h3>{{ isEditMode ? 'Chỉnh sửa User' : 'Thêm User Mới' }}</h3>
+                <button class="btn-close" (click)="closeUserModal()">×</button>
             </div>
             <div class="modal-body">
-                <div class="form-group">
+                <div class="form-group" *ngIf="!isEditMode">
                     <label>Username:</label>
-                    <input type="text" [value]="selectedUser?.username" readonly class="form-control">
+                    <input type="text" [(ngModel)]="userForm.username" class="form-control" placeholder="Nhập username">
                 </div>
                 <div class="form-group">
-                    <label>Role mới:</label>
-                    <select [(ngModel)]="newRole" class="form-control">
-                        <option value="user"> User</option>
-                        <option value="maker">Maker</option>
-                        <option value="checker"> Checker</option>
-                        <option value="admin"> Admin</option>
+                    <label>Email:</label>
+                    <input type="email" [(ngModel)]="userForm.email" class="form-control" placeholder="Nhập email">
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label>Họ:</label>
+                            <input type="text" [(ngModel)]="userForm.lastName" class="form-control" placeholder="Nhập họ">
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label>Tên:</label>
+                            <input type="text" [(ngModel)]="userForm.firstName" class="form-control" placeholder="Nhập tên">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Quyền (Role):</label>
+                    <select [(ngModel)]="userForm.role" class="form-select">
+                        <option *ngFor="let role of availableRoles" [value]="role.code">
+                            {{ role.name }} ({{ role.code }})
+                        </option>
                     </select>
+                </div>
+                <div class="info-alert" *ngIf="!isEditMode">
+                    <p>User mới sẽ được tạo với mật khẩu mặc định là <strong>Default123&#64;</strong></p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn-cancel" (click)="closeRoleModal()">Hủy</button>
-                <button class="btn-save" (click)="updateUserRole()" [disabled]="loading">
+                <button class="btn-cancel" (click)="closeUserModal()">Hủy</button>
+                <button class="btn-save" (click)="saveUser()" [disabled]="loading || !userForm.email || (!isEditMode && !userForm.username)">
                     {{ loading ? 'Đang lưu...' : 'Lưu' }}
                 </button>
             </div>

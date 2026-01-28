@@ -1,5 +1,6 @@
 package com.example.auth.controller;
 
+import com.example.auth.dto.PermissionDTO;
 import com.example.auth.dto.RoleDTO;
 import com.example.auth.service.RoleService;
 import lombok.RequiredArgsConstructor;
@@ -18,15 +19,16 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/roles")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('admin')")
 public class RoleController {
 
     private final RoleService roleService;
+    private final com.example.auth.repository.PermissionRepository permissionRepository;
 
     /**
      * Get all roles
      */
     @GetMapping
+    @PreAuthorize("hasAuthority('ROLE_VIEW') or hasAuthority('ROLE_MANAGE')")
     public ResponseEntity<List<RoleDTO>> getAllRoles() {
         return ResponseEntity.ok(roleService.getAllRoles());
     }
@@ -35,6 +37,7 @@ public class RoleController {
      * Get role by ID
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_VIEW') or hasAuthority('ROLE_MANAGE')")
     public ResponseEntity<RoleDTO> getRoleById(@PathVariable UUID id) {
         return ResponseEntity.ok(roleService.getRoleById(id));
     }
@@ -43,6 +46,7 @@ public class RoleController {
      * Get role by code
      */
     @GetMapping("/code/{code}")
+    @PreAuthorize("hasAuthority('ROLE_VIEW') or hasAuthority('ROLE_MANAGE')")
     public ResponseEntity<RoleDTO> getRoleByCode(@PathVariable String code) {
         return ResponseEntity.ok(roleService.getRoleByCode(code));
     }
@@ -51,6 +55,7 @@ public class RoleController {
      * Create new role
      */
     @PostMapping
+    @PreAuthorize("hasAuthority('ROLE_MANAGE')")
     public ResponseEntity<RoleDTO> createRole(@Valid @RequestBody RoleDTO dto) {
         return ResponseEntity.ok(roleService.createRole(dto));
     }
@@ -59,6 +64,7 @@ public class RoleController {
      * Update role
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_MANAGE')")
     public ResponseEntity<RoleDTO> updateRole(@PathVariable UUID id, @Valid @RequestBody RoleDTO dto) {
         return ResponseEntity.ok(roleService.updateRole(id, dto));
     }
@@ -67,6 +73,7 @@ public class RoleController {
      * Delete role
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_MANAGE')")
     public ResponseEntity<Map<String, String>> deleteRole(@PathVariable UUID id) {
         roleService.deleteRole(id);
         return ResponseEntity.ok(Map.of("status", "success", "message", "Role deleted successfully"));
@@ -76,6 +83,7 @@ public class RoleController {
      * Add permission to role
      */
     @PostMapping("/{id}/permissions/{permissionCode}")
+    @PreAuthorize("hasAuthority('ROLE_MANAGE')")
     public ResponseEntity<RoleDTO> addPermission(@PathVariable UUID id, @PathVariable String permissionCode) {
         return ResponseEntity.ok(roleService.addPermissionToRole(id, permissionCode));
     }
@@ -84,7 +92,36 @@ public class RoleController {
      * Remove permission from role
      */
     @DeleteMapping("/{id}/permissions/{permissionCode}")
+    @PreAuthorize("hasAuthority('ROLE_MANAGE')")
     public ResponseEntity<RoleDTO> removePermission(@PathVariable UUID id, @PathVariable String permissionCode) {
         return ResponseEntity.ok(roleService.removePermissionFromRole(id, permissionCode));
+    }
+
+    /**
+     * Get all available permissions
+     */
+    @GetMapping("/permissions")
+    @PreAuthorize("hasAuthority('ROLE_VIEW') or hasAuthority('ROLE_MANAGE')")
+    public ResponseEntity<List<PermissionDTO>> getAllPermissions() {
+        return ResponseEntity.ok(permissionRepository.findAll().stream()
+                .map(p -> PermissionDTO.builder()
+                        .id(p.getId())
+                        .code(p.getCode())
+                        .name(p.getName())
+                        .module(p.getModule())
+                        .description(p.getDescription())
+                        .status(p.getStatus())
+                        .build())
+                .collect(java.util.stream.Collectors.toList()));
+    }
+
+    /**
+     * Sync admin role with all available permissions
+     */
+    @PostMapping("/admin/sync")
+    @PreAuthorize("hasAuthority('ROLE_MANAGE')")
+    public ResponseEntity<Map<String, String>> syncAdminPermissions() {
+        roleService.syncAdminPermissions();
+        return ResponseEntity.ok(Map.of("status", "success", "message", "Admin permissions synchronized successfully"));
     }
 }

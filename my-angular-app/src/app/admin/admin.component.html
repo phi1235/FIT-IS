@@ -3,7 +3,7 @@
   <main class="admin-main">
     <!-- Stats Grid -->
     <div class="dashboard-header">
-      <h2> Dashboard Overview</h2>
+      <h2>Chào mừng, {{ getDisplayName() }}</h2>
       <div class="header-actions">
         <button class="btn-refresh" (click)="loadData()" [disabled]="loading">
           Làm mới dữ liệu
@@ -23,7 +23,7 @@
     </div>
 
     <!-- User Stats -->
-    <div *ngIf="isAdmin && !loading">
+    <div *ngIf="canViewUsers && !loading">
       <h3 class="stats-title">Thống kê Người dùng</h3>
       <div class="stats-grid">
         <div class="stat-card">
@@ -51,7 +51,7 @@
     </div>
 
     <!-- Ticket Stats -->
-    <div *ngIf="!loading">
+    <div *ngIf="canViewTickets && !loading">
       <h3 class="stats-title">Thống kê Tickets</h3>
       <div class="stats-grid">
         <div class="stat-card t-total">

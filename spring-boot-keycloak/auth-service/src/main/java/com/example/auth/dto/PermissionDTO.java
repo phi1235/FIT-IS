@@ -12,11 +12,10 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PermissionDTO {
-    
     private UUID id;
     private String code;
     private String name;
-    private String description;
     private String module;
+    private String description;
     private String status;
 }

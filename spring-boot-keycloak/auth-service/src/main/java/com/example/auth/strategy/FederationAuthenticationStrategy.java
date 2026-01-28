@@ -59,8 +59,8 @@ public class FederationAuthenticationStrategy implements AuthenticationStrategy 
             String email = String.valueOf(remoteUser.getOrDefault("email", request.getUsername() + "@remote.local"));
             Set<String> roleCodes = new HashSet<>(Arrays.asList("user")); // Default role for federation
             
-            String accessToken = jwtService.generateToken(request.getUsername(), roleCodes, 
-                    "federated-user", request.getUsername());
+            String accessToken = jwtService.generateToken(request.getUsername(), roleCodes, Collections.emptySet(),
+                    userId, email);
             String refreshToken = jwtService.generateRefreshToken(request.getUsername());
 
             log.info("Federation authentication successful for user: {}", request.getUsername());

@@ -47,6 +47,20 @@ export class AuthService {
         );
     }
 
+    get canAccessAdmin(): boolean {
+        if (this.isAdmin) return true;
+        // Specifically check for Admin Portal Access permission
+        if (this.hasPermission('SYSTEM_ADMIN_ACCESS')) return true;
+        
+        // Fallback for current permissions
+        const permissions = this.userInfo?.permissions || [];
+        console.log('[canAccessAdmin] permissions:', permissions);
+        const adminModules = ['USER', 'ROLE', 'EMAIL', 'REPORT', 'TICKET', 'AUTH', 'SYSTEM'];
+        const result = permissions.some(p => adminModules.some(mod => p.startsWith(mod)));
+        console.log('[canAccessAdmin] result:', result);
+        return result;
+    }
+
     getUsername(): string {
         return this.userInfo?.username || '';
     }
@@ -65,8 +79,9 @@ export class AuthService {
         localStorage.setItem('refresh_token', refreshToken);
         localStorage.setItem('user_info', JSON.stringify(userInfo));
 
-        this.isAuthenticatedSubject.next(true);
+        // IMPORTANT: Update userInfo FIRST so canAccessAdmin works correctly when isAuthenticated$ emits
         this.userInfoSubject.next(userInfo);
+        this.isAuthenticatedSubject.next(true);
     }
 
     getToken(): string | null {
@@ -94,5 +109,17 @@ export class AuthService {
     hasRole(role: string): boolean {
         const roles = this.userInfo?.roles || [];
         return roles.some(r => r === role || r === `ROLE_${role}` || r.toLowerCase().includes(role.toLowerCase()));
+    }
+
+    hasPermission(permission: string): boolean {
+        if (this.isAdmin) return true;
+        const permissions = this.userInfo?.permissions || [];
+        return permissions.includes(permission);
+    }
+
+    hasAnyPermission(permissions: string[]): boolean {
+        if (this.isAdmin) return true;
+        const userPermissions = this.userInfo?.permissions || [];
+        return permissions.some(p => userPermissions.includes(p));
     }
 }

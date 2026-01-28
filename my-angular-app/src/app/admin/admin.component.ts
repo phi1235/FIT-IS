@@ -29,7 +29,8 @@ export class AdminComponent implements OnInit {
   approvedTickets = 0;
   rejectedTickets = 0;
 
-  isAdmin = false;
+  canViewUsers = false;
+  canViewTickets = false;
 
   constructor(
     private adminService: AdminService,
@@ -39,7 +40,8 @@ export class AdminComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.isAdmin = this.authService.isAdmin || this.keycloakService.hasRole('admin');
+    this.canViewUsers = this.authService.hasPermission('USER_VIEW');
+    this.canViewTickets = this.authService.hasPermission('TICKET_VIEW');
     this.loadData();
   }
 
@@ -47,10 +49,12 @@ export class AdminComponent implements OnInit {
     this.loading = true;
     this.error = null;
 
-    if (this.isAdmin) {
+    if (this.canViewUsers) {
       this.loadUserStats();
     }
-    this.loadTicketStats();
+    if (this.canViewTickets) {
+      this.loadTicketStats();
+    }
   }
 
   private loadUserStats() {
@@ -88,6 +92,10 @@ export class AdminComponent implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  getDisplayName(): string {
+    return this.authService.getDisplayName();
   }
 
   downloadReport(type: string, format: string) {

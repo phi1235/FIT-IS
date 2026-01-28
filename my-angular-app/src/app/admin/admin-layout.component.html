@@ -8,16 +8,19 @@
 
     <nav class="sidebar-nav">
       <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-item">
-        <span class="icon"></span> Dashboard
+        <i class="bi bi-speedometer2"></i> Dashboard
       </a>
-      <a routerLink="/admin/tickets" routerLinkActive="active" class="nav-item">
-        <span class="icon"></span> Quản lý Tickets
+      <a *appPermission="'TICKET_VIEW'" routerLink="/admin/tickets" routerLinkActive="active" class="nav-item">
+        <i class="bi bi-ticket-perforated"></i> Tickets
       </a>
-      <a routerLink="/admin/users" routerLinkActive="active" class="nav-item" *ngIf="isAdmin">
-        <span class="icon"></span> Quản lý Users
+      <a *appPermission="'USER_VIEW'" routerLink="/admin/users" routerLinkActive="active" class="nav-item">
+        <i class="bi bi-people"></i> Users
       </a>
-      <a routerLink="/admin/email-templates" routerLinkActive="active" class="nav-item" *ngIf="isAdmin">
-        <span class="icon"></span> Email Templates
+      <a *appPermission="'EMAIL_TEMPLATE_VIEW'" routerLink="/admin/email-templates" routerLinkActive="active" class="nav-item">
+        <i class="bi bi-envelope-paper"></i> Email Templates
+      </a>
+      <a *appPermission="'ROLE_VIEW'" routerLink="/admin/roles" routerLinkActive="active" class="nav-item">
+        <i class="bi bi-shield-lock"></i> Role Management
       </a>
     </nav>
 

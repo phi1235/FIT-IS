@@ -16,7 +16,7 @@
           <span class="dropdown-arrow">&#9660;</span>
         </button>
         <div class="user-dropdown-menu" *ngIf="showUserMenu">
-          <a routerLink="/admin" class="dropdown-item adminn-item" *ngIf="isAdmin" (click)="toggleUserMenu()">
+          <a routerLink="/admin" class="dropdown-item adminn-item" *ngIf="canAccessAdmin" (click)="toggleUserMenu()">
             Quản Trị
           </a>
           <button class="dropdown-item logout-item" (click)="logout()">

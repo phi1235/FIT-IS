@@ -87,13 +87,19 @@ public class DatabaseAuthenticationStrategy implements AuthenticationStrategy {
             handleSuccessfulLogin(user);
 
             Set<String> roleCodes = new HashSet<>();
+            Set<String> permissionCodes = new HashSet<>();
             if (user.getRoles() != null) {
-                roleCodes = user.getRoles().stream()
-                        .map(Role::getCode)
-                        .collect(Collectors.toSet());
+                for (Role role : user.getRoles()) {
+                    roleCodes.add(role.getCode());
+                    if (role.getPermissions() != null) {
+                        permissionCodes.addAll(role.getPermissions().stream()
+                                .map(com.example.auth.entity.Permission::getCode)
+                                .collect(Collectors.toSet()));
+                    }
+                }
             }
 
-            String accessToken = jwtService.generateToken(user.getUsername(), roleCodes, 
+            String accessToken = jwtService.generateToken(user.getUsername(), roleCodes, permissionCodes,
                     user.getId().toString(), user.getEmail());
             String refreshToken = jwtService.generateRefreshToken(user.getUsername());
 
@@ -107,6 +113,7 @@ public class DatabaseAuthenticationStrategy implements AuthenticationStrategy {
                             .firstName(user.getFirstName())
                             .lastName(user.getLastName())
                             .roles(roleCodes)
+                            .permissions(permissionCodes)
                             .build())
                     .token(LoginResponse.TokenInfo.builder()
                             .accessToken(accessToken)

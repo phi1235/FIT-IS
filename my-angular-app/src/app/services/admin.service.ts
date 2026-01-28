@@ -92,6 +92,46 @@ export class AdminService {
   }
 
   /**
+   * Tạo user mới
+   */
+  createUser(user: Partial<User>): Observable<User> {
+    const headers = this.getAuthHeaders();
+    return this.http.post<User>(`${this.apiUrl}/admin/create`, user, { headers });
+  }
+
+  /**
+   * Cập nhật thông tin user
+   */
+  updateUser(id: string, user: Partial<User>): Observable<User> {
+    const headers = this.getAuthHeaders();
+    return this.http.put<User>(`${this.apiUrl}/admin/update/${id}`, user, { headers });
+  }
+
+  /**
+   * Xóa user
+   */
+  deleteUser(id: string): Observable<any> {
+    const headers = this.getAuthHeaders();
+    return this.http.delete(`${this.apiUrl}/admin/delete/${id}`, { headers });
+  }
+
+  /**
+   * Khóa user
+   */
+  lockUser(id: string): Observable<any> {
+    const headers = this.getAuthHeaders();
+    return this.http.post(`${this.apiUrl}/admin/lock/${id}`, {}, { headers });
+  }
+
+  /**
+   * Mở khóa user
+   */
+  unlockUser(id: string): Observable<any> {
+    const headers = this.getAuthHeaders();
+    return this.http.post(`${this.apiUrl}/admin/unlock/${id}`, {}, { headers });
+  }
+
+  /**
    * Lấy role của chính mình
    */
   getMyRole(): Observable<{ username: string; role: string }> {

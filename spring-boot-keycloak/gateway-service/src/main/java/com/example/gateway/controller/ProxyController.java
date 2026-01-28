@@ -40,6 +40,11 @@ public class ProxyController {
         return proxyRequest(request, body, userServiceUrl);
     }
 
+    @RequestMapping("/api/roles/**")
+    public ResponseEntity<byte[]> proxyRoles(HttpServletRequest request, @RequestBody(required = false) byte[] body) throws URISyntaxException {
+        return proxyRequest(request, body, authServiceUrl);
+    }
+
     @RequestMapping("/api/tickets/**")
     public ResponseEntity<byte[]> proxyTicket(HttpServletRequest request, @RequestBody(required = false) byte[] body) throws URISyntaxException {
         return proxyRequest(request, body, ticketServiceUrl);

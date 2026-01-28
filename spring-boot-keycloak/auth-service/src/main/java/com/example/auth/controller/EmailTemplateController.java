@@ -23,20 +23,21 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/auth/admin/email-templates")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")
 public class EmailTemplateController {
 
     private final EmailTemplateRepository emailTemplateRepository;
     private final AuthUserRepository authUserRepository;
 
     @GetMapping
+    @PreAuthorize("hasAuthority('EMAIL_TEMPLATE_VIEW') or hasAuthority('EMAIL_TEMPLATE_MANAGE')")
     public ResponseEntity<Page<EmailTemplateDTO>> getAllTemplates(Pageable pageable) {
         return ResponseEntity.ok(emailTemplateRepository.findAll(pageable)
                 .map(this::convertToDTO));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<EmailTemplateDTO> getTemplateById(@PathVariable UUID id) {
+    @PreAuthorize("hasAuthority('EMAIL_TEMPLATE_VIEW') or hasAuthority('EMAIL_TEMPLATE_MANAGE')")
+    public ResponseEntity<EmailTemplateDTO> getById(@PathVariable UUID id) {
         return emailTemplateRepository.findById(id)
                 .map(this::convertToDTO)
                 .map(ResponseEntity::ok)
@@ -44,7 +45,8 @@ public class EmailTemplateController {
     }
 
     @PostMapping
-    public ResponseEntity<EmailTemplateDTO> createTemplate(
+    @PreAuthorize("hasAuthority('EMAIL_TEMPLATE_MANAGE')")
+    public ResponseEntity<EmailTemplateDTO> create(
             @Valid @RequestBody EmailTemplateDTO dto,
             @AuthenticationPrincipal UserDetails userDetails) {
         
@@ -68,7 +70,8 @@ public class EmailTemplateController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<EmailTemplateDTO> updateTemplate(
+    @PreAuthorize("hasAuthority('EMAIL_TEMPLATE_MANAGE')")
+    public ResponseEntity<EmailTemplateDTO> update(
             @PathVariable UUID id,
             @Valid @RequestBody EmailTemplateDTO dto,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -92,7 +95,8 @@ public class EmailTemplateController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTemplate(@PathVariable UUID id) {
+    @PreAuthorize("hasAuthority('EMAIL_TEMPLATE_MANAGE')")
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
         EmailTemplate template = emailTemplateRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Template not found"));
         

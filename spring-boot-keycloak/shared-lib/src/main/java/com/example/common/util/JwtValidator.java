@@ -48,6 +48,17 @@ public class JwtValidator {
         return Collections.emptyList();
     }
 
+    public List<String> extractPermissions(String token) {
+        final Claims claims = extractAllClaims(token);
+        Object permissions = claims.get("permissions");
+        if (permissions instanceof List) {
+            return (List<String>) permissions;
+        } else if (permissions instanceof String) {
+            return Arrays.asList(((String) permissions).split(","));
+        }
+        return Collections.emptyList();
+    }
+
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);

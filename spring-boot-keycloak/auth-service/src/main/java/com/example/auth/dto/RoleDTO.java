@@ -19,5 +19,5 @@ public class RoleDTO {
     private String name;
     private String description;
     private boolean isSystem;
-    private Set<String> permissionCodes;
+    private Set<PermissionDTO> permissions;
 }

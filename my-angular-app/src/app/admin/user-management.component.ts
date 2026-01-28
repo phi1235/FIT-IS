@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { AdminService, User, PagedResponse } from '../services/admin.service';
 import { AuthService } from '../services/auth.service';
+import { RolePermissionService, Role } from '../services/role-permission.service';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 
@@ -18,6 +19,7 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     users: User[] = [];
     loading = false;
     error: string | null = null;
+    availableRoles: Role[] = [];
 
     // Pagination
     currentPage = 0;
@@ -31,10 +33,17 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     private searchSubject = new Subject<string>();
     private destroy$ = new Subject<void>();
 
-    // Role Modal
+    // User Modal (Create/Edit)
     selectedUser: User | null = null;
-    newRole: string = 'user';
-    showRoleModal = false;
+    showUserModal = false;
+    isEditMode = false;
+    userForm: Partial<User> = {
+        username: '',
+        email: '',
+        firstName: '',
+        lastName: '',
+        role: 'user'
+    };
 
     // Export
     exporting = false;
@@ -43,7 +52,8 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     constructor(
         private adminService: AdminService,
         private http: HttpClient,
-        private authService: AuthService
+        private authService: AuthService,
+        private rolePermissionService: RolePermissionService
     ) { }
 
     ngOnInit() {
@@ -59,11 +69,22 @@ export class UserManagementComponent implements OnInit, OnDestroy {
         });
 
         this.loadUsers();
+        this.loadAvailableRoles();
     }
 
     ngOnDestroy() {
         this.destroy$.next();
         this.destroy$.complete();
+    }
+
+    loadAvailableRoles() {
+        this.rolePermissionService.getRoles().subscribe({
+            next: (roles) => {
+                // Filter out admin role from user management selection
+                this.availableRoles = roles.filter(r => r.code.toLowerCase() !== 'admin');
+            },
+            error: (err) => console.error('Failed to load roles:', err)
+        });
     }
 
     loadUsers() {
@@ -133,39 +154,100 @@ export class UserManagementComponent implements OnInit, OnDestroy {
         return pages;
     }
 
-    openRoleModal(user: User) {
-        this.selectedUser = user;
-        this.newRole = user.role || 'user';
-        this.showRoleModal = true;
+    // User Modal CRUD logic
+
+    openCreateModal() {
+        this.selectedUser = null;
+        this.isEditMode = false;
+        this.userForm = {
+            username: '',
+            email: '',
+            firstName: '',
+            lastName: '',
+            role: 'user'
+        };
+        this.showUserModal = true;
     }
 
-    closeRoleModal() {
-        this.showRoleModal = false;
+    openEditModal(user: User) {
+        this.selectedUser = user;
+        this.isEditMode = true;
+        this.userForm = { ...user };
+        this.showUserModal = true;
+    }
+
+    closeUserModal() {
+        this.showUserModal = false;
         this.selectedUser = null;
     }
 
-    updateUserRole() {
-        if (!this.selectedUser) return;
-
+    saveUser() {
         this.loading = true;
         this.error = null;
 
-        this.adminService.updateUserRole(this.selectedUser.username, this.newRole).subscribe({
-            next: (response) => {
-                console.log('Role updated:', response);
-                if (this.selectedUser) {
-                    this.selectedUser.role = this.newRole;
+        if (this.isEditMode && this.selectedUser?.id) {
+            this.adminService.updateUser(this.selectedUser.id, this.userForm).subscribe({
+                next: () => {
+                    this.closeUserModal();
+                    this.loadUsers();
+                },
+                error: (err) => {
+                    console.error('Update failed:', err);
+                    this.error = 'Không thể cập nhật user.';
+                    this.loading = false;
                 }
-                this.closeRoleModal();
-                this.loading = false;
-                this.loadUsers();
-            },
+            });
+        } else {
+            this.adminService.createUser(this.userForm).subscribe({
+                next: () => {
+                    this.closeUserModal();
+                    this.loadUsers();
+                },
+                error: (err) => {
+                    console.error('Create failed:', err);
+                    this.error = 'Không thể tạo user.';
+                    this.loading = false;
+                }
+            });
+        }
+    }
+
+    deleteUser(user: User) {
+        if (!user.id || !confirm(`Bạn có chắc chắn muốn xóa user ${user.username}?`)) return;
+
+        this.loading = true;
+        this.adminService.deleteUser(user.id).subscribe({
+            next: () => this.loadUsers(),
             error: (err) => {
-                console.error('Failed to update role:', err);
-                this.error = 'Không thể cập nhật role. Vui lòng thử lại.';
+                console.error('Delete failed:', err);
+                this.error = 'Không thể xóa user.';
                 this.loading = false;
             }
         });
+    }
+
+    toggleUserStatus(user: User) {
+        if (!user.id) return;
+
+        this.loading = true;
+        const action = user.enabled ? this.adminService.lockUser(user.id) : this.adminService.unlockUser(user.id);
+
+        action.subscribe({
+            next: () => this.loadUsers(),
+            error: (err) => {
+                console.error('Status toggle failed:', err);
+                this.error = 'Không thể thay đổi trạng thái user.';
+                this.loading = false;
+            }
+        });
+    }
+
+    // Role update backup (still mapping to old UI if needed)
+    openRoleModal(user: User) {
+        this.selectedUser = user;
+        this.userForm = { ...user };
+        this.showUserModal = true;
+        this.isEditMode = true;
     }
 
     // Export state

@@ -11,6 +11,8 @@ import { ForgotPasswordComponent } from './password-management/forgot-password.c
 import { AdminPasswordResetComponent } from './password-management/admin-password-reset.component';
 import { EmailTemplateListComponent } from './admin/email-templates/email-template-list.component';
 import { EmailTemplateDetailComponent } from './admin/email-templates/email-template-detail.component';
+import { permissionGuard } from './guards/permission.guard';
+import { RoleManagementComponent } from './admin/role-management.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -35,10 +37,28 @@ export const routes: Routes = [
     canActivate: [portalGuard], // Cho phép Admin, Maker, Checker vào portal
     children: [
       { path: '', component: AdminComponent }, // Dashboard
-      { path: 'users', component: UserManagementComponent, canActivate: [adminGuard] }, // User Management
-      { path: 'password-reset', component: AdminPasswordResetComponent, canActivate: [adminGuard] }, // Admin Password Reset
+      { 
+        path: 'users', 
+        component: UserManagementComponent, 
+        canActivate: [permissionGuard], 
+        data: { permission: 'USER_VIEW' } 
+      }, // User Management
+      { 
+        path: 'password-reset', 
+        component: AdminPasswordResetComponent, 
+        canActivate: [permissionGuard], 
+        data: { permission: 'USER_MANAGE' } 
+      }, // Admin Password Reset
+      {
+        path: 'roles',
+        component: RoleManagementComponent,
+        canActivate: [permissionGuard],
+        data: { permission: 'ROLE_VIEW' }
+      },
       {
         path: 'tickets',
+        canActivate: [permissionGuard],
+        data: { permission: 'TICKET_VIEW' },
         children: [
           { path: '', loadComponent: () => import('./tickets/ticket-list.component').then(m => m.TicketListMainComponent) },
           { path: 'create', loadComponent: () => import('./tickets/ticket-create.component').then(m => m.TicketCreateComponent) },
@@ -47,11 +67,12 @@ export const routes: Routes = [
       },
       {
         path: 'email-templates',
-        canActivate: [adminGuard],
+        canActivate: [permissionGuard],
+        data: { permission: 'EMAIL_TEMPLATE_VIEW' },
         children: [
           { path: '', component: EmailTemplateListComponent },
-          { path: 'new', component: EmailTemplateDetailComponent },
-          { path: ':id', component: EmailTemplateDetailComponent }
+          { path: 'new', component: EmailTemplateDetailComponent, data: { permission: 'EMAIL_TEMPLATE_MANAGE' } },
+          { path: ':id', component: EmailTemplateDetailComponent, data: { permission: 'EMAIL_TEMPLATE_MANAGE' } }
         ]
       },
       { path: '**', redirectTo: '' }

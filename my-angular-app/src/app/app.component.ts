@@ -17,6 +17,7 @@ export class AppComponent implements OnInit {
   isAuthenticated = false;
   userProfile: any = null;
   isAdmin = false;
+  canAccessAdmin = false;
   isInternalUser = false;
   isAdminRoute = false;
   isAuthPage = false;
@@ -66,6 +67,7 @@ export class AppComponent implements OnInit {
         this.isAuthenticated = true;
         this.userProfile = this.authService.userInfo;
         this.isAdmin = this.authService.isAdmin;
+        this.canAccessAdmin = this.authService.canAccessAdmin;
         this.isInternalUser = true;
         console.log('Auth state updated:', {
           isAuthenticated: this.isAuthenticated,
@@ -93,6 +95,7 @@ export class AppComponent implements OnInit {
     if (this.authService.isAuthenticated) {
       this.isAuthenticated = true;
       this.isAdmin = this.authService.isAdmin;
+      this.canAccessAdmin = this.authService.canAccessAdmin;
       this.isInternalUser = true;
       this.userProfile = this.authService.userInfo;
     } else {

@@ -48,9 +48,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String email = jwtValidator.extractClaim(jwt, claims -> claims.get("email", String.class));
 
                 if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    List<String> permissions = jwtValidator.extractPermissions(jwt);
+                    
                     List<SimpleGrantedAuthority> authorities = roles.stream()
                             .map(role -> new SimpleGrantedAuthority(role.startsWith("ROLE_") ? role : "ROLE_" + role))
                             .collect(Collectors.toList());
+                    
+                    authorities.addAll(permissions.stream()
+                            .map(SimpleGrantedAuthority::new)
+                            .collect(Collectors.toList()));
 
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             username, null, authorities);
@@ -63,6 +69,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     userInfo.setUsername(username);
                     userInfo.setEmail(email);
                     userInfo.setRoles(roles.stream().collect(Collectors.toSet()));
+                    userInfo.setPermissions(permissions.stream().collect(Collectors.toSet()));
                     if (userIdStr != null) {
                         userInfo.setUserId(UUID.fromString(userIdStr));
                     }

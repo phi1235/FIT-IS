@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { KeycloakService } from '../services/keycloak.service';
 import { AuthService } from '../services/auth.service';
+import { PermissionDirective } from '../directives/permission.directive';
 
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, PermissionDirective],
   templateUrl: './admin-layout.component.html',
   styleUrl: './admin-layout.component.css'
 })

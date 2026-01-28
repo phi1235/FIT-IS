@@ -1,0 +1,110 @@
+<div class="role-mgmt-container">
+  <!-- Left Side: Role List -->
+  <div class="role-sidebar">
+    <div class="sidebar-header">
+      <h3>Roles</h3>
+      <button class="btn-add" (click)="createNewRole()">+ New Role</button>
+    </div>
+    <div class="role-list">
+      <div *ngFor="let role of roles" 
+           class="role-card" 
+           [class.active]="selectedRole?.id === role.id"
+           (click)="selectRole(role)">
+        <div class="role-info">
+          <span class="role-name">{{ role.name }}</span>
+          <span class="role-code">{{ role.code }}</span>
+        </div>
+        <button class="btn-delete" (click)="deleteRole(role); $event.stopPropagation()">
+          <i class="bi bi-trash"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Side: Role Editor -->
+  <div class="role-editor">
+    <div *ngIf="selectedRole || isEditing; else noSelection" class="editor-content">
+      <div class="editor-header">
+        <div class="breadcrumb">Portal / Hệ thống nội bộ / <b>{{ selectedRole?.name || 'New Role' }}</b></div>
+        <div class="header-main">
+          <h2>{{ isEditing && !selectedRole ? 'Tạo vai trò mới' : 'Vai trò: ' + selectedRole?.name }}</h2>
+          <div class="header-actions">
+            <button class="btn-cancel" *ngIf="isEditing" (click)="isEditing = false; selectRole(selectedRole!)">Hủy</button>
+            <button class="btn-save" (click)="saveRole()" [disabled]="isSaving">
+              {{ isSaving ? 'Đang lưu...' : 'Lưu thay đổi' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="editor-tabs">
+        <button class="tab-btn" [class.active]="currentTab === 'basic'" (click)="setTab('basic')">Thông tin cơ bản</button>
+        <button class="tab-btn" [class.active]="currentTab === 'permissions'" (click)="setTab('permissions')">Phân quyền</button>
+      </div>
+
+      <!-- Basic Info Tab -->
+      <div class="tab-panel" *ngIf="currentTab === 'basic'">
+        <div class="form-section">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Tên vai trò</label>
+              <input type="text" [(ngModel)]="roleForm.name" placeholder="Ví dụ: Quản trị viên">
+            </div>
+            <div class="form-group">
+              <label>Mã vai trò</label>
+              <input type="text" [(ngModel)]="roleForm.code" placeholder="Ví dụ: ADMIN_GLOBAL" [disabled]="!!selectedRole">
+              <small class="field-hint" *ngIf="selectedRole">Mã định danh duy nhất không thể thay đổi sau khi tạo.</small>
+            </div>
+            <div class="form-group full-width">
+              <label>Mô tả</label>
+              <textarea [(ngModel)]="roleForm.description" placeholder="Mô tả ngắn gọn về trách nhiệm của vai trò này"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Permissions Matrix Tab -->
+      <div class="tab-panel permissions-matrix" *ngIf="currentTab === 'permissions'">
+        <div class="matrix-header">
+          <h3>Phân quyền</h3>
+          <p>Cấp quyền chức năng chi tiết cho vai trò này</p>
+        </div>
+
+        <div class="matrix-scroll-area">
+          <table class="matrix-table">
+            <thead>
+              <tr>
+                <th class="sticky-col">Chức năng</th>
+                <th *ngFor="let col of ACTION_COLUMNS" class="action-header">{{ col.label }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of matrixData">
+                <td class="module-name sticky-col">{{ getModuleLabel(row.module) }}</td>
+                <td *ngFor="let col of ACTION_COLUMNS" class="checkbox-cell">
+                  <div *ngIf="row[col.key]" 
+                       class="matrix-checkbox" 
+                       [class.checked]="hasPermission(row[col.key])"
+                       (click)="togglePermission(row[col.key])"
+                       [attr.title]="row[col.key].name">
+                    <i class="bi bi-check" *ngIf="hasPermission(row[col.key])"></i>
+                  </div>
+                  <div *ngIf="!row[col.key]" class="matrix-empty">-</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <ng-template #noSelection>
+      <div class="no-selection">
+        <i class="bi bi-shield-lock large-icon"></i>
+        <h3>Select a role to edit</h3>
+        <p>Or create a new one to start assigning permissions.</p>
+        <button class="btn-primary" (click)="createNewRole()">Create New Role</button>
+      </div>
+    </ng-template>
+  </div>
+</div>

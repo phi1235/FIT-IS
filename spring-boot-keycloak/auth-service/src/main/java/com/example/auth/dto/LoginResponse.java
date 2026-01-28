@@ -28,6 +28,7 @@ public class LoginResponse {
         private String firstName;
         private String lastName;
         private Set<String> roles;
+        private Set<String> permissions;
     }
 
     @Data

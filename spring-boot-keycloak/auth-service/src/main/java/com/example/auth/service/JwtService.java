@@ -45,9 +45,10 @@ public class JwtService {
     /**
      * Sinh access token với user info
      */
-    public String generateToken(String username, Collection<String> roles, String userId, String email) {
+    public String generateToken(String username, Collection<String> roles, Collection<String> permissions, String userId, String email) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("roles", roles);
+        claims.put("permissions", permissions);
         claims.put("userId", userId);
         claims.put("email", email);
         claims.put("type", "access");

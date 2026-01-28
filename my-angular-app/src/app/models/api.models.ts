@@ -20,6 +20,8 @@ export interface UserResponse {
     firstName?: string;
     lastName?: string;
     role?: string;
+    roles?: string[];
+    permissions?: string[];
 }
 
 export interface TokenResponse {
@@ -54,6 +56,7 @@ export interface UserInfo {
     firstName?: string;
     lastName?: string;
     roles: string[];
+    permissions: string[];
 }
 
 // Ticket Types

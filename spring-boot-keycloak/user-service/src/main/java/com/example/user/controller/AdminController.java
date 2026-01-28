@@ -5,18 +5,24 @@ import com.example.common.util.SecurityUtils;
 import com.example.user.dto.UserDTO;
 import com.example.user.entity.Role;
 import com.example.user.entity.User;
+import com.example.user.repository.RoleRepository;
 import com.example.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
@@ -26,9 +32,11 @@ import java.util.stream.Collectors;
 public class AdminController {
 
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @GetMapping("/admin/list")
-    @PreAuthorize("hasRole('admin') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('USER_VIEW') or hasAuthority('USER_MANAGE')")
     public ResponseEntity<PagedResponse<UserDTO>> getUsersPaginated(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
@@ -64,7 +72,7 @@ public class AdminController {
     }
 
     @GetMapping("/admin/role")
-    @PreAuthorize("hasRole('admin') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('USER_VIEW') or hasAuthority('USER_MANAGE')")
     public ResponseEntity<Map<String, String>> getUserRole(@RequestParam String username) {
         return userRepository.findByUsername(username)
                 .map(user -> {
@@ -85,6 +93,124 @@ public class AdminController {
                 .map(user -> {
                     String role = user.getRoles().isEmpty() ? "user" : user.getRoles().iterator().next().getCode();
                     return ResponseEntity.ok(Map.of("username", username, "role", role));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/admin/role")
+    @PreAuthorize("hasAuthority('USER_MANAGE')")
+    @Transactional
+    public ResponseEntity<String> updateUserRole(@RequestBody Map<String, String> request) {
+        String username = request.get("username");
+        String roleCode = request.get("role");
+
+        log.info("Updating role for user {}: {}", username, roleCode);
+
+        return userRepository.findByUsername(username)
+                .map(user -> {
+                    Role role = roleRepository.findByCode(roleCode)
+                            .orElseThrow(() -> new RuntimeException("Role not found: " + roleCode));
+                    
+                    user.getRoles().clear();
+                    user.getRoles().add(role);
+                    userRepository.save(user);
+                    return ResponseEntity.ok("Role updated successfully");
+                })
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found"));
+    }
+
+    @PostMapping("/admin/create")
+    @PreAuthorize("hasAuthority('USER_MANAGE')")
+    @Transactional
+    public ResponseEntity<?> createUser(@RequestBody UserDTO dto) {
+        log.info("Creating user: {}", dto.getUsername());
+        
+        if (userRepository.findByUsername(dto.getUsername()).isPresent()) {
+            return ResponseEntity.badRequest().body("Username already exists");
+        }
+
+        Role userRole = roleRepository.findByCode(dto.getRole() != null ? dto.getRole() : "user")
+                .orElseThrow(() -> new RuntimeException("Default role not found"));
+
+        User user = User.builder()
+                .username(dto.getUsername())
+                .email(dto.getEmail())
+                .firstName(dto.getFirstName())
+                .lastName(dto.getLastName())
+                .enabled(true)
+                .passwordHash(passwordEncoder.encode("Default123@")) // Set a default password
+                .roles(new HashSet<>(java.util.Set.of(userRole)))
+                .build();
+
+        userRepository.save(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(convertToDTO(user));
+    }
+
+    @PutMapping("/admin/update/{id}")
+    @PreAuthorize("hasAuthority('USER_MANAGE')")
+    @Transactional
+    public ResponseEntity<?> updateUser(@PathVariable UUID id, @RequestBody UserDTO dto) {
+        log.info("Updating user id: {}", id);
+        
+        return userRepository.findById(id)
+                .map(user -> {
+                    user.setEmail(dto.getEmail());
+                    user.setFirstName(dto.getFirstName());
+                    user.setLastName(dto.getLastName());
+                    
+                    if (dto.getRole() != null) {
+                        Role role = roleRepository.findByCode(dto.getRole())
+                                .orElseThrow(() -> new RuntimeException("Role not found: " + dto.getRole()));
+                        user.getRoles().clear();
+                        user.getRoles().add(role);
+                    }
+                    
+                    userRepository.save(user);
+                    return ResponseEntity.ok(convertToDTO(user));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/admin/delete/{id}")
+    @PreAuthorize("hasAuthority('USER_MANAGE')")
+    @Transactional
+    public ResponseEntity<?> deleteUser(@PathVariable UUID id) {
+        log.info("Deleting user id: {}", id);
+        
+        if (!userRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        userRepository.deleteById(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/admin/lock/{id}")
+    @PreAuthorize("hasAuthority('USER_MANAGE')")
+    @Transactional
+    public ResponseEntity<?> lockUser(@PathVariable UUID id) {
+        log.info("Locking user id: {}", id);
+        
+        return userRepository.findById(id)
+                .map(user -> {
+                    user.setEnabled(false);
+                    userRepository.save(user);
+                    return ResponseEntity.ok().build();
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/admin/unlock/{id}")
+    @PreAuthorize("hasAuthority('USER_MANAGE')")
+    @Transactional
+    public ResponseEntity<?> unlockUser(@PathVariable UUID id) {
+        log.info("Unlocking user id: {}", id);
+        
+        return userRepository.findById(id)
+                .map(user -> {
+                    user.setEnabled(true);
+                    userRepository.save(user);
+                    return ResponseEntity.ok().build();
                 })
                 .orElse(ResponseEntity.notFound().build());
     }

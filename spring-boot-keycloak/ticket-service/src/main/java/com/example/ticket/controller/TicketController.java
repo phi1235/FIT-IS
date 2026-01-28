@@ -41,7 +41,10 @@ public class TicketController {
     @GetMapping
     public ResponseEntity<List<TicketDTO>> getAllTickets(Authentication authentication, HttpServletRequest request) {
         if (authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_admin") || a.getAuthority().equals("ROLE_checker"))) {
+                .anyMatch(a -> {
+                    String auth = a.getAuthority().toUpperCase();
+                    return auth.equals("ROLE_ADMIN") || auth.equals("ROLE_CHECKER") || auth.equals("TICKET_VIEW");
+                })) {
             return ResponseEntity.ok(ticketService.getAllTickets());
         }
         return ResponseEntity.ok(ticketService.getTicketsByMaker(requireUserId(request)));
@@ -57,7 +60,10 @@ public class TicketController {
             HttpServletRequest request) {
 
         if (authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_admin") || a.getAuthority().equals("ROLE_checker"))) {
+                .anyMatch(a -> {
+                    String auth = a.getAuthority().toUpperCase();
+                    return auth.equals("ROLE_ADMIN") || auth.equals("ROLE_CHECKER") || auth.equals("TICKET_VIEW");
+                })) {
             return ResponseEntity.ok(ticketService.getAllTicketsPaginatedWithStatus(page, size, search, status));
         }
 

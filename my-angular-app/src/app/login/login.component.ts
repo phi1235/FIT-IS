@@ -158,7 +158,8 @@ export class LoginComponent implements OnInit {
                     email: user.email,
                     firstName: user.firstName,
                     lastName: user.lastName,
-                    roles: roles
+                    roles: roles,
+                    permissions: user.permissions || []
                 };
 
                 console.log('Parsed userInfo:', userInfo);

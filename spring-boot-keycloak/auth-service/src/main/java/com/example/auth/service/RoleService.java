@@ -72,10 +72,10 @@ public class RoleService {
                 .build();
 
         // Add permissions if provided
-        if (dto.getPermissionCodes() != null && !dto.getPermissionCodes().isEmpty()) {
-            Set<Permission> permissions = dto.getPermissionCodes().stream()
-                    .map(code -> permissionRepository.findByCode(code)
-                            .orElseThrow(() -> new RuntimeException("Permission not found: " + code)))
+        if (dto.getPermissions() != null && !dto.getPermissions().isEmpty()) {
+            Set<Permission> permissions = dto.getPermissions().stream()
+                    .map(p -> permissionRepository.findByCode(p.getCode())
+                            .orElseThrow(() -> new RuntimeException("Permission not found: " + p.getCode())))
                     .collect(Collectors.toSet());
             role.setPermissions(permissions);
         }
@@ -101,10 +101,10 @@ public class RoleService {
         role.setDescription(dto.getDescription());
 
         // Update permissions if provided
-        if (dto.getPermissionCodes() != null) {
-            Set<Permission> permissions = dto.getPermissionCodes().stream()
-                    .map(code -> permissionRepository.findByCode(code)
-                            .orElseThrow(() -> new RuntimeException("Permission not found: " + code)))
+        if (dto.getPermissions() != null) {
+            Set<Permission> permissions = dto.getPermissions().stream()
+                    .map(p -> permissionRepository.findByCode(p.getCode())
+                            .orElseThrow(() -> new RuntimeException("Permission not found: " + p.getCode())))
                     .collect(Collectors.toSet());
             role.setPermissions(permissions);
         }
@@ -161,9 +161,40 @@ public class RoleService {
         return toDTO(role);
     }
 
+    /**
+     * Synchronize admin role with all available permissions
+     */
+    @Transactional
+    public void syncAdminPermissions() {
+        Role adminRole = roleRepository.findByCode("admin")
+                .orElseGet(() -> {
+                    log.info("Creating admin role since it doesn't exist");
+                    return roleRepository.save(Role.builder()
+                            .code("admin")
+                            .name("Administrator")
+                            .description("Full system access")
+                            .isSystem(true)
+                            .build());
+                });
+
+        List<Permission> allPermissions = permissionRepository.findAll();
+        adminRole.setPermissions(new HashSet<>(allPermissions));
+        roleRepository.save(adminRole);
+        log.info("Admin role synchronized with {} permissions", allPermissions.size());
+    }
+
     private RoleDTO toDTO(Role role) {
-        Set<String> permissionCodes = role.getPermissions() != null
-                ? role.getPermissions().stream().map(Permission::getCode).collect(Collectors.toSet())
+        Set<com.example.auth.dto.PermissionDTO> permissionDTOs = role.getPermissions() != null
+                ? role.getPermissions().stream()
+                    .map(p -> com.example.auth.dto.PermissionDTO.builder()
+                        .id(p.getId())
+                        .code(p.getCode())
+                        .name(p.getName())
+                        .module(p.getModule())
+                        .description(p.getDescription())
+                        .status(p.getStatus())
+                        .build())
+                    .collect(Collectors.toSet())
                 : new HashSet<>();
 
         return RoleDTO.builder()
@@ -172,7 +203,7 @@ public class RoleService {
                 .name(role.getName())
                 .description(role.getDescription())
                 .isSystem(role.isSystem())
-                .permissionCodes(permissionCodes)
+                .permissions(permissionDTOs)
                 .build();
     }
 }
