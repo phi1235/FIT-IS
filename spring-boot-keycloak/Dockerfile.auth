@@ -1,5 +1,6 @@
 # Auth Service Dockerfile
 FROM eclipse-temurin:17-jre
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY auth-service/build/libs/auth-service-1.0.0.jar /app/app.jar
 ENV JAVA_OPTS="-Xms128m -Xmx384m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"

@@ -30,6 +30,22 @@ public class ProxyController {
     @Value("${REPORT_SERVICE_URL}")
     private String reportServiceUrl;
 
+    @Value("${AUDIT_SERVICE_URL}")
+    private String auditServiceUrl;
+
+    @Value("${WORKFLOW_SERVICE_URL}")
+    private String workflowServiceUrl;
+
+    @RequestMapping("/api/audit/**")
+    public ResponseEntity<byte[]> proxyAudit(HttpServletRequest request, @RequestBody(required = false) byte[] body) throws URISyntaxException {
+        return proxyRequest(request, body, auditServiceUrl);
+    }
+
+    @RequestMapping("/api/workflow/**")
+    public ResponseEntity<byte[]> proxyWorkflow(HttpServletRequest request, @RequestBody(required = false) byte[] body) throws URISyntaxException {
+        return proxyRequest(request, body, workflowServiceUrl);
+    }
+
     @RequestMapping("/api/auth/**")
     public ResponseEntity<byte[]> proxyAuth(HttpServletRequest request, @RequestBody(required = false) byte[] body) throws URISyntaxException {
         return proxyRequest(request, body, authServiceUrl);

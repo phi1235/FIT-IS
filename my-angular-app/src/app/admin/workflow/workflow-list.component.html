@@ -1,0 +1,141 @@
+<div class="wf-wrapper">
+
+  <!-- Hero Header -->
+  <div class="wf-hero">
+    <div class="wf-hero-left">
+      <div class="wf-hero-icon"><i class="bi bi-diagram-3-fill"></i></div>
+      <div>
+        <h1 class="wf-title">Quản lý Workflows</h1>
+        <p class="wf-sub">Theo dõi và xử lý các yêu cầu phê duyệt</p>
+      </div>
+    </div>
+    <div class="wf-hero-actions">
+      <button class="wf-btn-refresh" (click)="loadRequests()" [disabled]="loading">
+        <i class="bi bi-arrow-clockwise"></i> Làm mới
+      </button>
+    </div>
+  </div>
+
+  <!-- Filter Card -->
+  <div class="wf-filter-card">
+    <div class="wf-filter-row">
+      <div class="wf-filter-group">
+        <label>Trạng thái</label>
+        <select [(ngModel)]="filters.status" class="wf-filter-input">
+          <option value="">Tất cả</option>
+          <option value="PENDING">Chờ duyệt</option>
+          <option value="COMPLETED">Hoàn tất</option>
+          <option value="REJECTED">Từ chối</option>
+        </select>
+      </div>
+      <div class="wf-filter-group">
+        <label>Loại yêu cầu</label>
+        <input type="text" [(ngModel)]="filters.requestType" placeholder="Loại yêu cầu..." class="wf-filter-input" />
+      </div>
+      <div class="wf-filter-actions">
+        <button class="wf-btn-search" (click)="applyFilters()">
+          <i class="bi bi-search"></i> Tìm kiếm
+        </button>
+        <button class="wf-btn-reset" (click)="resetFilters()">
+          <i class="bi bi-x-circle"></i> Xóa lọc
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table Card -->
+  <div class="wf-card">
+
+    <!-- Card toolbar -->
+    <div class="wf-card-toolbar">
+      <div class="wf-count-badge">
+        <i class="bi bi-diagram-3"></i>
+        <strong>{{ totalElements }}</strong> yêu cầu
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="wf-loading">
+      <div class="wf-spinner"></div>
+      <span>Đang tải...</span>
+    </div>
+
+    <table *ngIf="!loading" class="wf-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Loại yêu cầu</th>
+          <th>Người tạo</th>
+          <th>Trạng thái</th>
+          <th>Tiến độ</th>
+          <th>Ngày tạo</th>
+          <th class="col-actions">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let req of requests; let i = index" (click)="viewDetail(req.id)" class="wf-row-clickable">
+          <td class="wf-idx">{{ currentPage * pageSize + i + 1 }}</td>
+          <td><span class="wf-type-badge">{{ req.requestType }}</span></td>
+          <td class="wf-initiator">{{ req.initiatorUserId ? (req.initiatorUserId | slice:0:8) + '...' : '-' }}</td>
+          <td>
+            <span [class]="'wf-status-badge ' + getStatusClass(req.status)">
+              <span class="wf-status-dot"></span>
+              {{ req.status === 'PENDING' ? 'Chờ duyệt' : req.status === 'COMPLETED' ? 'Hoàn tất' : req.status === 'REJECTED' ? 'Từ chối' : req.status }}
+            </span>
+          </td>
+          <td>
+            <div class="wf-progress">
+              <span class="wf-progress-text">{{ req.currentStep }} / {{ req.totalSteps }}</span>
+              <div class="wf-progress-bar">
+                <div class="wf-progress-fill" [style.width.%]="(req.currentStep / req.totalSteps) * 100"></div>
+              </div>
+            </div>
+          </td>
+          <td class="wf-date">{{ req.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+          <td class="col-actions">
+            <button class="wf-btn-view" (click)="viewDetail(req.id); $event.stopPropagation()" title="Xem chi tiết">
+              <i class="bi bi-eye-fill"></i>
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="requests.length === 0">
+          <td colspan="7" class="wf-empty">
+            <i class="bi bi-inbox"></i>
+            <span>Không có yêu cầu nào</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <div class="pagination-bar" *ngIf="!loading && totalPages > 0">
+      <div class="page-info">
+        Hiển thị {{ currentPage * pageSize + 1 }}–{{ (currentPage + 1) * pageSize > totalElements ? totalElements : (currentPage + 1) * pageSize }} / {{ totalElements }} yêu cầu
+      </div>
+      <div class="page-nav">
+        <button class="pg-btn" (click)="onPageChange(0)" [disabled]="currentPage === 0" title="Trang đầu">
+          <i class="bi bi-chevron-double-left"></i>
+        </button>
+        <button class="pg-btn" (click)="onPageChange(currentPage - 1)" [disabled]="currentPage === 0" title="Trang trước">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <button *ngFor="let p of getPageNumbers()" class="pg-btn" [class.pg-active]="p === currentPage"
+          (click)="onPageChange(p)">{{ p + 1 }}</button>
+        <button class="pg-btn" (click)="onPageChange(currentPage + 1)" [disabled]="currentPage >= totalPages - 1" title="Trang sau">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+        <button class="pg-btn" (click)="onPageChange(totalPages - 1)" [disabled]="currentPage >= totalPages - 1" title="Trang cuối">
+          <i class="bi bi-chevron-double-right"></i>
+        </button>
+      </div>
+      <div class="page-size-wrap">
+        <label>Hiển thị:</label>
+        <select [value]="pageSize" (change)="onPageSizeChange($event)">
+          <option *ngFor="let s of pageSizeOptions" [value]="s">{{ s }}</option>
+        </select>
+        <span>/ trang</span>
+      </div>
+    </div>
+
+  </div>
+</div>

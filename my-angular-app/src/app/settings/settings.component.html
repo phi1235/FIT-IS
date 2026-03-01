@@ -1,0 +1,132 @@
+<div class="st-page">
+
+  <!-- Hero -->
+  <div class="st-hero">
+    <div class="st-hero-pattern"></div>
+    <div class="st-hero-content">
+      <button class="st-back-btn" (click)="goBack()">
+        <i class="bi bi-arrow-left"></i> Quay lại
+      </button>
+      <div class="st-avatar">{{ getInitials() }}</div>
+      <div class="st-hero-info">
+        <h1 class="st-title">Cài đặt tài khoản</h1>
+        <span class="st-username-badge">{{ getDisplayName() }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="st-body">
+
+    <!-- Change Password -->
+    <div class="st-card">
+      <div class="st-card-header">
+        <h2><i class="bi bi-shield-lock-fill"></i> Bảo mật — Đổi mật khẩu</h2>
+      </div>
+      <div class="st-card-body">
+        <div class="st-field">
+          <label>Mật khẩu hiện tại</label>
+          <div class="st-input-wrap">
+            <input
+              [type]="showCurrent ? 'text' : 'password'"
+              class="st-input"
+              [(ngModel)]="passwordForm.current"
+              placeholder="Nhập mật khẩu hiện tại"
+            >
+            <button type="button" class="st-eye-btn" (click)="showCurrent = !showCurrent">
+              <i class="bi" [class.bi-eye]="!showCurrent" [class.bi-eye-slash]="showCurrent"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="st-field">
+          <label>Mật khẩu mới</label>
+          <div class="st-input-wrap">
+            <input
+              [type]="showNew ? 'text' : 'password'"
+              class="st-input"
+              [(ngModel)]="passwordForm.newPw"
+              placeholder="Tối thiểu 8 ký tự"
+            >
+            <button type="button" class="st-eye-btn" (click)="showNew = !showNew">
+              <i class="bi" [class.bi-eye]="!showNew" [class.bi-eye-slash]="showNew"></i>
+            </button>
+          </div>
+          <small class="st-hint-error" *ngIf="passwordTooShort">Mật khẩu phải có ít nhất 8 ký tự</small>
+        </div>
+
+        <div class="st-field">
+          <label>Xác nhận mật khẩu mới</label>
+          <div class="st-input-wrap">
+            <input
+              [type]="showConfirm ? 'text' : 'password'"
+              class="st-input"
+              [(ngModel)]="passwordForm.confirm"
+              placeholder="Nhập lại mật khẩu mới"
+            >
+            <button type="button" class="st-eye-btn" (click)="showConfirm = !showConfirm">
+              <i class="bi" [class.bi-eye]="!showConfirm" [class.bi-eye-slash]="showConfirm"></i>
+            </button>
+          </div>
+          <small class="st-hint-error" *ngIf="passwordMismatch">Mật khẩu xác nhận không khớp</small>
+        </div>
+
+        <div class="st-form-actions">
+          <button class="st-submit-btn" (click)="changePassword()" [disabled]="!canSubmitPassword || passwordLoading">
+            <i class="bi bi-check-circle"></i>
+            {{ passwordLoading ? 'Đang xử lý...' : 'Đổi mật khẩu' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Account Info -->
+    <div class="st-card">
+      <div class="st-card-header">
+        <h2><i class="bi bi-person-badge-fill"></i> Thông tin tài khoản</h2>
+      </div>
+      <div class="st-card-body">
+        <div class="st-info-row">
+          <div class="st-info-item">
+            <label>Tên đăng nhập</label>
+            <span>{{ userInfo?.username }}</span>
+          </div>
+          <div class="st-info-item">
+            <label>Email</label>
+            <span>{{ userInfo?.email || '—' }}</span>
+          </div>
+        </div>
+        <div class="st-info-row">
+          <div class="st-info-item">
+            <label>Vai trò</label>
+            <div class="st-role-chips">
+              <span class="st-role-chip" *ngFor="let r of userInfo?.roles">{{ r }}</span>
+            </div>
+          </div>
+          <div class="st-info-item">
+            <label>Phòng ban</label>
+            <span>{{ userInfo?.department || '—' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Permissions -->
+    <div class="st-card" *ngIf="permissionGroups.length > 0">
+      <div class="st-card-header">
+        <h2><i class="bi bi-key-fill"></i> Quyền hạn</h2>
+      </div>
+      <div class="st-card-body">
+        <div class="st-perm-group" *ngFor="let g of permissionGroups">
+          <div class="st-perm-group-label">
+            {{ g.label }}
+            <span class="st-perm-count">{{ g.items.length }}</span>
+          </div>
+          <div class="st-perm-chips">
+            <span class="st-perm-chip" *ngFor="let p of g.items">{{ p }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

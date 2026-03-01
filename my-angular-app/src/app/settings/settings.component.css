@@ -1,0 +1,324 @@
+/* ===== Settings Page ===== */
+.st-page {
+  min-height: 100vh;
+  background: #f8fafc;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* ===== Hero ===== */
+.st-hero {
+  position: relative;
+  background: linear-gradient(135deg, #b94500 0%, #e85d04 50%, #e87c10 100%);
+  padding: 32px 40px 40px;
+  color: white;
+  overflow: hidden;
+}
+
+.st-hero-pattern {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 25% 75%, rgba(255,255,255,0.07) 0%, transparent 50%),
+    radial-gradient(circle at 75% 25%, rgba(255,255,255,0.05) 0%, transparent 50%);
+}
+
+.st-back-btn {
+  position: relative;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: white;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  margin-bottom: 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s;
+}
+
+.st-back-btn:hover {
+  background: rgba(255,255,255,0.25);
+}
+
+.st-hero-content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.st-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  border: 3px solid rgba(255,255,255,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.st-hero-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.st-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.st-username-badge {
+  background: rgba(255,255,255,0.2);
+  padding: 2px 12px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  align-self: flex-start;
+}
+
+/* ===== Body ===== */
+.st-body {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 28px 24px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ===== Card ===== */
+.st-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05);
+  overflow: hidden;
+}
+
+.st-card-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.st-card-header h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.st-card-header h2 i {
+  color: #e85d04;
+}
+
+.st-card-body {
+  padding: 20px 24px;
+}
+
+/* ===== Password Form Fields ===== */
+.st-field {
+  margin-bottom: 18px;
+}
+
+.st-field:last-of-type {
+  margin-bottom: 0;
+}
+
+.st-field label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.st-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.st-input {
+  width: 100%;
+  padding: 10px 40px 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #1e293b;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.st-input:focus {
+  border-color: #e85d04;
+  box-shadow: 0 0 0 3px rgba(232, 93, 4, 0.1);
+}
+
+.st-eye-btn {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px;
+  font-size: 1rem;
+  transition: color 0.2s;
+}
+
+.st-eye-btn:hover {
+  color: #64748b;
+}
+
+.st-hint-error {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.8rem;
+  color: #dc2626;
+}
+
+.st-form-actions {
+  margin-top: 20px;
+}
+
+.st-submit-btn {
+  padding: 10px 24px;
+  background: linear-gradient(135deg, #e85d04 0%, #e87c10 100%);
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: box-shadow 0.2s, opacity 0.2s;
+}
+
+.st-submit-btn:hover:not(:disabled) {
+  box-shadow: 0 4px 12px rgba(232, 93, 4, 0.35);
+}
+
+.st-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ===== Account Info ===== */
+.st-info-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.st-info-row:last-child {
+  margin-bottom: 0;
+}
+
+.st-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.st-info-item label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.st-info-item span {
+  font-size: 0.95rem;
+  color: #1e293b;
+  font-weight: 500;
+}
+
+.st-role-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.st-role-chip {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #c2410c;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+/* ===== Permissions ===== */
+.st-perm-group {
+  margin-bottom: 14px;
+}
+
+.st-perm-group:last-child {
+  margin-bottom: 0;
+}
+
+.st-perm-group-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.st-perm-count {
+  background: #f1f5f9;
+  color: #64748b;
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+}
+
+.st-perm-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.st-perm-chip {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+@media (max-width: 600px) {
+  .st-info-row {
+    grid-template-columns: 1fr;
+  }
+  .st-hero {
+    padding: 24px 20px 32px;
+  }
+  .st-body {
+    padding: 20px 16px 40px;
+  }
+}

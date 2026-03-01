@@ -18,6 +18,8 @@ import javax.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 
+import com.example.common.util.SecurityUtils;
+
 @RestController
 @RequestMapping("/api/tickets")
 @RequiredArgsConstructor
@@ -27,6 +29,11 @@ public class TicketController {
     private final TicketService ticketService;
 
     private UUID requireUserId(HttpServletRequest request) {
+        UUID userId = SecurityUtils.getCurrentUserId();
+        if (userId != null) {
+            return userId;
+        }
+        // Fallback: check request attribute (legacy)
         Object raw = request.getAttribute("userId");
         if (raw == null) {
             throw new RuntimeException("Missing userId in request (JWT not parsed?)");
@@ -82,27 +89,36 @@ public class TicketController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('maker') or hasRole('admin') or hasRole('user')")
+    @PreAuthorize("hasRole('MAKER') or hasRole('ADMIN') or hasRole('USER')")
     public ResponseEntity<TicketDTO> createTicket(
             @Valid @RequestBody TicketRequest request,
             HttpServletRequest httpServletRequest) {
         return ResponseEntity.ok(ticketService.createTicket(request, requireUserId(httpServletRequest)));
     }
 
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('MAKER') or hasRole('ADMIN') or hasRole('USER')")
+    public ResponseEntity<TicketDTO> updateTicket(
+            @PathVariable UUID id,
+            @Valid @RequestBody TicketRequest request,
+            HttpServletRequest httpServletRequest) {
+        return ResponseEntity.ok(ticketService.updateTicket(id, request, requireUserId(httpServletRequest)));
+    }
+
     @PostMapping("/{id}/submit")
-    @PreAuthorize("hasRole('maker') or hasRole('admin') or hasRole('user')")
+    @PreAuthorize("hasRole('MAKER') or hasRole('ADMIN') or hasRole('USER')")
     public ResponseEntity<TicketDTO> submitTicket(@PathVariable UUID id, HttpServletRequest httpServletRequest) {
         return ResponseEntity.ok(ticketService.submitTicket(id, requireUserId(httpServletRequest)));
     }
 
     @PostMapping("/{id}/approve")
-    @PreAuthorize("hasRole('checker') or hasRole('admin')")
+    @PreAuthorize("hasRole('CHECKER') or hasRole('ADMIN')")
     public ResponseEntity<TicketDTO> approveTicket(@PathVariable UUID id, HttpServletRequest httpServletRequest) {
         return ResponseEntity.ok(ticketService.approveTicket(id, requireUserId(httpServletRequest)));
     }
 
     @PostMapping("/{id}/reject")
-    @PreAuthorize("hasRole('checker') or hasRole('admin')")
+    @PreAuthorize("hasRole('CHECKER') or hasRole('ADMIN')")
     public ResponseEntity<TicketDTO> rejectTicket(
             @PathVariable UUID id,
             @Valid @RequestBody RejectionRequest request,

@@ -1,21 +1,28 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { KeycloakService } from '../services/keycloak.service';
 import { AuthService } from '../services/auth.service';
 import { PermissionDirective } from '../directives/permission.directive';
+import { ChangePasswordModalComponent } from '../password-management/change-password-modal.component';
 
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, PermissionDirective],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, PermissionDirective, ChangePasswordModalComponent],
   templateUrl: './admin-layout.component.html',
   styleUrl: './admin-layout.component.css'
 })
 export class AdminLayoutComponent implements OnInit {
+  @ViewChild(ChangePasswordModalComponent) changePasswordModal!: ChangePasswordModalComponent;
   currentUser: any = null;
   isAuthenticated = false;
   isAdmin = false;
+  showUserDropdown = false;
+
+  toggleUserDropdown(): void {
+    this.showUserDropdown = !this.showUserDropdown;
+  }
 
   constructor(
     private keycloakService: KeycloakService,
@@ -80,6 +87,10 @@ export class AdminLayoutComponent implements OnInit {
       return this.currentUser.username || this.currentUser.preferred_username || 'User';
     }
     return 'User';
+  }
+
+  openChangePassword() {
+    this.changePasswordModal.openModal();
   }
 
   logout() {

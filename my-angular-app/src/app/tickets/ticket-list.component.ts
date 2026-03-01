@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TicketService, TicketDTO, TicketStatus, PagedTicketResponse } from '../services/ticket.service';
-import { KeycloakService } from '../services/keycloak.service';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-ticket-list',
@@ -35,15 +35,28 @@ export class TicketListMainComponent implements OnInit {
   exportError: string | null = null;
   exportFormat: string = '';
 
+  protected readonly Math = Math;
+
+  readonly statusTabs = [
+    { key: 'ALL',      label: 'Tất cả',    icon: 'bi-grid-3x3-gap-fill', color: '#e85d04' },
+    { key: 'DRAFT',    label: 'Bản nháp',  icon: 'bi-pencil-square',     color: '#6b7280' },
+    { key: 'PENDING',  label: 'Chờ duyệt', icon: 'bi-hourglass-split',   color: '#f59e0b' },
+    { key: 'APPROVED', label: 'Đã duyệt',  icon: 'bi-check-circle-fill', color: '#10b981' },
+    { key: 'REJECTED', label: 'Từ chối',   icon: 'bi-x-circle-fill',     color: '#ef4444' },
+  ];
+
   constructor(
     private ticketService: TicketService,
-    private keycloakService: KeycloakService,
-    private router: Router
-  ) { 
-    console.log('TicketListComponent initialized');
-  }
+    private authService: AuthService,
+    private router: Router,
+    private route: ActivatedRoute
+  ) {}
 
   ngOnInit(): void {
+    const statusParam = this.route.snapshot.queryParamMap.get('status');
+    if (statusParam) {
+      this.selectedStatus = statusParam.toUpperCase();
+    }
     this.loadTickets();
   }
 
@@ -108,11 +121,9 @@ export class TicketListMainComponent implements OnInit {
     const maxVisiblePages = 5;
     let start = Math.max(0, this.currentPage - Math.floor(maxVisiblePages / 2));
     let end = Math.min(this.totalPages, start + maxVisiblePages);
-
     if (end - start < maxVisiblePages) {
       start = Math.max(0, end - maxVisiblePages);
     }
-
     for (let i = start; i < end; i++) {
       pages.push(i);
     }
@@ -121,7 +132,7 @@ export class TicketListMainComponent implements OnInit {
 
   filterStatus(status: string): void {
     this.selectedStatus = status;
-    this.currentPage = 0; // Reset to first page when changing status
+    this.currentPage = 0;
     this.loadTickets();
   }
 
@@ -130,23 +141,39 @@ export class TicketListMainComponent implements OnInit {
   }
 
   canCreate(): boolean {
-    return this.keycloakService.isAuthenticated();
+    return this.authService.isAuthenticated && !this.authService.hasRole('CHECKER');
   }
 
-  getStatusClass(status: TicketStatus): string {
-    return 'badge badge-' + status.toLowerCase();
-  }
-
-  getStatusLabel(status: TicketStatus): string {
-    const labels: any = {
-      'DRAFT': 'Bản nháp',
-      'PENDING': 'Chờ duyệt',
+  getStatusLabel(status: TicketStatus | string): string {
+    const labels: Record<string, string> = {
+      'DRAFT':     'Bản nháp',
+      'PENDING':   'Chờ duyệt',
       'SUBMITTED': 'Đã gửi',
-      'APPROVED': 'Đã duyệt',
-      'REJECTED': 'Bị từ chối',
+      'APPROVED':  'Đã duyệt',
+      'REJECTED':  'Từ chối',
       'COMPLETED': 'Hoàn tất'
     };
     return labels[status] || status;
+  }
+
+  getStatusIcon(status: string): string {
+    const icons: Record<string, string> = {
+      'DRAFT':     'bi-pencil-square',
+      'PENDING':   'bi-hourglass-split',
+      'APPROVED':  'bi-check-circle-fill',
+      'REJECTED':  'bi-x-circle-fill',
+      'COMPLETED': 'bi-check-all',
+    };
+    return icons[status] || 'bi-circle';
+  }
+
+  formatAmount(amount: number | undefined): string {
+    if (amount == null) return '—';
+    return amount.toLocaleString('de-DE') + ' VND';
+  }
+
+  getPageRangeEnd(): number {
+    return Math.min((this.currentPage + 1) * this.pageSize, this.totalElements);
   }
 
   downloadReport(format: string): void {
@@ -197,7 +224,7 @@ export class TicketListMainComponent implements OnInit {
           this.exportMessage = null;
         }
       });
-    }, 2000); // Poll every 2 seconds to avoid 429
+    }, 2000);
   }
 
   private downloadFile(jobId: string, format: string): void {

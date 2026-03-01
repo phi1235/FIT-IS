@@ -2,6 +2,8 @@ package com.example.user.controller;
 
 import com.example.common.dto.PagedResponse;
 import com.example.common.util.SecurityUtils;
+import com.example.user.dto.MeDTO;
+import com.example.user.dto.UpdateMeRequest;
 import com.example.user.dto.UserDTO;
 import com.example.user.entity.Role;
 import com.example.user.entity.User;
@@ -82,19 +84,75 @@ public class AdminController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<MeDTO> getMe() {
+        String username = SecurityUtils.getCurrentUsername();
+        if (username == null) {
+            return ResponseEntity.status(401).build();
+        }
+        return userRepository.findByUsername(username)
+                .map(user -> {
+                    var profiles = userRepository.findProfileByUsername(username);
+                    String dept = profiles.isEmpty() ? "" : (profiles.get(0).getDepartmentName() != null ? profiles.get(0).getDepartmentName() : "");
+                    String pos  = profiles.isEmpty() ? "" : (profiles.get(0).getPosition() != null ? profiles.get(0).getPosition() : "");
+                    return ResponseEntity.ok(MeDTO.from(user, dept, pos));
+                })
+                .orElse(ResponseEntity.status(401).build());
+    }
+
+    @PutMapping("/me")
+    @Transactional
+    public ResponseEntity<MeDTO> updateMe(@RequestBody UpdateMeRequest req) {
+        String username = SecurityUtils.getCurrentUsername();
+        if (username == null) {
+            return ResponseEntity.status(401).build();
+        }
+        return userRepository.findByUsername(username)
+                .map(user -> {
+                    if (req.getFirstName() != null) user.setFirstName(req.getFirstName());
+                    if (req.getLastName() != null) user.setLastName(req.getLastName());
+                    if (req.getEmail() != null) user.setEmail(req.getEmail());
+                    userRepository.save(user);
+                    var profiles = userRepository.findProfileByUsername(username);
+                    String dept = profiles.isEmpty() ? "" : (profiles.get(0).getDepartmentName() != null ? profiles.get(0).getDepartmentName() : "");
+                    String pos  = profiles.isEmpty() ? "" : (profiles.get(0).getPosition() != null ? profiles.get(0).getPosition() : "");
+                    return ResponseEntity.ok(MeDTO.from(user, dept, pos));
+                })
+                .orElse(ResponseEntity.status(401).build());
+    }
+
     @GetMapping("/me/role")
     public ResponseEntity<Map<String, String>> getMyRole() {
         String username = SecurityUtils.getCurrentUsername();
         if (username == null) {
             return ResponseEntity.status(401).build();
         }
-        
+
         return userRepository.findByUsername(username)
                 .map(user -> {
                     String role = user.getRoles().isEmpty() ? "user" : user.getRoles().iterator().next().getCode();
                     return ResponseEntity.ok(Map.of("username", username, "role", role));
                 })
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/me/profile")
+    public ResponseEntity<Map<String, String>> getMyProfile() {
+        String username = SecurityUtils.getCurrentUsername();
+        if (username == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        var profiles = userRepository.findProfileByUsername(username);
+        if (profiles.isEmpty()) {
+            return ResponseEntity.ok(Map.of("username", username, "department", "", "position", ""));
+        }
+        var p = profiles.get(0);
+        return ResponseEntity.ok(Map.of(
+                "username", username,
+                "department", p.getDepartmentName() != null ? p.getDepartmentName() : "",
+                "position",   p.getPosition() != null ? p.getPosition() : ""
+        ));
     }
 
     @PostMapping("/admin/role")

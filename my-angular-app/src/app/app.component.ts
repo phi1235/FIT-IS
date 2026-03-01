@@ -54,8 +54,9 @@ export class AppComponent implements OnInit {
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe((event: NavigationEnd) => {
-        this.isAdminRoute = event.urlAfterRedirects.startsWith('/admin');
-        this.isAuthPage = event.urlAfterRedirects.startsWith('/login') || event.urlAfterRedirects.startsWith('/sign');
+        const url = event.urlAfterRedirects;
+        this.isAdminRoute = url.startsWith('/admin');
+        this.isAuthPage = url.startsWith('/login') || url.startsWith('/sign');
       });
 
     // Check custom auth (from AuthService)

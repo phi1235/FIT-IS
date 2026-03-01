@@ -61,4 +61,8 @@ export class RolePermissionService {
   removePermissionFromRole(roleId: string, permissionCode: string): Observable<Role> {
     return this.http.delete<Role>(`${this.apiUrl}/${roleId}/permissions/${permissionCode}`);
   }
+
+  syncAdminRole(): Observable<any> {
+    return this.http.post('/api/roles/admin/sync', {});
+  }
 }

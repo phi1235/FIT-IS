@@ -77,13 +77,14 @@ project(':shared-lib') {
 // Gateway service configuration
 project(':gateway-service') {
     apply plugin: 'org.springframework.boot'
-    
+
     dependencies {
         implementation project(':shared-lib')
         implementation 'org.springframework.boot:spring-boot-starter-web'
         implementation 'org.springframework.boot:spring-boot-starter-security'
         implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-        
+        implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
         // Rate limiting
         implementation 'com.bucket4j:bucket4j-core:8.7.0'
         implementation 'com.github.ben-manes.caffeine:caffeine'
@@ -97,7 +98,7 @@ project(':gateway-service') {
 // Auth service configuration
 project(':auth-service') {
     apply plugin: 'org.springframework.boot'
-    
+
     dependencies {
         implementation project(':shared-lib')
         implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -105,6 +106,7 @@ project(':auth-service') {
         implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
         implementation 'org.springframework.boot:spring-boot-starter-data-redis'
         implementation 'org.springframework.boot:spring-boot-starter-validation'
+        implementation 'org.springframework.boot:spring-boot-starter-actuator'
         
         // JWT
         implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
@@ -137,13 +139,14 @@ project(':auth-service') {
 // User service configuration
 project(':user-service') {
     apply plugin: 'org.springframework.boot'
-    
+
     dependencies {
         implementation project(':shared-lib')
         implementation 'org.springframework.boot:spring-boot-starter-web'
         implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
         implementation 'org.springframework.boot:spring-boot-starter-validation'
-        
+        implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
         runtimeOnly 'org.postgresql:postgresql'
     }
     
@@ -155,14 +158,15 @@ project(':user-service') {
 // Ticket service configuration
 project(':ticket-service') {
     apply plugin: 'org.springframework.boot'
-    
+
     dependencies {
         implementation project(':shared-lib')
         implementation 'org.springframework.boot:spring-boot-starter-web'
         implementation 'org.springframework.boot:spring-boot-starter-security'
         implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
         implementation 'org.springframework.boot:spring-boot-starter-validation'
-        
+        implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
         runtimeOnly 'org.postgresql:postgresql'
         
         // JWT validation (shared secret with auth-service)
@@ -179,13 +183,14 @@ project(':ticket-service') {
 // Workflow service configuration (Camunda-ready)
 project(':workflow-service') {
     apply plugin: 'org.springframework.boot'
-    
+
     dependencies {
         implementation project(':shared-lib')
         implementation 'org.springframework.boot:spring-boot-starter-web'
         implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
         implementation 'org.springframework.boot:spring-boot-starter-validation'
-        
+        implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
         runtimeOnly 'org.postgresql:postgresql'
         
         // Hibernate types for JSONB
@@ -200,12 +205,13 @@ project(':workflow-service') {
 // Audit service configuration
 project(':audit-service') {
     apply plugin: 'org.springframework.boot'
-    
+
     dependencies {
         implementation project(':shared-lib')
         implementation 'org.springframework.boot:spring-boot-starter-web'
         implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-        
+        implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
         runtimeOnly 'org.postgresql:postgresql'
         
         // Hibernate types for JSONB
@@ -220,13 +226,14 @@ project(':audit-service') {
 // Report service configuration
 project(':report-service') {
     apply plugin: 'org.springframework.boot'
-    
+
     dependencies {
         implementation project(':shared-lib')
         implementation 'org.springframework.boot:spring-boot-starter-web'
         implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
         implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-        
+        implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
         runtimeOnly 'org.postgresql:postgresql'
         
         // Jackson support for Java 8 date/time types

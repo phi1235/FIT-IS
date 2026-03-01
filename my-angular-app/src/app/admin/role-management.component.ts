@@ -18,6 +18,7 @@ export class RoleManagementComponent implements OnInit {
   
   isEditing = false;
   isSaving = false;
+  isSyncing = false;
   currentTab: 'basic' | 'permissions' = 'permissions';
   
   // Matrix Columns
@@ -228,6 +229,23 @@ export class RoleManagementComponent implements OnInit {
         }
       });
     }
+  }
+
+  syncAdminRole() {
+    this.isSyncing = true;
+    this.roleService.syncAdminRole().subscribe({
+      next: () => {
+        this.isSyncing = false;
+        alert('Đồng bộ Admin Role thành công!');
+        this.loadRoles();
+        this.loadPermissions();
+      },
+      error: (err) => {
+        console.error('Sync failed:', err);
+        this.isSyncing = false;
+        alert('Đồng bộ thất bại: ' + (err.error?.message || err.message));
+      }
+    });
   }
 
   private updateRoleInList(updatedRole: Role) {

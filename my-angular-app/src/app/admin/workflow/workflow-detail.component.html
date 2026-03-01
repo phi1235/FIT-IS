@@ -1,0 +1,155 @@
+<!-- Loading State -->
+<div *ngIf="loading" class="wfd-loading">
+  <div class="wfd-spinner"></div>
+  <span>Đang tải thông tin yêu cầu...</span>
+</div>
+
+<!-- Detail Content -->
+<div *ngIf="!loading && request" class="wfd-wrapper">
+
+  <!-- Hero Header -->
+  <div class="wfd-hero">
+    <button class="wfd-btn-back" (click)="goBack()">
+      <i class="bi bi-arrow-left"></i> Quay lại
+    </button>
+    <div class="wfd-hero-center">
+      <div class="wfd-hero-icon"><i class="bi bi-diagram-3-fill"></i></div>
+      <div>
+        <h1 class="wfd-title">Chi tiết yêu cầu phê duyệt</h1>
+        <p class="wfd-sub">{{ request.requestType }}</p>
+      </div>
+    </div>
+    <span [class]="'wfd-hero-status ' + getStatusClass(request.status)">
+      {{ request.status === 'PENDING' ? 'Chờ duyệt' : request.status === 'COMPLETED' ? 'Hoàn tất' : request.status === 'REJECTED' ? 'Từ chối' : request.status }}
+    </span>
+  </div>
+
+  <div class="wfd-body">
+
+    <!-- Info Grid -->
+    <div class="wfd-section">
+      <div class="wfd-section-title">
+        <i class="bi bi-info-circle-fill"></i> Thông tin chung
+      </div>
+      <div class="wfd-info-grid">
+        <div class="wfd-info-item">
+          <span class="wfd-info-label">Mã yêu cầu</span>
+          <span class="wfd-info-value mono">{{ request.id }}</span>
+        </div>
+        <div class="wfd-info-item">
+          <span class="wfd-info-label">Loại yêu cầu</span>
+          <span class="wfd-info-value"><span class="wfd-type-badge">{{ request.requestType }}</span></span>
+        </div>
+        <div class="wfd-info-item">
+          <span class="wfd-info-label">Người khởi tạo</span>
+          <span class="wfd-info-value mono">{{ request.initiatorUserId || '-' }}</span>
+        </div>
+        <div class="wfd-info-item">
+          <span class="wfd-info-label">Tiến độ</span>
+          <span class="wfd-info-value">
+            <div class="wfd-progress">
+              <span>Bước {{ request.currentStep }} / {{ request.totalSteps }}</span>
+              <div class="wfd-progress-bar">
+                <div class="wfd-progress-fill" [style.width.%]="(request.currentStep / request.totalSteps) * 100"></div>
+              </div>
+            </div>
+          </span>
+        </div>
+        <div class="wfd-info-item">
+          <span class="wfd-info-label">Ngày tạo</span>
+          <span class="wfd-info-value">{{ request.createdAt | date:'dd/MM/yyyy HH:mm:ss' }}</span>
+        </div>
+        <div class="wfd-info-item" *ngIf="request.completedAt">
+          <span class="wfd-info-label">Ngày hoàn tất</span>
+          <span class="wfd-info-value">{{ request.completedAt | date:'dd/MM/yyyy HH:mm:ss' }}</span>
+        </div>
+        <div class="wfd-info-item" *ngIf="request.referenceId">
+          <span class="wfd-info-label">Reference ID</span>
+          <span class="wfd-info-value mono">{{ request.referenceId }}</span>
+        </div>
+        <div class="wfd-info-item" *ngIf="request.businessKey">
+          <span class="wfd-info-label">Business Key</span>
+          <span class="wfd-info-value">{{ request.businessKey }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Panel (pending step) -->
+    <div class="wfd-action-panel" *ngIf="getCurrentStep() && request.status === 'PENDING'">
+      <div class="wfd-action-header">
+        <i class="bi bi-hourglass-split"></i>
+        <div>
+          <div class="wfd-action-title">Xử lý bước hiện tại</div>
+          <div class="wfd-action-hint">Bước {{ getCurrentStep()?.stepNumber }}: <strong>{{ getCurrentStep()?.stepName }}</strong></div>
+        </div>
+      </div>
+      <div class="wfd-form-group">
+        <label>Nhận xét (tùy chọn)</label>
+        <textarea [(ngModel)]="actionForm.comments" placeholder="Nhập nhận xét của bạn..." class="wfd-comments" rows="3"></textarea>
+      </div>
+      <div class="wfd-action-btns">
+        <button class="wfd-btn-approve" (click)="processAction('APPROVE')" [disabled]="actionLoading">
+          <i class="bi bi-check-circle-fill"></i>
+          {{ actionLoading ? 'Đang xử lý...' : 'Phê duyệt' }}
+        </button>
+        <button class="wfd-btn-reject" (click)="processAction('REJECT')" [disabled]="actionLoading">
+          <i class="bi bi-x-circle-fill"></i>
+          {{ actionLoading ? 'Đang xử lý...' : 'Từ chối' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="wfd-section" *ngIf="request.steps && request.steps.length > 0">
+      <div class="wfd-section-title">
+        <i class="bi bi-list-check"></i> Các bước phê duyệt
+      </div>
+      <div class="wfd-timeline">
+        <div *ngFor="let step of request.steps; let last = last"
+             [class]="'wfd-step ' + getStatusClass(step.status)">
+          <div class="wfd-step-line" [class.last]="last"></div>
+          <div class="wfd-step-dot">
+            <i *ngIf="step.status === 'APPROVED'" class="bi bi-check-circle-fill"></i>
+            <i *ngIf="step.status === 'REJECTED'" class="bi bi-x-circle-fill"></i>
+            <i *ngIf="step.status === 'PENDING'" class="bi bi-clock-fill"></i>
+            <i *ngIf="step.status === 'SKIPPED'" class="bi bi-dash-circle"></i>
+          </div>
+          <div class="wfd-step-content">
+            <div class="wfd-step-header">
+              <strong>Bước {{ step.stepNumber }}: {{ step.stepName }}</strong>
+              <span [class]="'wfd-step-badge ' + getStatusClass(step.status)">
+                {{ step.status === 'PENDING' ? 'Chờ duyệt' : step.status === 'APPROVED' ? 'Phê duyệt' : step.status === 'REJECTED' ? 'Từ chối' : step.status }}
+              </span>
+            </div>
+            <div class="wfd-step-meta">
+              <span *ngIf="step.approverRoleCode"><i class="bi bi-shield-fill"></i> {{ step.approverRoleCode }}</span>
+              <span *ngIf="step.actionAt"><i class="bi bi-clock"></i> {{ step.actionAt | date:'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+            <div *ngIf="step.comments" class="wfd-step-comment">
+              <i class="bi bi-chat-left-text"></i> {{ step.comments }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- History -->
+    <div class="wfd-section" *ngIf="request.history && request.history.length > 0">
+      <div class="wfd-section-title">
+        <i class="bi bi-clock-history"></i> Lịch sử xử lý
+      </div>
+      <div class="wfd-history-list">
+        <div *ngFor="let h of request.history" class="wfd-history-item">
+          <span [class]="'wfd-history-badge ' + (h.action === 'APPROVE' ? 'approve' : 'reject')">
+            <i [class]="h.action === 'APPROVE' ? 'bi bi-check-lg' : 'bi bi-x-lg'"></i>
+            {{ h.action === 'APPROVE' ? 'Phê duyệt' : 'Từ chối' }}
+          </span>
+          <span class="wfd-history-by">bởi {{ h.performedBy ? (h.performedBy | slice:0:8) + '...' : '-' }}</span>
+          <span class="wfd-history-at">{{ h.performedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+          <div *ngIf="h.comments" class="wfd-history-comment">{{ h.comments }}</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

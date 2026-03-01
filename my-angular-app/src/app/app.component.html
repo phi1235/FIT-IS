@@ -16,11 +16,17 @@
           <span class="dropdown-arrow">&#9660;</span>
         </button>
         <div class="user-dropdown-menu" *ngIf="showUserMenu">
-          <a routerLink="/admin" class="dropdown-item adminn-item" *ngIf="canAccessAdmin" (click)="toggleUserMenu()">
-            Quản Trị
+          <a routerLink="/admin" class="dropdown-item adminn-item" *ngIf="isAdmin" (click)="toggleUserMenu()">
+            <i class="bi bi-speedometer2"></i> Quản Trị
+          </a>
+          <a routerLink="/profile" class="dropdown-item" (click)="toggleUserMenu()">
+            <i class="bi bi-person-circle"></i> Hồ sơ cá nhân
+          </a>
+          <a routerLink="/settings" class="dropdown-item" (click)="toggleUserMenu()">
+            <i class="bi bi-gear-fill"></i> Cài đặt
           </a>
           <button class="dropdown-item logout-item" (click)="logout()">
-            Đăng Xuất
+            <i class="bi bi-box-arrow-right"></i> Đăng Xuất
           </button>
         </div>
       </div>

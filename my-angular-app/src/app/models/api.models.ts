@@ -57,6 +57,8 @@ export interface UserInfo {
     lastName?: string;
     roles: string[];
     permissions: string[];
+    department?: string;
+    position?: string;
 }
 
 // Ticket Types

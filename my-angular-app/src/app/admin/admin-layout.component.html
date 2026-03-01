@@ -22,12 +22,34 @@
       <a *appPermission="'ROLE_VIEW'" routerLink="/admin/roles" routerLinkActive="active" class="nav-item">
         <i class="bi bi-shield-lock"></i> Role Management
       </a>
+      <a *appPermission="'AUDIT_VIEW'" routerLink="/admin/audit-logs" routerLinkActive="active" class="nav-item">
+        <i class="bi bi-shield-check"></i> Audit Logs
+      </a>
+      <a *appPermission="'AUDIT_VIEW'" routerLink="/admin/notifications" routerLinkActive="active" class="nav-item">
+        <i class="bi bi-megaphone"></i> Notifications
+      </a>
+      <a *appPermission="'WORKFLOW_VIEW'" routerLink="/admin/workflow" routerLinkActive="active" class="nav-item">
+        <i class="bi bi-diagram-3"></i> Workflows
+      </a>
     </nav>
 
     <div class="sidebar-footer">
-      <div class="user-info">
-        <span class="u-name">{{ getDisplayName() }}</span>
+      <div class="user-info-wrapper">
+        <button class="user-info" (click)="toggleUserDropdown()">
+          <div class="u-avatar">{{ getDisplayName().charAt(0).toUpperCase() }}</div>
+          <span class="u-name">{{ getDisplayName() }}</span>
+          <i class="bi u-chevron" [class.bi-chevron-up]="showUserDropdown" [class.bi-chevron-down]="!showUserDropdown"></i>
+        </button>
+        <div class="user-dropdown-menu" *ngIf="showUserDropdown">
+          <a routerLink="/profile" class="user-dropdown-item" (click)="showUserDropdown = false">
+            <i class="bi bi-person-circle"></i> Hồ sơ cá nhân
+          </a>
+          <a routerLink="/settings" class="user-dropdown-item" (click)="showUserDropdown = false">
+            <i class="bi bi-gear"></i> Cài đặt
+          </a>
+        </div>
       </div>
+      <button class="change-pw-btn" (click)="openChangePassword()">Đổi Mật Khẩu</button>
       <button class="logout-btn" (click)="logout()">Đăng Xuất</button>
     </div>
   </aside>
@@ -48,3 +70,4 @@
     </main>
   </div>
 </div>
+<app-change-password-modal></app-change-password-modal>

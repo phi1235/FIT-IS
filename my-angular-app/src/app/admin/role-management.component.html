@@ -5,6 +5,11 @@
       <h3>Roles</h3>
       <button class="btn-add" (click)="createNewRole()">+ New Role</button>
     </div>
+    <div class="sidebar-actions">
+      <button class="btn-sync" (click)="syncAdminRole()" [disabled]="isSyncing">
+        <i class="bi bi-arrow-repeat"></i> {{ isSyncing ? 'Đang đồng bộ...' : 'Đồng Bộ Admin Role' }}
+      </button>
+    </div>
     <div class="role-list">
       <div *ngFor="let role of roles" 
            class="role-card" 

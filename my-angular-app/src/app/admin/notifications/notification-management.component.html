@@ -1,0 +1,124 @@
+<div class="nm-page">
+
+  <!-- Header -->
+  <div class="nm-header">
+    <div>
+      <h1 class="nm-title"><i class="bi bi-megaphone-fill"></i> Quản lý Thông báo</h1>
+      <p class="nm-subtitle">Tạo và quản lý thông báo hệ thống hiển thị cho người dùng</p>
+    </div>
+    <button class="nm-create-btn" (click)="openCreate()">
+      <i class="bi bi-plus-lg"></i> Tạo thông báo
+    </button>
+  </div>
+
+  <!-- Form Modal -->
+  <div class="nm-modal-overlay" *ngIf="showForm" (click)="cancelForm()">
+    <div class="nm-modal" (click)="$event.stopPropagation()">
+      <div class="nm-modal-header">
+        <h3>{{ editingId ? 'Chỉnh sửa thông báo' : 'Tạo thông báo mới' }}</h3>
+        <button class="nm-close-btn" (click)="cancelForm()">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <div class="nm-modal-body">
+
+        <div class="nm-field">
+          <label>Loại thông báo</label>
+          <div class="nm-type-selector">
+            <button *ngFor="let t of typeOptions"
+              class="nm-type-opt"
+              [class.active]="form.type === t.value"
+              [class]="'nm-type-opt nm-type-' + t.value + (form.type === t.value ? ' active' : '')"
+              type="button"
+              (click)="form.type = t.value">
+              <i class="bi" [class]="t.icon"></i> {{ t.label }}
+            </button>
+          </div>
+        </div>
+
+        <div class="nm-field">
+          <label>Tiêu đề <span class="nm-required">*</span></label>
+          <input type="text" class="nm-input" [(ngModel)]="form.title" placeholder="Nhập tiêu đề thông báo" maxlength="200">
+        </div>
+
+        <div class="nm-field">
+          <label>Nội dung <span class="nm-required">*</span></label>
+          <textarea class="nm-textarea" [(ngModel)]="form.content" placeholder="Nhập nội dung thông báo" rows="4"></textarea>
+        </div>
+
+        <div class="nm-field">
+          <label>Hết hạn lúc <span class="nm-optional">(để trống = không hết hạn)</span></label>
+          <input type="datetime-local" class="nm-input" [(ngModel)]="form.expiresAtStr">
+        </div>
+
+      </div>
+      <div class="nm-modal-footer">
+        <button class="nm-cancel-btn" (click)="cancelForm()" [disabled]="saving">Hủy</button>
+        <button class="nm-save-btn" (click)="saveForm()" [disabled]="saving">
+          <i class="bi bi-check-lg"></i>
+          {{ saving ? 'Đang lưu...' : (editingId ? 'Cập nhật' : 'Tạo mới') }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="nm-loading" *ngIf="loading">
+    <div class="nm-spinner"></div>
+    <p>Đang tải...</p>
+  </div>
+
+  <!-- Empty -->
+  <div class="nm-empty" *ngIf="!loading && notifications.length === 0">
+    <i class="bi bi-megaphone"></i>
+    <p>Chưa có thông báo nào</p>
+    <button class="nm-create-btn" (click)="openCreate()">Tạo thông báo đầu tiên</button>
+  </div>
+
+  <!-- List -->
+  <div class="nm-list" *ngIf="!loading && notifications.length > 0">
+    <div class="nm-card" *ngFor="let n of notifications" [class]="'nm-card nm-card-' + n.type">
+      <div class="nm-card-left">
+        <div class="nm-type-badge" [class]="'nm-badge-' + n.type">
+          <i class="bi" [class]="getTypeIcon(n.type)"></i>
+          {{ getTypeLabel(n.type) }}
+        </div>
+      </div>
+      <div class="nm-card-body">
+        <div class="nm-card-title">{{ n.title }}</div>
+        <div class="nm-card-content">{{ n.content }}</div>
+        <div class="nm-card-meta">
+          <span><i class="bi bi-person"></i> {{ n.createdBy }}</span>
+          <span><i class="bi bi-clock"></i> {{ n.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+          <span *ngIf="n.expiresAt"><i class="bi bi-calendar-x"></i> Hết hạn: {{ n.expiresAt | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+      </div>
+      <div class="nm-card-actions">
+        <span class="nm-status-badge" [class.active]="n.active" [class.inactive]="!n.active">
+          {{ n.active ? 'Đang hiển thị' : 'Ẩn' }}
+        </span>
+        <button class="nm-action-btn" title="{{ n.active ? 'Tắt' : 'Bật' }}" (click)="toggle(n)">
+          <i class="bi" [class.bi-eye]="!n.active" [class.bi-eye-slash]="n.active"></i>
+        </button>
+        <button class="nm-action-btn" title="Chỉnh sửa" (click)="openEdit(n)">
+          <i class="bi bi-pencil"></i>
+        </button>
+        <button class="nm-action-btn nm-action-danger" title="Xóa" (click)="delete(n)">
+          <i class="bi bi-trash"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div class="nm-pagination" *ngIf="totalPages > 1">
+    <button [disabled]="page === 0" (click)="goPage(page - 1)">
+      <i class="bi bi-chevron-left"></i>
+    </button>
+    <span>Trang {{ page + 1 }} / {{ totalPages }}</span>
+    <button [disabled]="page >= totalPages - 1" (click)="goPage(page + 1)">
+      <i class="bi bi-chevron-right"></i>
+    </button>
+  </div>
+
+</div>

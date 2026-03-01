@@ -1,0 +1,143 @@
+<div class="pf-page" *ngIf="!loading; else loadingTpl">
+
+  <!-- Hero -->
+  <div class="pf-hero">
+    <div class="pf-hero-pattern"></div>
+    <div class="pf-hero-content">
+      <button class="pf-back-btn" (click)="goBack()">
+        <i class="bi bi-arrow-left"></i> Quay lai
+      </button>
+      <div class="pf-avatar">{{ getInitials() }}</div>
+      <div class="pf-hero-info">
+        <h1 class="pf-display-name">{{ getDisplayName() }}</h1>
+        <span class="pf-username-badge">&#64;{{ me?.username }}</span>
+        <div class="pf-role-chips">
+          <span class="pf-role-chip" *ngFor="let r of me?.roles">{{ r }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pf-body">
+
+    <!-- Personal Info -->
+    <div class="pf-card">
+      <div class="pf-card-header">
+        <h2><i class="bi bi-person-lines-fill"></i> Thong tin ca nhan</h2>
+        <button class="pf-edit-btn" (click)="startEdit()" *ngIf="!editMode">
+          <i class="bi bi-pencil"></i> Chinh sua
+        </button>
+      </div>
+
+      <div class="pf-card-body" *ngIf="!editMode">
+        <div class="pf-field-row">
+          <div class="pf-field">
+            <label>Ho</label>
+            <span>{{ me?.lastName || '-' }}</span>
+          </div>
+          <div class="pf-field">
+            <label>Ten</label>
+            <span>{{ me?.firstName || '-' }}</span>
+          </div>
+        </div>
+        <div class="pf-field">
+          <label>Email</label>
+          <span>{{ me?.email || '-' }}</span>
+        </div>
+      </div>
+
+      <div class="pf-card-body" *ngIf="editMode">
+        <div class="pf-field-row">
+          <div class="pf-field">
+            <label>Ho</label>
+            <input type="text" class="pf-input" [(ngModel)]="editForm.lastName" placeholder="Ho">
+          </div>
+          <div class="pf-field">
+            <label>Ten</label>
+            <input type="text" class="pf-input" [(ngModel)]="editForm.firstName" placeholder="Ten">
+          </div>
+        </div>
+        <div class="pf-field">
+          <label>Email</label>
+          <input type="email" class="pf-input" [(ngModel)]="editForm.email" placeholder="Email">
+        </div>
+        <div class="pf-edit-actions">
+          <button class="pf-cancel-btn" (click)="cancelEdit()" [disabled]="saving">Huy</button>
+          <button class="pf-save-btn" (click)="saveProfile()" [disabled]="saving">
+            <ng-container *ngIf="saving">Dang luu...</ng-container>
+            <ng-container *ngIf="!saving">Luu thay doi</ng-container>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Organization Info -->
+    <div class="pf-card" *ngIf="me?.department || me?.position">
+      <div class="pf-card-header">
+        <h2><i class="bi bi-building"></i> Thong tin to chuc</h2>
+      </div>
+      <div class="pf-card-body">
+        <div class="pf-field-row">
+          <div class="pf-field">
+            <label>Phong ban</label>
+            <span>{{ me?.department || '-' }}</span>
+          </div>
+          <div class="pf-field">
+            <label>Chuc vu</label>
+            <span>{{ me?.position || '-' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Roles & Permissions -->
+    <div class="pf-card" *ngIf="permissionGroups.length > 0">
+      <div class="pf-card-header">
+        <h2><i class="bi bi-shield-lock"></i> Vai tro va Quyen han</h2>
+      </div>
+      <div class="pf-card-body">
+        <div class="pf-perm-group" *ngFor="let g of permissionGroups">
+          <div class="pf-perm-group-label">
+            {{ g.label }}
+            <span class="pf-perm-count">{{ g.items.length }}</span>
+          </div>
+          <div class="pf-perm-chips">
+            <span class="pf-perm-chip" *ngFor="let p of g.items">{{ p }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Account Info -->
+    <div class="pf-card">
+      <div class="pf-card-header">
+        <h2><i class="bi bi-person-badge"></i> Tai khoan</h2>
+      </div>
+      <div class="pf-card-body">
+        <div class="pf-field-row">
+          <div class="pf-field">
+            <label>Ten dang nhap</label>
+            <span>{{ me?.username }}</span>
+          </div>
+          <div class="pf-field">
+            <label>Trang thai</label>
+            <span class="pf-status-badge pf-status-active" *ngIf="me?.enabled">Hoat dong</span>
+            <span class="pf-status-badge pf-status-inactive" *ngIf="!me?.enabled">Bi khoa</span>
+          </div>
+        </div>
+        <div class="pf-field" *ngIf="me?.createdAt">
+          <label>Thanh vien tu</label>
+          <span>{{ me?.createdAt | date:'dd/MM/yyyy' }}</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<ng-template #loadingTpl>
+  <div class="pf-loading">
+    <div class="pf-spinner"></div>
+    <p>Dang tai thong tin...</p>
+  </div>
+</ng-template>

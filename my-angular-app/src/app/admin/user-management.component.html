@@ -1,188 +1,208 @@
-<div class="user-management-container">
-    <div class="page-header">
-        <h1>👥 Quản lý Người dùng</h1>
-        <div class="header-actions">
-            <div class="export-buttons">
-                <button class="btn-export pdf" (click)="downloadReport('pdf')" [disabled]="exporting" title="Xuất PDF">
-                    PDF
-                </button>
-                <button class="btn-export excel" (click)="downloadReport('xlsx')" [disabled]="exporting"
-                    title="Xuất Excel">
-                    Excel
-                </button>
+<div class="um-wrapper">
+
+  <!-- Hero Header -->
+  <div class="um-hero">
+    <div class="um-hero-left">
+      <div class="um-hero-icon"><i class="bi bi-people-fill"></i></div>
+      <div>
+        <h1 class="um-title">Quản lý Người dùng</h1>
+        <p class="um-sub">Quản lý tài khoản, phân quyền và trạng thái người dùng</p>
+      </div>
+    </div>
+    <div class="um-hero-actions">
+      <button class="um-btn-export pdf" (click)="downloadReport('pdf')" [disabled]="exporting">
+        <i class="bi bi-file-earmark-pdf-fill"></i> PDF
+      </button>
+      <button class="um-btn-export excel" (click)="downloadReport('xlsx')" [disabled]="exporting">
+        <i class="bi bi-file-earmark-excel-fill"></i> Excel
+      </button>
+      <button class="um-btn-refresh" (click)="loadUsers()" [disabled]="loading">
+        <i class="bi bi-arrow-clockwise"></i> Làm mới
+      </button>
+      <button class="um-btn-add" (click)="openCreateModal()">
+        <i class="bi bi-person-plus-fill"></i> Thêm User
+      </button>
+    </div>
+  </div>
+
+  <!-- Export Progress -->
+  <div *ngIf="exportMessage" class="um-export-bar" [class.is-exporting]="exporting">
+    <i class="bi" [class.bi-hourglass-split]="exporting" [class.bi-check-circle-fill]="!exporting"></i>
+    <span>{{ exportMessage }}</span>
+    <div *ngIf="exporting && exportProgress > 0" class="um-progress-track">
+      <div class="um-progress-fill" [style.width.%]="exportProgress"></div>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="um-error">
+    <i class="bi bi-exclamation-triangle-fill"></i> {{ error }}
+  </div>
+
+  <!-- Toolbar -->
+  <div class="um-toolbar">
+    <div class="um-search-wrap">
+      <i class="bi bi-search um-search-icon"></i>
+      <input class="um-search-input" type="text"
+        placeholder="Tìm kiếm theo username, email..."
+        [value]="searchQuery" (input)="onSearch($event)" />
+    </div>
+    <div class="um-count-badge">
+      <i class="bi bi-people"></i>
+      <strong>{{ totalElements }}</strong> người dùng
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="um-loading">
+    <div class="um-spinner"></div>
+    <span>Đang tải...</span>
+  </div>
+
+  <!-- Table Card -->
+  <div *ngIf="!loading" class="um-card">
+    <table class="um-table">
+      <thead>
+        <tr>
+          <th class="col-stt">#</th>
+          <th>Người dùng</th>
+          <th>Email</th>
+          <th>Họ tên</th>
+          <th>Role</th>
+          <th>Trạng thái</th>
+          <th class="col-actions">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of users; let i = index" [class.row-disabled]="!user.enabled">
+          <td class="col-stt td-stt">{{ currentPage * pageSize + i + 1 }}</td>
+          <td>
+            <div class="um-user-cell">
+              <div class="um-avatar" [style.background]="getAvatarColor(user.username)">
+                {{ user.username.charAt(0).toUpperCase() }}
+              </div>
+              <span class="um-username">{{ user.username }}</span>
             </div>
-            <button class="btn-refresh" (click)="loadUsers()" [disabled]="loading">
-                Làm mới
-            </button>
-            <button class="btn-primary" (click)="openCreateModal()">
-                + Thêm User
-            </button>
+          </td>
+          <td class="um-email">{{ user.email }}</td>
+          <td class="um-fullname">{{ (user.firstName || '') + ' ' + (user.lastName || '') }}</td>
+          <td>
+            <span class="um-role-badge" [style.background]="getRoleBg(user.role)" [style.color]="getRoleColor(user.role)">
+              {{ (user.role || 'N/A') | uppercase }}
+            </span>
+          </td>
+          <td>
+            <span class="um-status" [class.um-status-active]="user.enabled" [class.um-status-inactive]="!user.enabled">
+              <span class="um-status-dot"></span>
+              {{ user.enabled ? 'Hoạt động' : 'Vô hiệu' }}
+            </span>
+          </td>
+          <td class="col-actions">
+            <div class="um-actions">
+              <button class="um-act-btn edit" (click)="openEditModal(user)" title="Chỉnh sửa">
+                <i class="bi bi-pencil-fill"></i>
+              </button>
+              <button class="um-act-btn lock" (click)="toggleUserStatus(user)"
+                [title]="user.enabled ? 'Khóa tài khoản' : 'Mở khóa'">
+                <i class="bi" [class.bi-lock-fill]="user.enabled" [class.bi-unlock-fill]="!user.enabled"></i>
+              </button>
+              <button class="um-act-btn delete" (click)="deleteUser(user)" title="Xóa">
+                <i class="bi bi-trash3-fill"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="users.length === 0">
+          <td colspan="7" class="um-empty">
+            <i class="bi bi-inbox"></i>
+            <span>Không có dữ liệu</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <div class="pagination-bar" *ngIf="!loading && totalPages > 0">
+      <div class="page-info">
+        Hiển thị {{ currentPage * pageSize + 1 }}–{{ (currentPage + 1) * pageSize > totalElements ? totalElements : (currentPage + 1) * pageSize }} / {{ totalElements }} users
+      </div>
+      <div class="page-nav">
+        <button class="pg-btn" (click)="goToPage(0)" [disabled]="currentPage === 0" title="Trang đầu">
+          <i class="bi bi-chevron-double-left"></i>
+        </button>
+        <button class="pg-btn" (click)="previousPage()" [disabled]="currentPage === 0" title="Trang trước">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <button *ngFor="let page of getPageNumbers()" class="pg-btn" [class.pg-active]="page === currentPage"
+          (click)="goToPage(page)">{{ page + 1 }}</button>
+        <button class="pg-btn" (click)="nextPage()" [disabled]="currentPage >= totalPages - 1" title="Trang sau">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+        <button class="pg-btn" (click)="goToPage(totalPages - 1)" [disabled]="currentPage >= totalPages - 1" title="Trang cuối">
+          <i class="bi bi-chevron-double-right"></i>
+        </button>
+      </div>
+      <div class="page-size-wrap">
+        <label>Hiển thị:</label>
+        <select [value]="pageSize" (change)="onPageSizeChange($event)">
+          <option *ngFor="let s of pageSizeOptions" [value]="s">{{ s }}</option>
+        </select>
+        <span>/ trang</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Create / Edit Modal ── -->
+<div *ngIf="showUserModal" class="um-modal-overlay" (click)="closeUserModal()">
+  <div class="um-modal" (click)="$event.stopPropagation()">
+    <div class="um-modal-hd">
+      <div class="um-modal-title">
+        <i class="bi" [class.bi-person-plus-fill]="!isEditMode" [class.bi-pencil-square]="isEditMode"></i>
+        {{ isEditMode ? 'Chỉnh sửa User' : 'Thêm User Mới' }}
+      </div>
+      <button class="um-modal-close" (click)="closeUserModal()"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="um-modal-body">
+      <div class="um-field" *ngIf="!isEditMode">
+        <label>Username</label>
+        <input type="text" [(ngModel)]="userForm.username" placeholder="Nhập username" />
+      </div>
+      <div class="um-field">
+        <label>Email</label>
+        <input type="email" [(ngModel)]="userForm.email" placeholder="Nhập email" />
+      </div>
+      <div class="um-field-row">
+        <div class="um-field">
+          <label>Họ</label>
+          <input type="text" [(ngModel)]="userForm.lastName" placeholder="Nhập họ" />
         </div>
-    </div>
-
-    <!-- Search Box -->
-    <div class="search-box">
-        <input type="text" placeholder=" Tìm kiếm theo username, email..." [value]="searchQuery"
-            (input)="onSearch($event)" class="search-input" />
-        <span class="search-info">Tổng: {{ totalElements }} users</span>
-    </div>
-
-    <!-- Export Message with Progress Bar -->
-    <div *ngIf="exportMessage" class="export-message" [class.exporting]="exporting">
-        <div class="export-text">{{ exportMessage }}</div>
-        <div *ngIf="exporting && exportProgress > 0" class="progress-bar-container">
-            <div class="progress-bar" [style.width.%]="exportProgress"></div>
+        <div class="um-field">
+          <label>Tên</label>
+          <input type="text" [(ngModel)]="userForm.firstName" placeholder="Nhập tên" />
         </div>
+      </div>
+      <div class="um-field">
+        <label>Quyền (Role)</label>
+        <select [(ngModel)]="userForm.role">
+          <option *ngFor="let role of availableRoles" [value]="role.code">
+            {{ role.name }} ({{ role.code }})
+          </option>
+        </select>
+      </div>
+      <div *ngIf="!isEditMode" class="um-info-note">
+        <i class="bi bi-info-circle-fill"></i>
+        Mật khẩu mặc định: <strong>Default123&#64;</strong>
+      </div>
     </div>
-
-    <!-- Error Message -->
-    <div *ngIf="error" class="error-message">
-        {{ error }}
+    <div class="um-modal-ft">
+      <button class="um-modal-cancel" (click)="closeUserModal()">Hủy</button>
+      <button class="um-modal-save" (click)="saveUser()"
+        [disabled]="loading || !userForm.email || (!isEditMode && !userForm.username)">
+        <i class="bi bi-check-lg"></i>
+        {{ loading ? 'Đang lưu...' : (isEditMode ? 'Cập nhật' : 'Tạo mới') }}
+      </button>
     </div>
-
-    <!-- Loading -->
-    <div *ngIf="loading" class="loading">
-        <div class="spinner"></div>
-        <span>Đang tải...</span>
-    </div>
-
-    <!-- Users Table -->
-    <div *ngIf="!loading" class="table-container">
-        <table class="users-table">
-            <thead>
-                <tr>
-                    <th>STT</th>
-                    <th>Username</th>
-                    <th>Email</th>
-                    <th>Họ Tên</th>
-                    <th>Role</th>
-                    <th>Trạng thái</th>
-                    <th>Thao tác</th>
-                </tr>
-            </thead>
-            <tbody>
-
-
-            <tr *ngFor="let user of users; let i = index" [class.disabled]="!user.enabled">
-                    <td>{{ currentPage * pageSize + i + 1 }}</td>
-                    <td><strong>{{ user.username }}</strong></td>
-                    <td>{{ user.email }}</td>
-                    <td>{{ (user.firstName || '') + ' ' + (user.lastName || '') }}</td>
-                    <td>
-                        <span class="badge" [ngClass]="'badge-' + (user.role || 'user').toLowerCase()">
-                            {{ user.role | uppercase }}
-                        </span>
-                    </td>
-                    <td>
-                        <span class="status" [class.status-active]="user.enabled"
-                            [class.status-inactive]="!user.enabled">
-                            {{ user.enabled ? 'Hoạt động' : ' Vô hiệu hóa' }}
-                        </span>
-                    </td>
-                    <td>
-                        <div class="actions-group">
-                            <button class="btn-icon" (click)="openEditModal(user)" title="Chỉnh sửa">
-                                ✏️
-                            </button>
-                            <button class="btn-icon" (click)="toggleUserStatus(user)" 
-                                    [title]="user.enabled ? 'Khóa' : 'Mở khóa'">
-                                {{ user.enabled ? '🔒' : '🔓' }}
-                            </button>
-                            <button class="btn-icon btn-delete" (click)="deleteUser(user)" title="Xóa">
-                                🗑️
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                <tr *ngIf="users.length === 0">
-                    <td colspan="7" class="no-data">Không có dữ liệu</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <!-- Pagination Controls -->
-        <div class="pagination-controls" *ngIf="totalPages > 0">
-            <div class="pagination-info">
-                Hiển thị {{ currentPage * pageSize + 1 }} - {{ (currentPage + 1) * pageSize > totalElements ?
-                totalElements : (currentPage + 1) * pageSize }}
-                trong tổng số {{ totalElements }} users
-            </div>
-
-            <div class="pagination-nav">
-                <button class="btn-page" (click)="goToPage(0)" [disabled]="currentPage === 0"
-                    title="Trang đầu">⏮</button>
-                <button class="btn-page" (click)="previousPage()" [disabled]="currentPage === 0"
-                    title="Trang trước">◀</button>
-
-                <button *ngFor="let page of getPageNumbers()" class="btn-page" [class.active]="page === currentPage"
-                    (click)="goToPage(page)">
-                    {{ page + 1 }}
-                </button>
-
-                <button class="btn-page" (click)="nextPage()" [disabled]="currentPage >= totalPages - 1"
-                    title="Trang sau">▶</button>
-                <button class="btn-page" (click)="goToPage(totalPages - 1)" [disabled]="currentPage >= totalPages - 1"
-                    title="Trang cuối">⏭</button>
-            </div>
-
-            <div class="page-size-selector">
-                <label>Hiển thị:</label>
-                <select [value]="pageSize" (change)="onPageSizeChange($event)">
-                    <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
-                </select>
-                <span>/ trang</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- User Create/Edit Modal -->
-    <div *ngIf="showUserModal" class="modal-overlay" (click)="closeUserModal()">
-        <div class="modal-content" (click)="$event.stopPropagation()">
-            <div class="modal-header">
-                <h3>{{ isEditMode ? 'Chỉnh sửa User' : 'Thêm User Mới' }}</h3>
-                <button class="btn-close" (click)="closeUserModal()">×</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group" *ngIf="!isEditMode">
-                    <label>Username:</label>
-                    <input type="text" [(ngModel)]="userForm.username" class="form-control" placeholder="Nhập username">
-                </div>
-                <div class="form-group">
-                    <label>Email:</label>
-                    <input type="email" [(ngModel)]="userForm.email" class="form-control" placeholder="Nhập email">
-                </div>
-                <div class="row">
-                    <div class="col">
-                        <div class="form-group">
-                            <label>Họ:</label>
-                            <input type="text" [(ngModel)]="userForm.lastName" class="form-control" placeholder="Nhập họ">
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="form-group">
-                            <label>Tên:</label>
-                            <input type="text" [(ngModel)]="userForm.firstName" class="form-control" placeholder="Nhập tên">
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Quyền (Role):</label>
-                    <select [(ngModel)]="userForm.role" class="form-select">
-                        <option *ngFor="let role of availableRoles" [value]="role.code">
-                            {{ role.name }} ({{ role.code }})
-                        </option>
-                    </select>
-                </div>
-                <div class="info-alert" *ngIf="!isEditMode">
-                    <p>User mới sẽ được tạo với mật khẩu mặc định là <strong>Default123&#64;</strong></p>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-cancel" (click)="closeUserModal()">Hủy</button>
-                <button class="btn-save" (click)="saveUser()" [disabled]="loading || !userForm.email || (!isEditMode && !userForm.username)">
-                    {{ loading ? 'Đang lưu...' : 'Lưu' }}
-                </button>
-            </div>
-        </div>
-    </div>
+  </div>
 </div>

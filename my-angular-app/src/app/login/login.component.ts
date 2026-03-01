@@ -172,6 +172,10 @@ export class LoginComponent implements OnInit {
                     userInfo
                 );
 
+                // Fetch department/position in background — non-blocking
+                this.http.get<{ department: string; position: string }>('/api/users/me/profile')
+                    .subscribe({ next: p => this.authService.updateUserInfo(p) });
+
                 this.toastService.success('Đăng nhập thành công!');
 
                 const isAdmin = userInfo.roles.some(role =>

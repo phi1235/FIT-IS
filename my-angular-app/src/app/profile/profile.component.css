@@ -1,0 +1,360 @@
+/* ===== Profile Page ===== */
+.pf-page {
+  min-height: 100vh;
+  background: #f8fafc;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* ===== Hero ===== */
+.pf-hero {
+  position: relative;
+  background: linear-gradient(135deg, #b94500 0%, #e85d04 50%, #e87c10 100%);
+  padding: 32px 40px 40px;
+  color: white;
+  overflow: hidden;
+}
+
+.pf-hero-pattern {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 20% 80%, rgba(255,255,255,0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255,255,255,0.06) 0%, transparent 50%);
+}
+
+.pf-back-btn {
+  position: relative;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: white;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  margin-bottom: 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s;
+}
+
+.pf-back-btn:hover {
+  background: rgba(255,255,255,0.25);
+}
+
+.pf-hero-content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.pf-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  border: 3px solid rgba(255,255,255,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.pf-hero-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pf-display-name {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.pf-username-badge {
+  background: rgba(255,255,255,0.2);
+  padding: 2px 12px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  align-self: flex-start;
+}
+
+.pf-role-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.pf-role-chip {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.3);
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ===== Body ===== */
+.pf-body {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 28px 24px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ===== Card ===== */
+.pf-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05);
+  overflow: hidden;
+}
+
+.pf-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.pf-card-header h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pf-card-header h2 i {
+  color: #e85d04;
+}
+
+.pf-edit-btn {
+  background: none;
+  border: 1px solid #e85d04;
+  color: #e85d04;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.pf-edit-btn:hover {
+  background: #e85d04;
+  color: white;
+}
+
+.pf-card-body {
+  padding: 20px 24px;
+}
+
+/* ===== Fields ===== */
+.pf-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.pf-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.pf-field:last-child {
+  margin-bottom: 0;
+}
+
+.pf-field label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pf-field span {
+  font-size: 0.95rem;
+  color: #1e293b;
+  font-weight: 500;
+}
+
+.pf-input {
+  padding: 9px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #1e293b;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.pf-input:focus {
+  border-color: #e85d04;
+  box-shadow: 0 0 0 3px rgba(232, 93, 4, 0.1);
+}
+
+/* ===== Edit Actions ===== */
+.pf-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.pf-cancel-btn {
+  padding: 8px 20px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #64748b;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.pf-cancel-btn:hover:not(:disabled) {
+  background: #e2e8f0;
+}
+
+.pf-save-btn {
+  padding: 8px 20px;
+  background: linear-gradient(135deg, #e85d04 0%, #e87c10 100%);
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: opacity 0.2s, box-shadow 0.2s;
+}
+
+.pf-save-btn:hover:not(:disabled) {
+  box-shadow: 0 4px 12px rgba(232, 93, 4, 0.35);
+}
+
+.pf-save-btn:disabled,
+.pf-cancel-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ===== Permission Groups ===== */
+.pf-perm-group {
+  margin-bottom: 14px;
+}
+
+.pf-perm-group:last-child {
+  margin-bottom: 0;
+}
+
+.pf-perm-group-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pf-perm-count {
+  background: #f1f5f9;
+  color: #64748b;
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+}
+
+.pf-perm-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pf-perm-chip {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #c2410c;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+/* ===== Status Badge ===== */
+.pf-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.pf-status-active {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.pf-status-inactive {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* ===== Loading ===== */
+.pf-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+  color: #64748b;
+  gap: 16px;
+}
+
+.pf-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f1f5f9;
+  border-top-color: #e85d04;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 600px) {
+  .pf-field-row {
+    grid-template-columns: 1fr;
+  }
+  .pf-hero {
+    padding: 24px 20px 32px;
+  }
+  .pf-body {
+    padding: 20px 16px 40px;
+  }
+}

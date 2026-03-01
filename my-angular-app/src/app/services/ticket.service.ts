@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 export enum TicketStatus {
     DRAFT = 'DRAFT',
@@ -15,6 +16,7 @@ export interface TicketRequest {
     title: string;
     description?: string;
     amount?: number;
+    saveDraft?: boolean;
 }
 
 export interface TicketDTO {
@@ -66,8 +68,17 @@ export class TicketService {
 
     constructor(private http: HttpClient) { }
 
+    // Backend trả UTC không có 'Z' → Angular date pipe + new Date() hiểu sai múi giờ.
+    // Normalize: thêm 'Z' vào các trường timestamp để parse đúng UTC.
+    private fixTimestamps(t: TicketDTO): TicketDTO {
+        const z = (s?: string) => s && !s.endsWith('Z') && !s.includes('+') ? s + 'Z' : s;
+        return { ...t, createdAt: z(t.createdAt)!, updatedAt: z(t.updatedAt)! };
+    }
+
     getAllTickets(): Observable<TicketDTO[]> {
-        return this.http.get<TicketDTO[]>(this.apiUrl);
+        return this.http.get<TicketDTO[]>(this.apiUrl).pipe(
+            map(list => list.map(t => this.fixTimestamps(t)))
+        );
     }
 
     getTicketsPaginated(page: number, size: number, search: string = '', status: string = ''): Observable<PagedTicketResponse> {
@@ -75,11 +86,15 @@ export class TicketService {
         if (status && status !== 'ALL') {
             params.status = status;
         }
-        return this.http.get<PagedTicketResponse>(`${this.apiUrl}/paginated`, { params });
+        return this.http.get<PagedTicketResponse>(`${this.apiUrl}/paginated`, { params }).pipe(
+            map(res => ({ ...res, content: res.content.map(t => this.fixTimestamps(t)) }))
+        );
     }
 
     getTicketById(id: string): Observable<TicketDTO> {
-        return this.http.get<TicketDTO>(`${this.apiUrl}/${id}`);
+        return this.http.get<TicketDTO>(`${this.apiUrl}/${id}`).pipe(
+            map(t => this.fixTimestamps(t))
+        );
     }
 
     getTicketsByStatus(status: TicketStatus): Observable<TicketDTO[]> {
@@ -88,6 +103,10 @@ export class TicketService {
 
     createTicket(request: TicketRequest): Observable<TicketDTO> {
         return this.http.post<TicketDTO>(this.apiUrl, request);
+    }
+
+    updateTicket(id: string, request: TicketRequest): Observable<TicketDTO> {
+        return this.http.put<TicketDTO>(`${this.apiUrl}/${id}`, request);
     }
 
     submitTicket(id: string): Observable<TicketDTO> {

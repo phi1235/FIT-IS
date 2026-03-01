@@ -1,153 +1,173 @@
-<div class="ticket-list-container">
-    <!-- Page Header -->
-    <div class="page-header">
-        <div>
-            <h1>🎫 Quản lý Tickets</h1>
-            <p>Theo dõi và xử lý các yêu cầu nghiệp vụ</p>
-        </div>
-        <div class="header-actions">
-            <button class="btn-export pdf" (click)="downloadReport('pdf')" [disabled]="exporting">
-                PDF
-            </button>
-            <button class="btn-export excel" (click)="downloadReport('excel')" [disabled]="exporting">
-                Excel
-            </button>
-            <button class="btn-refresh" (click)="loadTickets()" [disabled]="loading">
-                Làm mới
-            </button>
-            <a *ngIf="canCreate()" routerLink="create" class="btn-create">
-                + Tạo mới
-            </a>
-        </div>
-    </div>
+<div class="ticket-list-wrapper">
 
-    <!-- Search Box -->
-    <div class="search-box">
-        <input type="text" 
-               placeholder="Tìm kiếm theo mã, tiêu đề, người tạo..." 
-               [value]="searchQuery"
-               (input)="onSearch($event)" 
-               class="search-input" />
-        <span class="search-info">Tổng: {{ totalElements }} tickets</span>
+  <!-- Hero Header -->
+  <div class="page-hero">
+    <div class="hero-content">
+      <div class="hero-icon">
+        <i class="bi bi-ticket-perforated-fill"></i>
+      </div>
+      <div class="hero-text">
+        <h1>Quản lý Tickets</h1>
+        <p>Theo dõi và xử lý các yêu cầu nghiệp vụ</p>
+      </div>
     </div>
+    <div class="hero-actions">
+      <button class="btn-act btn-pdf" (click)="downloadReport('pdf')" [disabled]="exporting" title="Xuất PDF">
+        <i class="bi bi-file-earmark-pdf-fill"></i> PDF
+      </button>
+      <button class="btn-act btn-excel" (click)="downloadReport('excel')" [disabled]="exporting" title="Xuất Excel">
+        <i class="bi bi-file-earmark-excel-fill"></i> Excel
+      </button>
+      <button class="btn-act btn-refresh" (click)="loadTickets()" [disabled]="loading" title="Làm mới">
+        <i class="bi bi-arrow-clockwise"></i> Làm mới
+      </button>
+      <a *ngIf="canCreate()" routerLink="create" class="btn-act btn-create">
+        <i class="bi bi-plus-lg"></i> Tạo ticket
+      </a>
+    </div>
+  </div>
 
-    <!-- Status Tabs -->
-    <div class="status-tabs">
-        <button class="status-tab" 
-                [class.active]="selectedStatus === 'ALL'"
-                (click)="filterStatus('ALL')">Tất cả</button>
-        <button class="status-tab" 
-                [class.active]="selectedStatus === 'DRAFT'"
-                (click)="filterStatus('DRAFT')">Bản nháp</button>
-        <button class="status-tab" 
-                [class.active]="selectedStatus === 'PENDING'"
-                (click)="filterStatus('PENDING')">Chờ duyệt</button>
-        <button class="status-tab" 
-                [class.active]="selectedStatus === 'APPROVED'"
-                (click)="filterStatus('APPROVED')">Đã duyệt</button>
-        <button class="status-tab" 
-                [class.active]="selectedStatus === 'REJECTED'"
-                (click)="filterStatus('REJECTED')">Bị từ chối</button>
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <div class="status-pills">
+      <button *ngFor="let tab of statusTabs"
+              class="status-pill"
+              [class.active]="selectedStatus === tab.key"
+              [style.--pill-color]="tab.color"
+              (click)="filterStatus(tab.key)">
+        <i class="bi" [ngClass]="tab.icon"></i>
+        <span>{{ tab.label }}</span>
+        <span *ngIf="selectedStatus === tab.key" class="pill-badge">{{ totalElements }}</span>
+      </button>
     </div>
+    <div class="search-wrap">
+      <i class="bi bi-search search-icon"></i>
+      <input type="text"
+             class="search-input"
+             placeholder="Tìm kiếm mã, tiêu đề, người tạo..."
+             [value]="searchQuery"
+             (input)="onSearch($event)" />
+    </div>
+  </div>
 
-    <!-- Error Message -->
-    <div *ngIf="error" class="error-message">
-        {{ error }}
-    </div>
+  <!-- Error Banner -->
+  <div *ngIf="error" class="error-banner">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    {{ error }}
+  </div>
+
+  <!-- Table Card -->
+  <div class="table-card">
 
     <!-- Loading -->
-    <div *ngIf="loading" class="loading">
-        <div class="spinner"></div>
-        <span>Đang tải...</span>
+    <div *ngIf="loading" class="loading-state">
+      <div class="spin-ring"></div>
+      <span>Đang tải dữ liệu...</span>
     </div>
 
-    <!-- Tickets Table -->
-    <div *ngIf="!loading" class="table-container">
-        <table class="tickets-table">
-            <thead>
-                <tr>
-                    <th>Mã Ticket</th>
-                    <th>Tiêu đề</th>
-                    <th>Trạng thái</th>
-                    <th>Số tiền</th>
-                    <th>Người tạo</th>
-                    <th>Ngày tạo</th>
-                    <th>Thao tác</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr *ngFor="let ticket of filteredTickets">
-                    <td>
-                        <strong>{{ ticket.code }}</strong>
-                        <br>
-                        <small style="color: #9ca3af;">#{{ ticket.id.substring(0,8) }}</small>
-                    </td>
-                    <td>{{ ticket.title }}</td>
-                    <td>
-                        <span class="badge" [ngClass]="'badge-' + ticket.status.toLowerCase()">
-                            {{ getStatusLabel(ticket.status) }}
-                        </span>
-                    </td>
-                    <td class="amount">
-                        {{ ticket.amount | currency:'VND':'symbol':'1.0-0' }}
-                    </td>
-                    <td>{{ ticket.makerName }}</td>
-                    <td>
-                        {{ ticket.createdAt | date:'dd/MM/yyyy' }}
-                        <br>
-                        <small style="color: #9ca3af;">{{ ticket.createdAt | date:'HH:mm' }}</small>
-                    </td>
-                    <td>
-                        <a [routerLink]="[ticket.id]" class="btn-action">Chi tiết</a>
-                    </td>
-                </tr>
-                <tr *ngIf="filteredTickets.length === 0">
-                    <td colspan="7" class="no-data">Không có dữ liệu</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <!-- Pagination Controls -->
-        <div class="pagination-controls" *ngIf="totalPages > 0">
-            <div class="pagination-info">
-                Hiển thị trang {{ currentPage + 1 }} / {{ totalPages }}
-            </div>
-
-            <div class="pagination-nav">
-                <button class="btn-page" (click)="goToPage(0)" [disabled]="currentPage === 0"
-                    title="Trang đầu">⏮</button>
-                <button class="btn-page" (click)="previousPage()" [disabled]="currentPage === 0"
-                    title="Trang trước">◀</button>
-
-                <button *ngFor="let page of getPageNumbers()" class="btn-page" [class.active]="page === currentPage"
-                    (click)="goToPage(page)">
-                    {{ page + 1 }}
-                </button>
-
-                <button class="btn-page" (click)="nextPage()" [disabled]="currentPage >= totalPages - 1"
-                    title="Trang sau">▶</button>
-                <button class="btn-page" (click)="goToPage(totalPages - 1)" [disabled]="currentPage >= totalPages - 1"
-                    title="Trang cuối">⏭</button>
-            </div>
-
-            <div class="page-size-selector">
-                <label>Hiển thị:</label>
-                <select [value]="pageSize" (change)="onPageSizeChange($event)">
-                    <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
-                </select>
-                <span>/ trang</span>
-            </div>
-        </div>
+    <!-- Data Table -->
+    <div *ngIf="!loading" class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="col-stt">#</th>
+            <th class="col-code">Mã Ticket</th>
+            <th class="col-title">Tiêu đề</th>
+            <th class="col-status">Trạng thái</th>
+            <th class="col-amount">Số tiền</th>
+            <th class="col-maker">Người tạo</th>
+            <th class="col-date">Ngày tạo</th>
+            <th class="col-action">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let ticket of filteredTickets; let i = index" class="data-row">
+            <td class="col-stt stt-cell">{{ currentPage * pageSize + i + 1 }}</td>
+            <td class="col-code">
+              <span class="ticket-code">{{ ticket.code }}</span>
+              <span class="ticket-uuid">#{{ ticket.id.substring(0, 8) }}</span>
+            </td>
+            <td class="col-title title-cell">{{ ticket.title }}</td>
+            <td class="col-status">
+              <span class="status-badge" [ngClass]="'badge-' + ticket.status.toLowerCase()">
+                <i class="bi" [ngClass]="getStatusIcon(ticket.status)"></i>
+                {{ getStatusLabel(ticket.status) }}
+              </span>
+            </td>
+            <td class="col-amount amount-cell">{{ formatAmount(ticket.amount) }}</td>
+            <td class="col-maker">
+              <div class="maker-info">
+                <div class="maker-avatar">{{ ticket.makerName.charAt(0).toUpperCase() }}</div>
+                <span>{{ ticket.makerName }}</span>
+              </div>
+            </td>
+            <td class="col-date">
+              <div class="date-main">{{ ticket.createdAt | date:'dd/MM/yyyy' }}</div>
+              <div class="date-sub">{{ ticket.createdAt | date:'HH:mm' }}</div>
+            </td>
+            <td class="col-action">
+              <a [routerLink]="[ticket.id]" class="btn-detail">
+                <i class="bi bi-eye-fill"></i> Chi tiết
+              </a>
+            </td>
+          </tr>
+          <tr *ngIf="filteredTickets.length === 0">
+            <td colspan="8" class="empty-state">
+              <i class="bi bi-inbox"></i>
+              <p>Không có dữ liệu</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
+
+    <!-- Pagination -->
+    <div class="pagination-bar" *ngIf="!loading && totalPages > 0">
+      <div class="page-info">
+        Hiển thị {{ currentPage * pageSize + 1 }}–{{ getPageRangeEnd() }} / {{ totalElements }} tickets
+      </div>
+
+      <div class="page-nav">
+        <button class="pg-btn" (click)="goToPage(0)" [disabled]="currentPage === 0" title="Trang đầu">
+          <i class="bi bi-chevron-double-left"></i>
+        </button>
+        <button class="pg-btn" (click)="previousPage()" [disabled]="currentPage === 0" title="Trang trước">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <button *ngFor="let page of getPageNumbers()"
+                class="pg-btn"
+                [class.pg-active]="page === currentPage"
+                (click)="goToPage(page)">
+          {{ page + 1 }}
+        </button>
+        <button class="pg-btn" (click)="nextPage()" [disabled]="currentPage >= totalPages - 1" title="Trang sau">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+        <button class="pg-btn" (click)="goToPage(totalPages - 1)" [disabled]="currentPage >= totalPages - 1" title="Trang cuối">
+          <i class="bi bi-chevron-double-right"></i>
+        </button>
+      </div>
+
+      <div class="page-size-wrap">
+        <label>Hiển thị:</label>
+        <select [value]="pageSize" (change)="onPageSizeChange($event)">
+          <option *ngFor="let s of pageSizeOptions" [value]="s">{{ s }}</option>
+        </select>
+        <span>/ trang</span>
+      </div>
+    </div>
+
+  </div>
 </div>
 
 <!-- Export Overlay -->
 <div *ngIf="exporting" class="export-overlay">
-    <div class="export-card">
-        <div class="spinner" style="width: 40px; height: 40px; margin: 0 auto 15px;"></div>
-        <div class="export-text">{{ exportMessage }}</div>
-        <div class="progress-bar-container">
-            <div class="progress-bar" [style.width.%]="exportProgress"></div>
-        </div>
+  <div class="export-modal">
+    <div class="export-spinner"></div>
+    <p class="export-msg">{{ exportMessage }}</p>
+    <div class="export-progress-track">
+      <div class="export-progress-fill" [style.width.%]="exportProgress"></div>
     </div>
+    <p *ngIf="exportError" class="export-error">{{ exportError }}</p>
+  </div>
 </div>

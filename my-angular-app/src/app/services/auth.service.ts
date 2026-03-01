@@ -84,6 +84,14 @@ export class AuthService {
         this.isAuthenticatedSubject.next(true);
     }
 
+    updateUserInfo(partial: Partial<UserInfo>): void {
+        const current = this.userInfoSubject.value;
+        if (!current) return;
+        const updated = { ...current, ...partial };
+        localStorage.setItem('user_info', JSON.stringify(updated));
+        this.userInfoSubject.next(updated);
+    }
+
     getToken(): string | null {
         return localStorage.getItem('access_token');
     }
@@ -115,6 +123,17 @@ export class AuthService {
         if (this.isAdmin) return true;
         const permissions = this.userInfo?.permissions || [];
         return permissions.includes(permission);
+    }
+
+    getUserIdFromToken(): string {
+        const token = this.getToken();
+        if (!token) return '';
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            return payload.userId || payload.sub || '';
+        } catch {
+            return '';
+        }
     }
 
     hasAnyPermission(permissions: string[]): boolean {

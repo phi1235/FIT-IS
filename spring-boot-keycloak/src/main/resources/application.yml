@@ -129,6 +129,17 @@ jasperreports:
     users: ${JASPER_TEMPLATE_USERS}
     tickets: ${JASPER_TEMPLATE_TICKETS}
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+  server:
+    port: ${server.port}
+
 logging:
   level:
     org.keycloak: ${LOGGING_LEVEL_ORG_KEYCLOAK:INFO}

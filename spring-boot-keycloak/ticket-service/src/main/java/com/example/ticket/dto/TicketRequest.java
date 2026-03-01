@@ -16,8 +16,10 @@ public class TicketRequest {
     
     @NotBlank(message = "Title is required")
     private String title;
-    
+
     private String description;
-    
+
     private BigDecimal amount;
+
+    private boolean saveDraft;
 }

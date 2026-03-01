@@ -242,6 +242,32 @@ export class UserManagementComponent implements OnInit, OnDestroy {
         });
     }
 
+    // Avatar color based on username
+    private readonly AVATAR_COLORS = [
+        '#b94500','#1d4ed8','#7c3aed','#0891b2','#059669','#d97706','#dc2626','#0d9488',
+    ];
+    getAvatarColor(username: string): string {
+        let hash = 0;
+        for (let i = 0; i < username.length; i++) hash = username.charCodeAt(i) + ((hash << 5) - hash);
+        return this.AVATAR_COLORS[Math.abs(hash) % this.AVATAR_COLORS.length];
+    }
+
+    // Role badge colors
+    private readonly ROLE_BG: Record<string, string> = {
+        ADMIN:   '#f3e8ff', CHECKER: '#e0f2fe',
+        MAKER:   '#fef3c7', USER:    '#dbeafe',
+    };
+    private readonly ROLE_FG: Record<string, string> = {
+        ADMIN:   '#7c3aed', CHECKER: '#0891b2',
+        MAKER:   '#b45309', USER:    '#1d4ed8',
+    };
+    getRoleBg(role: string): string {
+        return this.ROLE_BG[(role || '').toUpperCase()] ?? '#f3f4f6';
+    }
+    getRoleColor(role: string): string {
+        return this.ROLE_FG[(role || '').toUpperCase()] ?? '#6b7280';
+    }
+
     // Role update backup (still mapping to old UI if needed)
     openRoleModal(user: User) {
         this.selectedUser = user;

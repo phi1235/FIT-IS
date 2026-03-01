@@ -105,17 +105,41 @@ public class TicketService {
     public TicketDTO createTicket(TicketRequest request, UUID makerUserId) {
         String code = generateTicketCode();
 
+        TicketStatus initialStatus = request.isSaveDraft() ? TicketStatus.DRAFT : TicketStatus.PENDING;
+
         Ticket ticket = Ticket.builder()
                 .code(code)
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .amount(request.getAmount())
-                .status(TicketStatus.DRAFT)
+                .status(initialStatus)
                 .makerUserId(makerUserId)
                 .build();
 
         Ticket savedTicket = ticketRepository.save(ticket);
         log.info("Ticket created: {} by maker {}", code, makerUserId);
+
+        return convertToDTO(savedTicket);
+    }
+
+    @Transactional
+    public TicketDTO updateTicket(UUID id, TicketRequest request, UUID makerUserId) {
+        Ticket ticket = ticketRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+
+        if (!ticket.getMakerUserId().equals(makerUserId)) {
+            throw new RuntimeException("Only the maker can update the ticket");
+        }
+
+        if (ticket.getStatus() != TicketStatus.DRAFT && ticket.getStatus() != TicketStatus.REJECTED) {
+            throw new RuntimeException("Only DRAFT or REJECTED tickets can be updated");
+        }
+
+        ticket.setTitle(request.getTitle());
+        ticket.setDescription(request.getDescription());
+        ticket.setAmount(request.getAmount());
+        Ticket savedTicket = ticketRepository.save(ticket);
+        log.info("Ticket updated: {} by maker {}", savedTicket.getCode(), makerUserId);
 
         return convertToDTO(savedTicket);
     }

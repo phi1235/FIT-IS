@@ -18,6 +18,7 @@ export class EmailTemplateListComponent implements OnInit {
   pageSize = 10;
   totalElements = 0;
   totalPages = 0;
+  pageSizeOptions = [10, 20, 50];
 
   constructor(
     private emailTemplateService: EmailTemplateService,
@@ -77,7 +78,17 @@ export class EmailTemplateListComponent implements OnInit {
     });
   }
 
+  onPageSizeChange(event: Event): void {
+    this.pageSize = Number((event.target as HTMLSelectElement).value);
+    this.currentPage = 0;
+    this.loadTemplates();
+  }
+
   getPageNumbers(): number[] {
-    return Array.from({ length: this.totalPages }, (_, i) => i);
+    const maxVisible = 5;
+    let start = Math.max(0, this.currentPage - Math.floor(maxVisible / 2));
+    let end = Math.min(this.totalPages, start + maxVisible);
+    if (end - start < maxVisible) start = Math.max(0, end - maxVisible);
+    return Array.from({ length: end - start }, (_, i) => start + i);
   }
 }

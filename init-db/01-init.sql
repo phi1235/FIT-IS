@@ -355,8 +355,7 @@ INSERT INTO auth.role (code, name, description, is_system)
 VALUES
   ('ADMIN', 'Administrator', 'System administrator', TRUE),
   ('MAKER', 'Maker', 'Creates requests/tickets', TRUE),
-  ('CHECKER', 'Checker', 'Approves/rejects requests', TRUE),
-  ('LEADER', 'Leader', 'Escalation/override approver', TRUE)
+  ('CHECKER', 'Checker', 'Approves/rejects requests', TRUE)
 ON CONFLICT (code) DO NOTHING;
 
 INSERT INTO auth.permission (code, name, module)
@@ -367,5 +366,14 @@ VALUES
   ('TICKET_REJECT', 'Reject ticket', 'TICKET'),
   ('USER_VIEW', 'View users', 'USER'),
   ('USER_ROLE_ASSIGN', 'Assign roles to user', 'USER'),
-  ('REPORT_EXPORT', 'Export reports', 'REPORT')
+  ('REPORT_EXPORT', 'Export reports', 'REPORT'),
+  ('TICKET_VIEW', 'View tickets', 'TICKET'),
+  ('USER_MANAGE', 'Manage users', 'USER'),
+  ('EMAIL_TEMPLATE_VIEW', 'View email templates', 'EMAIL'),
+  ('EMAIL_TEMPLATE_MANAGE', 'Manage email templates', 'EMAIL'),
+  ('ROLE_VIEW', 'View roles', 'AUTH'),
+  ('ROLE_MANAGE', 'Manage roles', 'AUTH'),
+  ('AUDIT_VIEW', 'View audit logs', 'AUDIT'),
+  ('WORKFLOW_VIEW', 'View workflows', 'WORKFLOW'),
+  ('WORKFLOW_MANAGE', 'Manage workflows', 'WORKFLOW')
 ON CONFLICT (code) DO NOTHING;

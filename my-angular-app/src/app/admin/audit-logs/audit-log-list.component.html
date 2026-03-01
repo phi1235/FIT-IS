@@ -1,0 +1,159 @@
+<div class="al-wrapper">
+
+  <!-- Hero Header -->
+  <div class="al-hero">
+    <div class="al-hero-left">
+      <div class="al-hero-icon"><i class="bi bi-shield-check-fill"></i></div>
+      <div>
+        <h1 class="al-title">Audit Logs</h1>
+        <p class="al-sub">Lịch sử hoạt động và sự kiện bảo mật hệ thống</p>
+      </div>
+    </div>
+    <div class="al-hero-actions">
+      <button class="al-btn-refresh" (click)="loadEvents()" [disabled]="loading">
+        <i class="bi bi-arrow-clockwise"></i> Làm mới
+      </button>
+    </div>
+  </div>
+
+  <!-- Filter Card -->
+  <div class="al-filter-card">
+    <div class="al-filter-row">
+      <div class="al-filter-group">
+        <label>Loại sự kiện</label>
+        <input type="text" [(ngModel)]="filters.eventType" placeholder="LOGIN, LOGOUT..." class="al-filter-input" />
+      </div>
+      <div class="al-filter-group">
+        <label>Tên người dùng</label>
+        <input type="text" [(ngModel)]="filters.username" placeholder="Tìm theo username..." class="al-filter-input" />
+      </div>
+      <div class="al-filter-group">
+        <label>Từ ngày</label>
+        <input type="date" [(ngModel)]="filters.fromDate" class="al-filter-input" />
+      </div>
+      <div class="al-filter-group">
+        <label>Đến ngày</label>
+        <input type="date" [(ngModel)]="filters.toDate" class="al-filter-input" />
+      </div>
+      <div class="al-filter-actions">
+        <button class="al-btn-search" (click)="applyFilters()">
+          <i class="bi bi-search"></i> Tìm kiếm
+        </button>
+        <button class="al-btn-reset" (click)="resetFilters()">
+          <i class="bi bi-x-circle"></i> Xóa lọc
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table Card -->
+  <div class="al-card">
+
+    <!-- Card toolbar -->
+    <div class="al-card-toolbar">
+      <div class="al-count-badge">
+        <i class="bi bi-activity"></i>
+        <strong>{{ totalElements }}</strong> sự kiện
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="al-loading">
+      <div class="al-spinner"></div>
+      <span>Đang tải...</span>
+    </div>
+
+    <table *ngIf="!loading" class="al-table">
+      <thead>
+        <tr>
+          <th>Thời gian</th>
+          <th>Người dùng</th>
+          <th>Sự kiện</th>
+          <th>HTTP</th>
+          <th>URL</th>
+          <th>Status</th>
+          <th>Chi tiết</th>
+        </tr>
+      </thead>
+      <tbody>
+        <ng-container *ngFor="let event of events">
+          <tr>
+            <td class="al-time">{{ event.eventTime | date:'dd/MM/yyyy HH:mm:ss' }}</td>
+            <td class="al-user">{{ event.username || '-' }}</td>
+            <td><span class="al-event-badge">{{ event.eventType }}</span></td>
+            <td>
+              <span *ngIf="event.httpMethod" class="al-method-badge">{{ event.httpMethod }}</span>
+              <span *ngIf="!event.httpMethod">-</span>
+            </td>
+            <td class="al-url" [title]="event.requestUrl || ''">{{ event.requestUrl || '-' }}</td>
+            <td>
+              <span *ngIf="event.statusCode" [class]="'al-status-badge ' + getStatusClass(event.statusCode)">
+                {{ event.statusCode }}
+              </span>
+              <span *ngIf="!event.statusCode">-</span>
+            </td>
+            <td>
+              <button class="al-btn-expand" (click)="toggleRow(event.id)" *ngIf="event.metadata || event.errorMessage">
+                <i [class]="isExpanded(event.id) ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"></i>
+              </button>
+              <span *ngIf="!event.metadata && !event.errorMessage" class="al-dash">-</span>
+            </td>
+          </tr>
+          <tr *ngIf="isExpanded(event.id)" class="al-detail-row">
+            <td colspan="7">
+              <div class="al-detail-panel">
+                <div *ngIf="event.errorMessage" class="al-error-msg">
+                  <i class="bi bi-exclamation-circle-fill"></i> {{ event.errorMessage }}
+                </div>
+                <div *ngIf="event.userAgent" class="al-user-agent">
+                  <strong>User Agent:</strong> {{ event.userAgent }}
+                </div>
+                <div *ngIf="event.metadata" class="al-metadata-block">
+                  <strong>Metadata:</strong>
+                  <pre>{{ formatMetadata(event.metadata) }}</pre>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </ng-container>
+        <tr *ngIf="events.length === 0">
+          <td colspan="7" class="al-empty">
+            <i class="bi bi-shield-x"></i>
+            <span>Không có dữ liệu audit log</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <div class="pagination-bar" *ngIf="!loading && totalPages > 0">
+      <div class="page-info">
+        Hiển thị {{ currentPage * pageSize + 1 }}–{{ (currentPage + 1) * pageSize > totalElements ? totalElements : (currentPage + 1) * pageSize }} / {{ totalElements }} sự kiện
+      </div>
+      <div class="page-nav">
+        <button class="pg-btn" (click)="onPageChange(0)" [disabled]="currentPage === 0" title="Trang đầu">
+          <i class="bi bi-chevron-double-left"></i>
+        </button>
+        <button class="pg-btn" (click)="onPageChange(currentPage - 1)" [disabled]="currentPage === 0" title="Trang trước">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <button *ngFor="let p of getPageNumbers()" class="pg-btn" [class.pg-active]="p === currentPage"
+          (click)="onPageChange(p)">{{ p + 1 }}</button>
+        <button class="pg-btn" (click)="onPageChange(currentPage + 1)" [disabled]="currentPage >= totalPages - 1" title="Trang sau">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+        <button class="pg-btn" (click)="onPageChange(totalPages - 1)" [disabled]="currentPage >= totalPages - 1" title="Trang cuối">
+          <i class="bi bi-chevron-double-right"></i>
+        </button>
+      </div>
+      <div class="page-size-wrap">
+        <label>Hiển thị:</label>
+        <select [value]="pageSize" (change)="onPageSizeChange($event)">
+          <option *ngFor="let s of pageSizeOptions" [value]="s">{{ s }}</option>
+        </select>
+        <span>/ trang</span>
+      </div>
+    </div>
+
+  </div>
+</div>

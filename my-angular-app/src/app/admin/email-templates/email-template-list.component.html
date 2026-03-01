@@ -1,74 +1,124 @@
-<div class="template-list-container">
-  <div class="header-actions">
-    <h1>Quản lý Email Templates</h1>
-    <button class="primary-btn" (click)="createNewTemplate()">
-      <span class="icon">+</span> Thêm Template mới
-    </button>
+<div class="et-wrapper">
+
+  <!-- Hero Header -->
+  <div class="et-hero">
+    <div class="et-hero-left">
+      <div class="et-hero-icon"><i class="bi bi-envelope-fill"></i></div>
+      <div>
+        <h1 class="et-title">Quản lý Email Templates</h1>
+        <p class="et-sub">Quản lý các mẫu email được sử dụng trong hệ thống</p>
+      </div>
+    </div>
+    <div class="et-hero-actions">
+      <button class="et-btn-refresh" (click)="loadTemplates()" [disabled]="loading">
+        <i class="bi bi-arrow-clockwise"></i> Làm mới
+      </button>
+      <button class="et-btn-add" (click)="createNewTemplate()">
+        <i class="bi bi-plus-lg"></i> Thêm Template mới
+      </button>
+    </div>
   </div>
 
-  <div class="card">
-    <div class="card-header">
-      <div class="search-box">
-        <input type="text" placeholder="Tìm kiếm template...">
+  <!-- Toolbar -->
+  <div class="et-toolbar">
+    <div class="et-search-wrap">
+      <i class="bi bi-search et-search-icon"></i>
+      <input class="et-search-input" type="text" placeholder="Tìm kiếm template..." />
+    </div>
+    <div class="et-count-badge">
+      <i class="bi bi-envelope"></i>
+      <strong>{{ totalElements }}</strong> templates
+    </div>
+  </div>
+
+  <!-- Table Card -->
+  <div class="et-card">
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="et-loading">
+      <div class="et-spinner"></div>
+      <span>Đang tải...</span>
+    </div>
+
+    <table *ngIf="!loading" class="et-table">
+      <thead>
+        <tr>
+          <th>Mã Template</th>
+          <th>Tên hiển thị</th>
+          <th>Tiêu đề</th>
+          <th>Phiên bản</th>
+          <th>Trạng thái</th>
+          <th>Cập nhật lần cuối</th>
+          <th class="col-actions">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let t of templates">
+          <td>
+            <span class="et-code">{{ t.templateCode }}</span>
+          </td>
+          <td class="et-name">{{ t.templateName }}</td>
+          <td class="et-subject">{{ t.subject }}</td>
+          <td>
+            <span class="et-version">v{{ t.version }}</span>
+          </td>
+          <td>
+            <span class="et-status" [class.et-active]="t.active" [class.et-inactive]="!t.active">
+              <span class="et-status-dot"></span>
+              {{ t.active ? 'Hoạt động' : 'Vô hiệu' }}
+            </span>
+          </td>
+          <td class="et-date">{{ t.updatedAt | date:'dd/MM/yyyy HH:mm' }}</td>
+          <td class="col-actions">
+            <div class="et-actions">
+              <button class="et-act-btn edit" (click)="editTemplate(t.id!)" title="Chỉnh sửa">
+                <i class="bi bi-pencil-fill"></i>
+              </button>
+              <button class="et-act-btn lock" (click)="toggleTemplateStatus(t)"
+                [title]="t.active ? 'Vô hiệu hóa' : 'Kích hoạt'">
+                <i class="bi" [class.bi-lock-fill]="t.active" [class.bi-unlock-fill]="!t.active"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="!loading && templates.length === 0">
+          <td colspan="7" class="et-empty">
+            <i class="bi bi-inbox"></i>
+            <span>Không tìm thấy template nào</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <div class="pagination-bar" *ngIf="!loading && totalPages > 0">
+      <div class="page-info">
+        Hiển thị {{ currentPage * pageSize + 1 }}–{{ (currentPage + 1) * pageSize > totalElements ? totalElements : (currentPage + 1) * pageSize }} / {{ totalElements }} templates
       </div>
-    </div>
-
-    <div class="table-container">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Mã Template</th>
-            <th>Tên Hiển Thị</th>
-            <th>Tiêu Đề</th>
-            <th>Phiên Bản</th>
-            <th>Trạng Thái</th>
-            <th>Cập Nhật Lần Cuối</th>
-            <th>Thao Tác</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngIf="loading">
-            <td colspan="7" class="loading-state">Đang tải dữ liệu...</td>
-          </tr>
-          <tr *ngIf="!loading && templates.length === 0">
-            <td colspan="7" class="empty-state">Không tìm thấy template nào.</td>
-          </tr>
-          <tr *ngFor="let template of templates">
-            <td class="code-cell">{{ template.templateCode }}</td>
-            <td>{{ template.templateName }}</td>
-            <td class="subject-cell">{{ template.subject }}</td>
-            <td>v{{ template.version }}</td>
-            <td>
-              <span class="badge" [ngClass]="template.active ? 'badge-success' : 'badge-danger'">
-                {{ template.active ? 'Hoạt động' : 'Vô hiệu hóa' }}
-              </span>
-            </td>
-            <td>{{ template.updatedAt | date:'dd/MM/yyyy HH:mm' }}</td>
-            <td class="actions-cell">
-              <button class="icon-btn edit-btn" (click)="editTemplate(template.id!)" title="Chỉnh sửa">
-                ✏️
-              </button>
-              <button class="icon-btn status-btn" (click)="toggleTemplateStatus(template)" 
-                      [title]="template.active ? 'Vô hiệu hóa' : 'Kích hoạt'">
-                {{ template.active ? '🔒' : '🔓' }}
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="pagination" *ngIf="totalPages > 1">
-      <button class="page-btn" [disabled]="currentPage === 0" (click)="onPageChange(currentPage - 1)">Trước</button>
-      <div class="page-numbers">
-        <button *ngFor="let p of getPageNumbers()" 
-                class="page-btn" 
-                [class.active]="p === currentPage" 
-                (click)="onPageChange(p)">
-          {{ p + 1 }}
+      <div class="page-nav">
+        <button class="pg-btn" (click)="onPageChange(0)" [disabled]="currentPage === 0" title="Trang đầu">
+          <i class="bi bi-chevron-double-left"></i>
+        </button>
+        <button class="pg-btn" (click)="onPageChange(currentPage - 1)" [disabled]="currentPage === 0" title="Trang trước">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <button *ngFor="let p of getPageNumbers()" class="pg-btn" [class.pg-active]="p === currentPage"
+          (click)="onPageChange(p)">{{ p + 1 }}</button>
+        <button class="pg-btn" (click)="onPageChange(currentPage + 1)" [disabled]="currentPage >= totalPages - 1" title="Trang sau">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+        <button class="pg-btn" (click)="onPageChange(totalPages - 1)" [disabled]="currentPage >= totalPages - 1" title="Trang cuối">
+          <i class="bi bi-chevron-double-right"></i>
         </button>
       </div>
-      <button class="page-btn" [disabled]="currentPage === totalPages - 1" (click)="onPageChange(currentPage + 1)">Sau</button>
+      <div class="page-size-wrap">
+        <label>Hiển thị:</label>
+        <select [value]="pageSize" (change)="onPageSizeChange($event)">
+          <option *ngFor="let s of pageSizeOptions" [value]="s">{{ s }}</option>
+        </select>
+        <span>/ trang</span>
+      </div>
     </div>
+
   </div>
 </div>

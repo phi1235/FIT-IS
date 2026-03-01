@@ -7,12 +7,19 @@ import { AdminLayoutComponent } from './admin/admin-layout.component';
 import { UserManagementComponent } from './admin/user-management.component';
 import { portalGuard } from './guards/portal.guard';
 import { adminGuard } from './guards/admin.guard';
+import { authGuard } from './guards/auth.guard';
 import { ForgotPasswordComponent } from './password-management/forgot-password.component';
 import { AdminPasswordResetComponent } from './password-management/admin-password-reset.component';
 import { EmailTemplateListComponent } from './admin/email-templates/email-template-list.component';
 import { EmailTemplateDetailComponent } from './admin/email-templates/email-template-detail.component';
 import { permissionGuard } from './guards/permission.guard';
 import { RoleManagementComponent } from './admin/role-management.component';
+import { AuditLogListComponent } from './admin/audit-logs/audit-log-list.component';
+import { WorkflowListComponent } from './admin/workflow/workflow-list.component';
+import { WorkflowDetailComponent } from './admin/workflow/workflow-detail.component';
+import { ProfileComponent } from './profile/profile.component';
+import { SettingsComponent } from './settings/settings.component';
+import { NotificationManagementComponent } from './admin/notifications/notification-management.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -75,9 +82,32 @@ export const routes: Routes = [
           { path: ':id', component: EmailTemplateDetailComponent, data: { permission: 'EMAIL_TEMPLATE_MANAGE' } }
         ]
       },
+      {
+        path: 'audit-logs',
+        component: AuditLogListComponent,
+        canActivate: [permissionGuard],
+        data: { permission: 'AUDIT_VIEW' }
+      },
+      {
+        path: 'notifications',
+        component: NotificationManagementComponent,
+        canActivate: [permissionGuard],
+        data: { permission: 'AUDIT_VIEW' }
+      },
+      {
+        path: 'workflow',
+        canActivate: [permissionGuard],
+        data: { permission: 'WORKFLOW_VIEW' },
+        children: [
+          { path: '', component: WorkflowListComponent },
+          { path: ':id', component: WorkflowDetailComponent }
+        ]
+      },
       { path: '**', redirectTo: '' }
     ]
   },
+  { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
+  { path: 'settings', component: SettingsComponent, canActivate: [authGuard] },
   { path: '**', redirectTo: 'home' }
 ];
 
