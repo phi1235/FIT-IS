@@ -2,28 +2,37 @@
 
   <!-- Hero Header -->
   <div class="page-hero">
-    <div class="hero-content">
-      <div class="hero-icon">
-        <i class="bi bi-ticket-perforated-fill"></i>
+    <!-- Breadcrumb embedded in hero (maker/checker only) -->
+    <nav *ngIf="!isAdminView()" class="tl-hero-bc">
+      <a routerLink="/home" class="tl-hbc-link"><i class="bi bi-house-fill"></i> Trang chủ</a>
+      <i class="bi bi-chevron-right tl-hbc-sep"></i>
+      <span class="tl-hbc-current">Tickets</span>
+    </nav>
+    <!-- Main hero row -->
+    <div class="tl-hero-main">
+      <div class="hero-content">
+        <div class="hero-icon">
+          <i class="bi bi-ticket-perforated-fill"></i>
+        </div>
+        <div class="hero-text">
+          <h1>Quản lý Tickets</h1>
+          <p>Theo dõi và xử lý các yêu cầu nghiệp vụ</p>
+        </div>
       </div>
-      <div class="hero-text">
-        <h1>Quản lý Tickets</h1>
-        <p>Theo dõi và xử lý các yêu cầu nghiệp vụ</p>
+      <div class="hero-actions">
+        <button class="btn-act btn-pdf" (click)="downloadReport('pdf')" [disabled]="exporting" title="Xuất PDF">
+          <i class="bi bi-file-earmark-pdf-fill"></i> PDF
+        </button>
+        <button class="btn-act btn-excel" (click)="downloadReport('xlsx')" [disabled]="exporting" title="Xuất Excel">
+          <i class="bi bi-file-earmark-excel-fill"></i> Excel
+        </button>
+        <button class="btn-act btn-refresh" (click)="loadTickets()" [disabled]="loading" title="Làm mới">
+          <i class="bi bi-arrow-clockwise"></i> Làm mới
+        </button>
+        <a *ngIf="canCreate()" routerLink="create" class="btn-act btn-create">
+          <i class="bi bi-plus-lg"></i> Tạo ticket
+        </a>
       </div>
-    </div>
-    <div class="hero-actions">
-      <button class="btn-act btn-pdf" (click)="downloadReport('pdf')" [disabled]="exporting" title="Xuất PDF">
-        <i class="bi bi-file-earmark-pdf-fill"></i> PDF
-      </button>
-      <button class="btn-act btn-excel" (click)="downloadReport('excel')" [disabled]="exporting" title="Xuất Excel">
-        <i class="bi bi-file-earmark-excel-fill"></i> Excel
-      </button>
-      <button class="btn-act btn-refresh" (click)="loadTickets()" [disabled]="loading" title="Làm mới">
-        <i class="bi bi-arrow-clockwise"></i> Làm mới
-      </button>
-      <a *ngIf="canCreate()" routerLink="create" class="btn-act btn-create">
-        <i class="bi bi-plus-lg"></i> Tạo ticket
-      </a>
     </div>
   </div>
 

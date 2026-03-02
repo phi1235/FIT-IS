@@ -16,9 +16,14 @@ import { ToastService } from '../services/toast.service';
   <!-- Header -->
   <div class="td-header">
     <div class="td-header-inner">
-      <a [routerLink]="router.url.startsWith('/admin') ? '/admin/tickets' : '/tickets'" class="td-back">
-        <i class="bi bi-arrow-left"></i> Quay lại
-      </a>
+      <!-- Breadcrumb inside header (maker/checker only) -->
+      <nav *ngIf="!router.url.startsWith('/admin')" class="td-breadcrumb">
+        <a routerLink="/home" class="td-bc-link"><i class="bi bi-house-fill"></i> Trang chủ</a>
+        <i class="bi bi-chevron-right td-bc-sep"></i>
+        <a routerLink="/tickets" class="td-bc-link">Tickets</a>
+        <i class="bi bi-chevron-right td-bc-sep"></i>
+        <span class="td-bc-current">{{ ticket?.code || 'Chi tiết' }}</span>
+      </nav>
       <div class="td-header-main">
         <div class="td-header-left">
           <div class="td-ticket-icon"><i class="bi bi-file-earmark-text-fill"></i></div>
@@ -206,12 +211,18 @@ import { ToastService } from '../services/toast.service';
       padding: 20px 0 24px;
     }
     .td-header-inner { max-width: 1100px; margin: 0 auto; padding: 0 32px; }
-    .td-back {
-      color: rgba(255,255,255,0.75); text-decoration: none;
-      font-size: 0.83rem; display: inline-flex; align-items: center;
-      gap: 6px; margin-bottom: 12px; transition: color 0.2s;
+    .td-breadcrumb {
+      display: flex; align-items: center; gap: 6px;
+      margin-bottom: 12px; font-size: 0.8rem;
     }
-    .td-back:hover { color: #fff; }
+    .td-bc-link {
+      display: inline-flex; align-items: center; gap: 4px;
+      color: rgba(255,255,255,0.75) !important; text-decoration: none !important;
+      font-weight: 500; transition: color 0.15s;
+    }
+    .td-bc-link:hover { color: #fff !important; }
+    .td-bc-sep { color: rgba(255,255,255,0.4); font-size: 0.68rem; }
+    .td-bc-current { color: rgba(255,255,255,0.95); font-weight: 600; }
     .td-header-main { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap; }
     .td-header-left { display: flex; align-items: flex-start; gap: 14px; }
     .td-ticket-icon {

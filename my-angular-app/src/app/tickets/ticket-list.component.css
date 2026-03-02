@@ -10,13 +10,44 @@
 /* ── Hero Header ── */
 .page-hero {
   background: linear-gradient(135deg, #b94500 0%, #d45f02 55%, #e87c10 100%);
-  padding: 26px 32px;
+  padding: 16px 32px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 4px 16px rgba(185, 69, 0, 0.35);
+}
+
+/* Breadcrumb inside hero */
+.tl-hero-bc {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+}
+
+.tl-hbc-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: rgba(255, 255, 255, 0.75) !important;
+  text-decoration: none !important;
+  font-weight: 500;
+  transition: color 0.15s;
+}
+
+.tl-hbc-link:hover { color: #fff !important; }
+
+.tl-hbc-sep { color: rgba(255, 255, 255, 0.4); font-size: 0.68rem; }
+
+.tl-hbc-current { color: rgba(255, 255, 255, 0.95); font-weight: 600; }
+
+/* Hero main row (content + actions) */
+.tl-hero-main {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
-  box-shadow: 0 4px 16px rgba(185, 69, 0, 0.35);
 }
 
 .hero-content {

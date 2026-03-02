@@ -185,7 +185,7 @@ export class TicketListMainComponent implements OnInit {
     this.exportMessage = `Đang khởi tạo xuất báo cáo ${format.toUpperCase()}...`;
     this.exportError = null;
 
-    this.ticketService.generateReport(format).subscribe({
+    this.ticketService.generateReport(format, this.selectedStatus).subscribe({
       next: (response) => {
         const jobId = response.jobId;
         this.exportMessage = `Đang xử lý...`;

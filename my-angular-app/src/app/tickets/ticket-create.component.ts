@@ -14,9 +14,14 @@ import { TicketService, TicketRequest } from '../services/ticket.service';
   <!-- Page Header -->
   <div class="tc-header">
     <div class="tc-header-inner">
-      <a [routerLink]="router.url.startsWith('/admin') ? '/admin/tickets' : '/tickets'" class="tc-back">
-        <i class="bi bi-arrow-left"></i> Quay lại
-      </a>
+      <!-- Breadcrumb inside header (maker/checker only) -->
+      <nav *ngIf="!router.url.startsWith('/admin')" class="tc-breadcrumb">
+        <a routerLink="/home" class="tc-bc-link"><i class="bi bi-house-fill"></i> Trang chủ</a>
+        <i class="bi bi-chevron-right tc-bc-sep"></i>
+        <a routerLink="/tickets" class="tc-bc-link">Tickets</a>
+        <i class="bi bi-chevron-right tc-bc-sep"></i>
+        <span class="tc-bc-current">Tạo mới</span>
+      </nav>
       <div class="tc-header-title">
         <div class="tc-header-icon"><i class="bi bi-plus-lg"></i></div>
         <div>
@@ -169,17 +174,18 @@ import { TicketService, TicketRequest } from '../services/ticket.service';
       margin: 0 auto;
       padding: 0 32px;
     }
-    .tc-back {
-      color: rgba(255,255,255,0.75);
-      text-decoration: none;
-      font-size: 0.85rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      margin-bottom: 14px;
-      transition: color 0.2s;
+    .tc-breadcrumb {
+      display: flex; align-items: center; gap: 6px;
+      margin-bottom: 14px; font-size: 0.8rem;
     }
-    .tc-back:hover { color: #fff; }
+    .tc-bc-link {
+      display: inline-flex; align-items: center; gap: 4px;
+      color: rgba(255,255,255,0.75) !important; text-decoration: none !important;
+      font-weight: 500; transition: color 0.15s;
+    }
+    .tc-bc-link:hover { color: #fff !important; }
+    .tc-bc-sep { color: rgba(255,255,255,0.4); font-size: 0.68rem; }
+    .tc-bc-current { color: rgba(255,255,255,0.95); font-weight: 600; }
     .tc-header-title {
       display: flex;
       align-items: center;

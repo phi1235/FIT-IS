@@ -122,11 +122,11 @@ export class TicketService {
     }
 
     // Async report generation
-    generateReport(format: string): Observable<ReportJobResponse> {
+    generateReport(format: string, status: string = 'ALL'): Observable<ReportJobResponse> {
         return this.http.post<ReportJobResponse>(
             `${this.reportApiUrl}/tickets/generate`,
             null,
-            { params: { format } }
+            { params: { format, status } }
         );
     }
 

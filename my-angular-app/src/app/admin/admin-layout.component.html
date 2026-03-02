@@ -57,12 +57,14 @@
   <!-- Main Area -->
   <div class="admin-main-area">
     <header class="admin-top-bar">
-      <div class="breadcrumb">
-        <span>Portal</span> / <strong>Hệ thống nội bộ</strong>
-      </div>
-      <div class="top-bar-actions">
-        <!-- Optional notifications or search -->
-      </div>
+      <nav class="breadcrumb" aria-label="breadcrumb">
+        <ng-container *ngFor="let crumb of breadcrumbs">
+          <a *ngIf="!crumb.isLast" [routerLink]="crumb.url" class="bc-link">{{ crumb.label }}</a>
+          <span *ngIf="crumb.isLast" class="bc-current">{{ crumb.label }}</span>
+          <i *ngIf="!crumb.isLast" class="bi bi-chevron-right bc-sep"></i>
+        </ng-container>
+      </nav>
+      <div class="top-bar-actions"></div>
     </header>
 
     <main class="admin-content-scroll">

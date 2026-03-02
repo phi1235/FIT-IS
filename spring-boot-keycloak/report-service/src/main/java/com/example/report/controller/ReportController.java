@@ -31,7 +31,8 @@ public class ReportController {
     @PostMapping("/{reportType}/generate")
     public ResponseEntity<Map<String, Object>> generateReport(
             @PathVariable String reportType,
-            @RequestParam String format) {
+            @RequestParam String format,
+            @RequestParam(required = false, defaultValue = "ALL") String status) {
 
         if (!reportType.equals("users") && !reportType.equals("tickets")) {
             return ResponseEntity.badRequest().body(Map.of("error", "Invalid report type"));
@@ -41,7 +42,7 @@ public class ReportController {
         }
 
         ReportJob job = jobService.createJob(format.toLowerCase(), reportType);
-        reportService.exportReportAsync(job.getJobId(), format.toLowerCase(), reportType);
+        reportService.exportReportAsync(job.getJobId(), format.toLowerCase(), reportType, status.toUpperCase());
 
         Map<String, Object> response = new HashMap<>();
         response.put("jobId", job.getJobId());

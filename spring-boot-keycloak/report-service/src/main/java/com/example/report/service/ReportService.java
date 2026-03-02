@@ -43,21 +43,26 @@ public class ReportService {
      * Async report generation
      */
     @Async
-    public void exportReportAsync(String jobId, String format, String reportType) {
+    public void exportReportAsync(String jobId, String format, String reportType, String statusFilter) {
         try {
             jobService.updateProgress(jobId, 10);
 
             String templateFileName = reportType.equals("users") ? "Invoice.jrxml" : "tickets_report.jrxml";
-            
+
             jobService.updateProgress(jobId, 30);
 
             JasperReport jasperReport = getOrCompileTemplate(templateFileName);
-            
+
             jobService.updateProgress(jobId, 50);
+
+            Map<String, Object> params = new HashMap<>();
+            if ("tickets".equals(reportType) && statusFilter != null && !statusFilter.isEmpty()) {
+                params.put("STATUS_FILTER", statusFilter);
+            }
 
             JasperPrint jasperPrint;
             try (Connection connection = dataSource.getConnection()) {
-                jasperPrint = JasperFillManager.fillReport(jasperReport, new HashMap<>(), connection);
+                jasperPrint = JasperFillManager.fillReport(jasperReport, params, connection);
             }
             
             jobService.updateProgress(jobId, 70);

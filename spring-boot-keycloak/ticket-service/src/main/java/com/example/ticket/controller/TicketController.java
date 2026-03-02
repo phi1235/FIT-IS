@@ -89,7 +89,7 @@ public class TicketController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('MAKER') or hasRole('ADMIN') or hasRole('USER')")
+    @PreAuthorize("hasRole('MAKER') or hasRole('ADMIN') or hasRole('USER') or hasAuthority('TICKET_CREATE') or hasAuthority('TICKET_MANAGE')")
     public ResponseEntity<TicketDTO> createTicket(
             @Valid @RequestBody TicketRequest request,
             HttpServletRequest httpServletRequest) {
@@ -97,7 +97,7 @@ public class TicketController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('MAKER') or hasRole('ADMIN') or hasRole('USER')")
+    @PreAuthorize("hasRole('MAKER') or hasRole('ADMIN') or hasRole('USER') or hasAuthority('TICKET_CREATE') or hasAuthority('TICKET_MANAGE')")
     public ResponseEntity<TicketDTO> updateTicket(
             @PathVariable UUID id,
             @Valid @RequestBody TicketRequest request,
@@ -106,19 +106,19 @@ public class TicketController {
     }
 
     @PostMapping("/{id}/submit")
-    @PreAuthorize("hasRole('MAKER') or hasRole('ADMIN') or hasRole('USER')")
+    @PreAuthorize("hasRole('MAKER') or hasRole('ADMIN') or hasRole('USER') or hasAuthority('TICKET_CREATE') or hasAuthority('TICKET_MANAGE')")
     public ResponseEntity<TicketDTO> submitTicket(@PathVariable UUID id, HttpServletRequest httpServletRequest) {
         return ResponseEntity.ok(ticketService.submitTicket(id, requireUserId(httpServletRequest)));
     }
 
     @PostMapping("/{id}/approve")
-    @PreAuthorize("hasRole('CHECKER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('CHECKER') or hasRole('ADMIN') or hasAuthority('TICKET_APPROVE') or hasAuthority('TICKET_MANAGE')")
     public ResponseEntity<TicketDTO> approveTicket(@PathVariable UUID id, HttpServletRequest httpServletRequest) {
         return ResponseEntity.ok(ticketService.approveTicket(id, requireUserId(httpServletRequest)));
     }
 
     @PostMapping("/{id}/reject")
-    @PreAuthorize("hasRole('CHECKER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('CHECKER') or hasRole('ADMIN') or hasAuthority('TICKET_REJECT') or hasAuthority('TICKET_MANAGE')")
     public ResponseEntity<TicketDTO> rejectTicket(
             @PathVariable UUID id,
             @Valid @RequestBody RejectionRequest request,

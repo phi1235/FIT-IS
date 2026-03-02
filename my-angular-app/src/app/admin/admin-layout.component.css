@@ -228,12 +228,32 @@
 }
 
 .breadcrumb {
-  font-size: 0.9rem;
-  color: #718096;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.875rem;
 }
 
-.breadcrumb strong {
+.bc-link {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s;
+}
+
+.bc-link:hover {
+  color: #5a67d8;
+  text-decoration: underline;
+}
+
+.bc-sep {
+  color: #cbd5e0;
+  font-size: 0.75rem;
+}
+
+.bc-current {
   color: #2d3748;
+  font-weight: 600;
 }
 
 .admin-content-scroll {

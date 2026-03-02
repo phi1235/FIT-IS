@@ -1,8 +1,10 @@
 package com.example.gateway.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.impl.client.HttpClients;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
@@ -16,7 +18,14 @@ import java.util.Enumeration;
 @Slf4j
 public class ProxyController {
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
+
+    public ProxyController() {
+        // HttpComponentsClientHttpRequestFactory supports all HTTP methods including PATCH
+        HttpComponentsClientHttpRequestFactory factory =
+                new HttpComponentsClientHttpRequestFactory(HttpClients.createDefault());
+        this.restTemplate = new RestTemplate(factory);
+    }
 
     @Value("${AUTH_SERVICE_URL}")
     private String authServiceUrl;
