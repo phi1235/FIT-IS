@@ -6,11 +6,12 @@ import { KeycloakService } from '../services/keycloak.service';
 import { AuthService } from '../services/auth.service';
 import { PermissionDirective } from '../directives/permission.directive';
 import { ChangePasswordModalComponent } from '../password-management/change-password-modal.component';
+import { NotificationBellComponent } from '../components/notification-bell.component';
 
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, PermissionDirective, ChangePasswordModalComponent],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, PermissionDirective, ChangePasswordModalComponent, NotificationBellComponent],
   templateUrl: './admin-layout.component.html',
   styleUrl: './admin-layout.component.css'
 })
