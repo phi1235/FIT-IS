@@ -348,6 +348,19 @@ CREATE INDEX IF NOT EXISTS idx_audit_event_type ON audit.audit_event(event_type)
 CREATE INDEX IF NOT EXISTS idx_audit_event_time ON audit.audit_event(event_time);
 CREATE INDEX IF NOT EXISTS idx_audit_event_user ON audit.audit_event(user_id);
 
+CREATE TABLE IF NOT EXISTS audit.system_notification (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title VARCHAR(200) NOT NULL,
+    content TEXT NOT NULL,
+    type VARCHAR(20) NOT NULL DEFAULT 'info',
+    created_by VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    expires_at TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_sys_notif_active ON audit.system_notification(is_active, expires_at);
+
 -- ===============================
 -- Seed minimal system roles/permissions (optional)
 -- ===============================
