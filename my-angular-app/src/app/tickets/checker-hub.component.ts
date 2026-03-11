@@ -6,11 +6,12 @@ import { forkJoin } from 'rxjs';
 import { TicketService, TicketDTO, PagedTicketResponse } from '../services/ticket.service';
 import { AuthService } from '../services/auth.service';
 import { ToastService } from '../services/toast.service';
+import { SlaBadgeComponent } from '../components/sla-badge.component';
 
 @Component({
   selector: 'app-checker-hub',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule, SlaBadgeComponent],
   template: `
 <div class="page">
   <!-- ═══ SIDEBAR ═══ -->
@@ -144,6 +145,7 @@ import { ToastService } from '../services/toast.service';
                 <th>MAKER DETAILS</th>
                 <th>TRANSACTION TYPE</th>
                 <th>AMOUNT</th>
+                <th>SLA</th>
                 <th>STATUS</th>
                 <th class="th-c">QUICK DECISION</th>
               </tr>
@@ -162,6 +164,14 @@ import { ToastService } from '../services/toast.service';
                 </td>
                 <td class="td-type">{{ t.title }}</td>
                 <td class="td-amt">{{ fmtAmt(t.amount) }}</td>
+                <td>
+                  <app-sla-badge
+                    [slaStatus]="t.slaStatus"
+                    [slaDeadline]="t.slaDeadline"
+                    [slaRemainingMinutes]="t.slaRemainingMinutes">
+                  </app-sla-badge>
+                  <span *ngIf="!t.slaStatus" class="maker-date">—</span>
+                </td>
                 <td>
                   <span class="badge" [ngClass]="bdgClass(t.status)">{{ bdgLbl(t.status) }}</span>
                 </td>

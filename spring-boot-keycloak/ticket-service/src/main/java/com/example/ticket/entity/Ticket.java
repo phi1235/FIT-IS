@@ -58,6 +58,9 @@ public class Ticket {
     @Column(name = "priority_id")
     private UUID priorityId;
 
+    @Column(name = "sla_deadline")
+    private LocalDateTime slaDeadline;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

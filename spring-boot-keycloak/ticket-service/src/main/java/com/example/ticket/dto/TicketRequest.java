@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotBlank;
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Data
 @Builder
@@ -20,6 +21,10 @@ public class TicketRequest {
     private String description;
 
     private BigDecimal amount;
+
+    private UUID priorityId;
+
+    private UUID categoryId;
 
     private boolean saveDraft;
 }

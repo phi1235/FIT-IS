@@ -3,7 +3,9 @@ package com.example.ticket.service;
 import com.example.ticket.dto.TicketDTO;
 import com.example.ticket.dto.TicketRequest;
 import com.example.ticket.dto.TicketStatus;
+import com.example.ticket.entity.Priority;
 import com.example.ticket.entity.Ticket;
+import com.example.ticket.repository.PriorityRepository;
 import com.example.ticket.repository.TicketRepository;
 import com.example.ticket.repository.TicketUserRepository;
 import lombok.RequiredArgsConstructor;
@@ -13,11 +15,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -33,6 +38,7 @@ public class TicketService {
 
     private final TicketRepository ticketRepository;
     private final TicketUserRepository userRepository;
+    private final PriorityRepository priorityRepository;
     private final ApplicationEventPublisher eventPublisher;
 
     public List<TicketDTO> getAllTickets() {
@@ -104,8 +110,16 @@ public class TicketService {
     @Transactional
     public TicketDTO createTicket(TicketRequest request, UUID makerUserId) {
         String code = generateTicketCode();
-
         TicketStatus initialStatus = request.isSaveDraft() ? TicketStatus.DRAFT : TicketStatus.PENDING;
+
+        // Compute SLA deadline from priority
+        LocalDateTime slaDeadline = null;
+        if (request.getPriorityId() != null) {
+            slaDeadline = priorityRepository.findById(request.getPriorityId())
+                    .filter(p -> p.getSlaDurationHours() != null)
+                    .map(p -> LocalDateTime.now().plusHours(p.getSlaDurationHours()))
+                    .orElse(null);
+        }
 
         Ticket ticket = Ticket.builder()
                 .code(code)
@@ -114,10 +128,13 @@ public class TicketService {
                 .amount(request.getAmount())
                 .status(initialStatus)
                 .makerUserId(makerUserId)
+                .priorityId(request.getPriorityId())
+                .categoryId(request.getCategoryId())
+                .slaDeadline(slaDeadline)
                 .build();
 
         Ticket savedTicket = ticketRepository.save(ticket);
-        log.info("Ticket created: {} by maker {}", code, makerUserId);
+        log.info("Ticket created: {} by maker {}, SLA deadline: {}", code, makerUserId, slaDeadline);
 
         return convertToDTO(savedTicket);
     }
@@ -219,6 +236,22 @@ public class TicketService {
                     .orElse("Unknown (" + ticket.getCheckerUserId() + ")");
         }
 
+        String priorityCode = null;
+        String priorityName = null;
+        if (ticket.getPriorityId() != null) {
+            Priority priority = priorityRepository.findById(ticket.getPriorityId()).orElse(null);
+            if (priority != null) {
+                priorityCode = priority.getCode();
+                priorityName = priority.getName();
+            }
+        }
+
+        String slaStatus = computeSlaStatus(ticket);
+        Long slaRemainingMinutes = null;
+        if (ticket.getSlaDeadline() != null) {
+            slaRemainingMinutes = ChronoUnit.MINUTES.between(LocalDateTime.now(), ticket.getSlaDeadline());
+        }
+
         return TicketDTO.builder()
                 .id(ticket.getId())
                 .code(ticket.getCode())
@@ -231,9 +264,37 @@ public class TicketService {
                 .makerName(makerName)
                 .checkerName(checkerName)
                 .rejectionReason(ticket.getRejectionReason())
+                .priorityCode(priorityCode)
+                .priorityName(priorityName)
+                .slaDeadline(ticket.getSlaDeadline())
+                .slaStatus(slaStatus)
+                .slaRemainingMinutes(slaRemainingMinutes)
                 .createdAt(ticket.getCreatedAt())
                 .updatedAt(ticket.getUpdatedAt())
                 .build();
+    }
+
+    private String computeSlaStatus(Ticket ticket) {
+        if (ticket.getSlaDeadline() == null) return null;
+        if (ticket.getStatus() == TicketStatus.APPROVED || ticket.getStatus() == TicketStatus.REJECTED) {
+            return "COMPLETED";
+        }
+        LocalDateTime now = LocalDateTime.now();
+        long minutesLeft = ChronoUnit.MINUTES.between(now, ticket.getSlaDeadline());
+        if (minutesLeft < 0)  return "BREACHED";
+        if (minutesLeft < 60) return "WARNING";  // < 1 hour
+        return "ON_TIME";
+    }
+
+    /** Chạy mỗi 15 phút — log các ticket PENDING đã vượt SLA */
+    @Scheduled(fixedRate = 900_000)
+    public void checkSlaBreaches() {
+        List<Ticket> overdue = ticketRepository.findOverduePendingTickets(LocalDateTime.now());
+        if (!overdue.isEmpty()) {
+            log.warn("SLA BREACH: {} PENDING ticket(s) overdue: {}",
+                    overdue.size(),
+                    overdue.stream().map(Ticket::getCode).collect(Collectors.joining(", ")));
+        }
     }
 
     private String generateTicketCode() {

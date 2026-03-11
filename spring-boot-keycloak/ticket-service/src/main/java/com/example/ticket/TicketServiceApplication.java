@@ -3,6 +3,7 @@ package com.example.ticket;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * Ticket Service - Handles ticket CRUD and maker-checker workflow
@@ -15,6 +16,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
  */
 @SpringBootApplication(scanBasePackages = "com.example")
 @EnableAsync
+@EnableScheduling
 public class TicketServiceApplication {
 
     public static void main(String[] args) {
