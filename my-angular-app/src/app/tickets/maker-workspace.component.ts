@@ -5,11 +5,12 @@ import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { TicketService, TicketDTO, PagedTicketResponse } from '../services/ticket.service';
 import { AuthService } from '../services/auth.service';
+import { SlaBadgeComponent } from '../components/sla-badge.component';
 
 @Component({
   selector: 'app-maker-workspace',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule, SlaBadgeComponent],
   template: `
 <div class="page">
   <!-- ═══ SIDEBAR ═══ -->
@@ -146,6 +147,7 @@ import { AuthService } from '../services/auth.service';
                 <th>TRANSACTION TYPE</th>
                 <th>AMOUNT</th>
                 <th>CREATED ON</th>
+                <th>SLA</th>
                 <th>STATUS</th>
                 <th class="th-r">ACTIONS</th>
               </tr>
@@ -161,6 +163,14 @@ import { AuthService } from '../services/auth.service';
                 </td>
                 <td class="td-amt">{{ fmtAmt(t.amount) }}</td>
                 <td class="td-date">{{ t.createdAt | date:'MMM dd, hh:mm a' }}</td>
+                <td>
+                  <app-sla-badge
+                    [slaStatus]="t.slaStatus"
+                    [slaDeadline]="t.slaDeadline"
+                    [slaRemainingMinutes]="t.slaRemainingMinutes">
+                  </app-sla-badge>
+                  <span *ngIf="!t.slaStatus" class="td-date" style="font-size:10px">—</span>
+                </td>
                 <td>
                   <span class="badge" [ngClass]="badgeClass(t.status)">
                     <span class="badge-dot"></span>{{ badgeLabel(t.status) }}

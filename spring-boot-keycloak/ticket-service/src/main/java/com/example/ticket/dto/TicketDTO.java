@@ -25,6 +25,11 @@ public class TicketDTO {
     private String makerName;
     private String checkerName;
     private String rejectionReason;
+    private String priorityCode;
+    private String priorityName;
+    private LocalDateTime slaDeadline;
+    private String slaStatus; // ON_TIME | WARNING | BREACHED | COMPLETED
+    private Long slaRemainingMinutes;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

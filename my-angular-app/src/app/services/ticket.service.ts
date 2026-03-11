@@ -12,15 +12,26 @@ export enum TicketStatus {
     COMPLETED = 'COMPLETED'
 }
 
+export interface PriorityDTO {
+    id: string;
+    code: string;
+    name: string;
+    slaDurationHours?: number;
+}
+
 export interface TicketRequest {
     title: string;
     description?: string;
     amount?: number;
+    priorityId?: string;
+    categoryId?: string;
     saveDraft?: boolean;
 }
 
+export type SlaStatus = 'ON_TIME' | 'WARNING' | 'BREACHED' | 'COMPLETED';
+
 export interface TicketDTO {
-    id: string; // Changed to string for UUID
+    id: string;
     code: string;
     title: string;
     description?: string;
@@ -31,6 +42,11 @@ export interface TicketDTO {
     makerName: string;
     checkerName?: string;
     rejectionReason?: string;
+    priorityCode?: string;
+    priorityName?: string;
+    slaDeadline?: string;
+    slaStatus?: SlaStatus;
+    slaRemainingMinutes?: number;
     createdAt: string;
     updatedAt: string;
 }
@@ -72,7 +88,7 @@ export class TicketService {
     // Normalize: thêm 'Z' vào các trường timestamp để parse đúng UTC.
     private fixTimestamps(t: TicketDTO): TicketDTO {
         const z = (s?: string) => s && !s.endsWith('Z') && !s.includes('+') ? s + 'Z' : s;
-        return { ...t, createdAt: z(t.createdAt)!, updatedAt: z(t.updatedAt)! };
+        return { ...t, createdAt: z(t.createdAt)!, updatedAt: z(t.updatedAt)!, slaDeadline: z(t.slaDeadline) };
     }
 
     getAllTickets(): Observable<TicketDTO[]> {
@@ -138,6 +154,10 @@ export class TicketService {
         return this.http.get(`${this.reportApiUrl}/download/${jobId}`, {
             responseType: 'blob'
         });
+    }
+
+    getPriorities(): Observable<PriorityDTO[]> {
+        return this.http.get<PriorityDTO[]>(`${this.apiUrl}/priorities`);
     }
 }
 

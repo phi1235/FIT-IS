@@ -193,6 +193,7 @@ CREATE TABLE IF NOT EXISTS ticket.ticket (
     maker_user_id UUID NOT NULL,
     checker_user_id UUID NULL,
     rejection_reason TEXT,
+    sla_deadline TIMESTAMP NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_ticket_category FOREIGN KEY (category_id) REFERENCES ticket.ticket_category(id),
@@ -389,4 +390,13 @@ VALUES
   ('AUDIT_VIEW', 'View audit logs', 'AUDIT'),
   ('WORKFLOW_VIEW', 'View workflows', 'WORKFLOW'),
   ('WORKFLOW_MANAGE', 'Manage workflows', 'WORKFLOW')
+ON CONFLICT (code) DO NOTHING;
+
+-- Seed priority levels with SLA
+INSERT INTO ticket.priority (code, name, description, sla_duration_hours)
+VALUES
+  ('P1', 'Critical',  'Immediate attention required — system down or critical impact', 2),
+  ('P2', 'High',      'Significant impact, urgent resolution needed',                 8),
+  ('P3', 'Medium',    'Moderate impact, standard processing',                         24),
+  ('P4', 'Low',       'Minor impact, resolve when possible',                          72)
 ON CONFLICT (code) DO NOTHING;

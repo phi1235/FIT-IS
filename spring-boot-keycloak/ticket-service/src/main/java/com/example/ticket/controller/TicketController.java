@@ -4,6 +4,8 @@ import com.example.ticket.dto.RejectionRequest;
 import com.example.ticket.dto.TicketDTO;
 import com.example.ticket.dto.TicketRequest;
 import com.example.ticket.dto.TicketStatus;
+import com.example.ticket.entity.Priority;
+import com.example.ticket.repository.PriorityRepository;
 import com.example.ticket.service.TicketService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -27,6 +29,7 @@ import com.example.common.util.SecurityUtils;
 public class TicketController {
 
     private final TicketService ticketService;
+    private final PriorityRepository priorityRepository;
 
     private UUID requireUserId(HttpServletRequest request) {
         UUID userId = SecurityUtils.getCurrentUserId();
@@ -86,6 +89,11 @@ public class TicketController {
     @GetMapping("/status/{status}")
     public ResponseEntity<List<TicketDTO>> getTicketsByStatus(@PathVariable TicketStatus status) {
         return ResponseEntity.ok(ticketService.getTicketsByStatus(status));
+    }
+
+    @GetMapping("/priorities")
+    public ResponseEntity<List<Priority>> getPriorities() {
+        return ResponseEntity.ok(priorityRepository.findAll());
     }
 
     @PostMapping
