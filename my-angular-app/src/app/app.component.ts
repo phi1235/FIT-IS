@@ -21,7 +21,12 @@ export class AppComponent implements OnInit {
   isInternalUser = false;
   isAdminRoute = false;
   isAuthPage = false;
+  isHomePage = false;
   showUserMenu = false;
+
+  get isGuestLandingPage(): boolean {
+    return this.isHomePage && !this.isAuthenticated;
+  }
 
   constructor(
     private keycloakService: KeycloakService,
@@ -57,6 +62,7 @@ export class AppComponent implements OnInit {
         const url = event.urlAfterRedirects;
         this.isAdminRoute = url.startsWith('/admin');
         this.isAuthPage = url.startsWith('/login') || url.startsWith('/sign');
+        this.isHomePage = url === '/home' || url === '/' || url.startsWith('/home');
       });
 
     // Check custom auth (from AuthService)

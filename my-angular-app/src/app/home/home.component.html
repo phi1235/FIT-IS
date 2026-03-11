@@ -1,15 +1,278 @@
-<div class="dashboard" [class.guest-mode]="!isLoggedIn">
+<!-- ======================================================= -->
+<!-- GUEST: Premium Landing Page                            -->
+<!-- ======================================================= -->
+<div class="landing-page" *ngIf="!isLoggedIn">
+
+  <!-- Navbar -->
+  <nav class="lp-nav">
+    <div class="lp-nav-inner">
+      <a routerLink="/" class="lp-logo">
+        <img src="logo.png" alt="FIS Logo" class="lp-logo-img">
+        <span class="lp-logo-text">FIS<span class="lp-logo-accent">BANK</span></span>
+      </a>
+      <div class="lp-nav-links">
+        <a href="#" class="lp-nav-link active">Trang Chủ</a>
+        <a href="#features" class="lp-nav-link">Dịch vụ</a>
+        <a href="#" class="lp-nav-link">Về chúng tôi</a>
+        <a href="#" class="lp-nav-link">Liên hệ</a>
+      </div>
+      <div class="lp-nav-actions">
+        <a routerLink="/sign" class="lp-btn-ghost">Đăng ký</a>
+        <a routerLink="/login" class="lp-btn-primary-nav">Đăng nhập</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="lp-hero">
+    <div class="lp-hero-bg-orb"></div>
+    <div class="lp-hero-bg-orb lp-hero-bg-orb-2"></div>
+    <div class="lp-container">
+      <div class="lp-hero-grid">
+
+        <!-- Left: Content -->
+        <div class="lp-hero-left">
+          <div class="lp-badge">
+            <span class="lp-badge-dot"></span>
+            <span>Mới: Hệ thống quản lý ticket 2.0</span>
+          </div>
+          <h1 class="lp-hero-title">
+            Giải pháp<br/>
+            <span class="lp-hero-gradient">Ngân hàng</span><br/>
+            Hiện đại
+          </h1>
+          <p class="lp-hero-sub">
+            Tối ưu hóa quy trình <strong>Maker-Checker</strong>, nâng cao hiệu suất làm việc nội bộ với công nghệ hàng đầu dành riêng cho tổ chức tài chính.
+          </p>
+          <div class="lp-hero-cta">
+            <a routerLink="/login" class="lp-btn-solid">
+              Bắt đầu ngay <i class="bi bi-arrow-right"></i>
+            </a>
+            <a routerLink="/sign" class="lp-btn-outline">
+              <i class="bi bi-play-circle-fill"></i>
+              Xem hướng dẫn
+            </a>
+          </div>
+          <div class="lp-hero-stats">
+            <div class="lp-stat">
+              <span class="lp-stat-num">99.9%</span>
+              <span class="lp-stat-lbl">Uptime</span>
+            </div>
+            <div class="lp-stats-divider"></div>
+            <div class="lp-stat">
+              <span class="lp-stat-num">256-bit</span>
+              <span class="lp-stat-lbl">Encryption</span>
+            </div>
+            <div class="lp-stats-divider"></div>
+            <div class="lp-stat">
+              <span class="lp-stat-num">24/7</span>
+              <span class="lp-stat-lbl">Support</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Dashboard Mockup -->
+        <div class="lp-hero-right">
+          <div class="lp-mockup-wrap">
+            <div class="lp-mockup-orb-top"></div>
+            <div class="lp-mockup-frame">
+              <div class="lp-mockup-header">
+                <div class="lp-mockup-dots">
+                  <span></span><span></span><span></span>
+                </div>
+                <span class="lp-mockup-title-bar">FIS Portal — Dashboard</span>
+              </div>
+              <div class="lp-mockup-body">
+                <div class="lp-mockup-stats-row">
+                  <div class="lp-mkstat lp-mkstat-purple">
+                    <span class="lp-mkstat-num">24</span>
+                    <span class="lp-mkstat-lbl">Total</span>
+                  </div>
+                  <div class="lp-mkstat lp-mkstat-amber">
+                    <span class="lp-mkstat-num">8</span>
+                    <span class="lp-mkstat-lbl">Pending</span>
+                  </div>
+                  <div class="lp-mkstat lp-mkstat-green">
+                    <span class="lp-mkstat-num">15</span>
+                    <span class="lp-mkstat-lbl">Approved</span>
+                  </div>
+                </div>
+                <div class="lp-mkrow">
+                  <div class="lp-mkrow-dot lp-mkrow-dot-green"></div>
+                  <div class="lp-mkrow-text lp-mkrow-text-lg"></div>
+                  <div class="lp-mkrow-badge lp-mkrow-badge-green">Approved</div>
+                </div>
+                <div class="lp-mkrow">
+                  <div class="lp-mkrow-dot lp-mkrow-dot-amber"></div>
+                  <div class="lp-mkrow-text lp-mkrow-text-md"></div>
+                  <div class="lp-mkrow-badge lp-mkrow-badge-amber">Pending</div>
+                </div>
+                <div class="lp-mkrow">
+                  <div class="lp-mkrow-dot lp-mkrow-dot-blue"></div>
+                  <div class="lp-mkrow-text"></div>
+                  <div class="lp-mkrow-badge lp-mkrow-badge-blue">Review</div>
+                </div>
+                <div class="lp-mkrow">
+                  <div class="lp-mkrow-dot lp-mkrow-dot-red"></div>
+                  <div class="lp-mkrow-text lp-mkrow-text-sm"></div>
+                  <div class="lp-mkrow-badge lp-mkrow-badge-red">Rejected</div>
+                </div>
+              </div>
+            </div>
+            <!-- Floating status badge -->
+            <div class="lp-float-badge">
+              <div class="lp-float-icon">
+                <i class="bi bi-check-circle-fill"></i>
+              </div>
+              <div class="lp-float-text">
+                <span class="lp-float-label">Trạng thái hệ thống</span>
+                <span class="lp-float-value">Phê duyệt thành công</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Trust Bar -->
+  <section class="lp-trust">
+    <div class="lp-container">
+      <p class="lp-trust-label">Được tin dùng bởi các đối tác công nghệ hàng đầu</p>
+      <div class="lp-trust-logos">
+        <div class="lp-trust-item"><i class="bi bi-shield-check"></i><span>ISO 27001</span></div>
+        <div class="lp-trust-item"><i class="bi bi-cloud-check-fill"></i><span>AWS Cloud</span></div>
+        <div class="lp-trust-item"><i class="bi bi-key-fill"></i><span>Keycloak Auth</span></div>
+        <div class="lp-trust-item"><i class="bi bi-patch-check-fill"></i><span>PCI DSS</span></div>
+        <div class="lp-trust-item"><i class="bi bi-database-lock-fill"></i><span>SOC 2</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="lp-features" id="features">
+    <div class="lp-container">
+      <div class="lp-section-header">
+        <h2 class="lp-section-title">
+          Tại sao chọn <span class="lp-text-primary">FIS BANK</span>?
+        </h2>
+        <p class="lp-section-sub">
+          Xây dựng trên nền tảng kiến trúc hiện đại, giải quyết những bài toán phức tạp nhất trong vận hành ngân hàng số.
+        </p>
+      </div>
+      <div class="lp-features-grid">
+
+        <div class="lp-feat-card">
+          <div class="lp-feat-icon lp-feat-icon-orange">
+            <i class="bi bi-shield-lock-fill"></i>
+          </div>
+          <h3 class="lp-feat-title">Bảo mật đa lớp</h3>
+          <p class="lp-feat-desc">Mã hóa dữ liệu đầu cuối theo chuẩn ngân hàng, xác thực JWT và kiểm soát truy cập theo vai trò (RBAC) nghiêm ngặt nhất.</p>
+          <a href="#" class="lp-feat-link">Khám phá bảo mật <i class="bi bi-arrow-right"></i></a>
+        </div>
+
+        <div class="lp-feat-card">
+          <div class="lp-feat-icon lp-feat-icon-blue">
+            <i class="bi bi-diagram-3-fill"></i>
+          </div>
+          <h3 class="lp-feat-title">Workflow linh hoạt</h3>
+          <p class="lp-feat-desc">Hỗ trợ đa vai trò Maker – Checker – Admin, tự động hóa quy trình phê duyệt, giảm thiểu sai sót con người và tăng tốc giao dịch.</p>
+          <a href="#" class="lp-feat-link">Quy trình thông minh <i class="bi bi-arrow-right"></i></a>
+        </div>
+
+        <div class="lp-feat-card">
+          <div class="lp-feat-icon lp-feat-icon-green">
+            <i class="bi bi-speedometer2"></i>
+          </div>
+          <h3 class="lp-feat-title">Hiệu năng tối ưu</h3>
+          <p class="lp-feat-desc">Kiến trúc Microservices đảm bảo khả năng mở rộng không giới hạn và phản hồi tức thì với báo cáo thời gian thực.</p>
+          <a href="#" class="lp-feat-link">Thông số kỹ thuật <i class="bi bi-arrow-right"></i></a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Landing Footer -->
+  <footer class="lp-footer">
+    <div class="lp-container">
+      <div class="lp-footer-grid">
+
+        <!-- Brand -->
+        <div class="lp-footer-brand">
+          <div class="lp-footer-logo">
+            <img src="logo.png" alt="FIS Logo" class="lp-footer-logo-img">
+            <span>FIS<span>BANK</span></span>
+          </div>
+          <p>Nâng tầm hệ thống ngân hàng với các giải pháp công nghệ dẫn đầu xu hướng, an toàn và hiệu quả tuyệt đối.</p>
+          <div class="lp-footer-social">
+            <a href="#"><i class="bi bi-globe2"></i></a>
+            <a href="#"><i class="bi bi-linkedin"></i></a>
+            <a href="#"><i class="bi bi-twitter-x"></i></a>
+          </div>
+        </div>
+
+        <!-- Product -->
+        <div class="lp-footer-col">
+          <h4>Sản phẩm</h4>
+          <ul>
+            <li><a href="#">Tính năng chính</a></li>
+            <li><a href="#">Bảo mật</a></li>
+            <li><a href="#">Quy trình</a></li>
+            <li><a href="#">API Docs</a></li>
+          </ul>
+        </div>
+
+        <!-- Company -->
+        <div class="lp-footer-col">
+          <h4>Công ty</h4>
+          <ul>
+            <li><a href="#">Về chúng tôi</a></li>
+            <li><a href="#">Nghề nghiệp</a></li>
+            <li><a href="#">Liên hệ</a></li>
+            <li><a href="#">Tin tức</a></li>
+          </ul>
+        </div>
+
+        <!-- Legal -->
+        <div class="lp-footer-col">
+          <h4>Pháp lý</h4>
+          <ul>
+            <li><a href="#">Điều khoản</a></li>
+            <li><a href="#">Bảo mật</a></li>
+            <li><a href="#">Cookies</a></li>
+          </ul>
+        </div>
+
+      </div>
+      <div class="lp-footer-bottom">
+        <span>© {{ today | date:'yyyy' }} FIS BANK Corporation. Vietnam's Leading Banking Software Solutions.</span>
+        <span class="lp-footer-region"><i class="bi bi-globe2"></i> Vietnam (VN)</span>
+      </div>
+    </div>
+  </footer>
+
+</div><!-- /landing-page -->
+
+
+<!-- ======================================================= -->
+<!-- AUTHENTICATED: Dashboard                                -->
+<!-- ======================================================= -->
+<ng-container *ngIf="isLoggedIn">
+
+<div class="dashboard">
 
   <!-- Hero Section -->
   <div class="hero-section">
     <div class="hero-pattern"></div>
     <div class="hero-content">
       <div class="hero-left">
-        <div class="hero-avatar" *ngIf="isLoggedIn">
+        <div class="hero-avatar">
           <span>{{ userInitials }}</span>
         </div>
         <div class="hero-text">
-          <p class="hero-greeting" *ngIf="isLoggedIn">{{ greeting }}, <strong>{{ displayName }}</strong> 👋</p>
+          <p class="hero-greeting">{{ greeting }}, <strong>{{ displayName }}</strong> 👋</p>
           <h1>Chào mừng đến <span class="brand-text">FIS BANK</span></h1>
           <p class="hero-sub">
             <i class="bi bi-calendar3"></i>
@@ -18,7 +281,7 @@
             <i class="bi bi-building"></i>
             Hệ thống quản lý nội bộ
           </p>
-          <div class="hero-user-meta" *ngIf="isLoggedIn">
+          <div class="hero-user-meta">
             <span class="hero-role-badge" *ngFor="let role of userRoles">
               <i class="bi bi-person-badge-fill"></i> {{ role }}
             </span>
@@ -31,7 +294,7 @@
           </div>
         </div>
       </div>
-      <div class="hero-actions" *ngIf="isLoggedIn">
+      <div class="hero-actions">
         <a *ngIf="!authService.hasRole('CHECKER')" routerLink="/tickets/create" class="btn-hero-primary">
           <i class="bi bi-plus-circle-fill"></i> Tạo Ticket mới
         </a>
@@ -39,45 +302,34 @@
           <i class="bi bi-list-ul"></i> Xem tất cả
         </a>
       </div>
-      <div class="hero-actions" *ngIf="!isLoggedIn">
-        <a routerLink="/login" class="btn-hero-primary">
-          <i class="bi bi-box-arrow-in-right"></i> Đăng Nhập
-        </a>
-        <a routerLink="/sign" class="btn-hero-secondary">
-          <i class="bi bi-person-plus"></i> Đăng Ký
-        </a>
-      </div>
     </div>
   </div>
 
-  <!-- Authenticated Content -->
-  <ng-container *ngIf="isLoggedIn">
+  <!-- Stats Row -->
+  <div class="stats-row">
+    <a class="stat-card" *ngFor="let s of stats; let i = index"
+         [routerLink]="['/tickets']"
+         [queryParams]="s.status ? {status: s.status} : {}"
+         [style.--accent]="s.color"
+         [style.--grad-from]="s.gradientFrom"
+         [style.--grad-to]="s.gradientTo"
+         [style.animation-delay]="(i * 100) + 'ms'">
+      <div class="stat-icon-wrap">
+        <i [class]="'bi ' + s.icon"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ isLoading ? '—' : s.displayValue }}</span>
+        <span class="stat-label">{{ s.label }}</span>
+      </div>
+      <div class="stat-decoration"></div>
+    </a>
+  </div>
 
-    <!-- Stats Row -->
-    <div class="stats-row">
-      <a class="stat-card" *ngFor="let s of stats; let i = index"
-           [routerLink]="['/tickets']"
-           [queryParams]="s.status ? {status: s.status} : {}"
-           [style.--accent]="s.color"
-           [style.--grad-from]="s.gradientFrom"
-           [style.--grad-to]="s.gradientTo"
-           [style.animation-delay]="(i * 100) + 'ms'">
-        <div class="stat-icon-wrap">
-          <i [class]="'bi ' + s.icon"></i>
-        </div>
-        <div class="stat-info">
-          <span class="stat-value">{{ isLoading ? '—' : s.displayValue }}</span>
-          <span class="stat-label">{{ s.label }}</span>
-        </div>
-        <div class="stat-decoration"></div>
-      </a>
-    </div>
+  <!-- Content Grid -->
+  <div class="content-grid">
 
-    <!-- Content Grid -->
-    <div class="content-grid">
-
-      <!-- Left Column -->
-      <div class="main-column">
+    <!-- Left Column -->
+    <div class="main-column">
 
       <!-- Recent Tickets -->
       <div class="card card-tickets">
@@ -160,161 +412,131 @@
         </div>
       </div>
 
-      </div><!-- /main-column -->
+    </div><!-- /main-column -->
 
-      <!-- Sidebar -->
-      <div class="sidebar">
+    <!-- Sidebar -->
+    <div class="sidebar">
 
-        <!-- Donut Chart Card -->
-        <div class="card card-chart" *ngIf="!isLoading && donutTotal > 0">
-          <div class="card-header">
-            <div class="card-title">
-              <i class="bi bi-pie-chart-fill"></i>
-              <h3>Phân bố trạng thái</h3>
-            </div>
+      <!-- Donut Chart Card -->
+      <div class="card card-chart" *ngIf="!isLoading && donutTotal > 0">
+        <div class="card-header">
+          <div class="card-title">
+            <i class="bi bi-pie-chart-fill"></i>
+            <h3>Phân bố trạng thái</h3>
           </div>
-          <div class="donut-container">
-            <svg viewBox="0 0 42 42" class="donut-svg">
-              <circle cx="21" cy="21" r="15.91549430918954" fill="transparent"
-                      stroke="#f1f5f9" stroke-width="5"></circle>
-              <circle *ngFor="let seg of donutSegments"
-                      cx="21" cy="21" r="15.91549430918954" fill="transparent"
-                      [attr.stroke]="seg.color"
-                      stroke-width="5"
-                      [attr.stroke-dasharray]="seg.percentage + ' ' + (100 - seg.percentage)"
-                      [attr.stroke-dashoffset]="25 - seg.offset"
-                      stroke-linecap="round"
-                      class="donut-segment">
-              </circle>
-            </svg>
-            <div class="donut-center">
-              <span class="donut-total">{{ donutTotal }}</span>
-              <span class="donut-label">Ticket</span>
-            </div>
+        </div>
+        <div class="donut-container">
+          <svg viewBox="0 0 42 42" class="donut-svg">
+            <circle cx="21" cy="21" r="15.91549430918954" fill="transparent"
+                    stroke="#f1f5f9" stroke-width="5"></circle>
+            <circle *ngFor="let seg of donutSegments"
+                    cx="21" cy="21" r="15.91549430918954" fill="transparent"
+                    [attr.stroke]="seg.color"
+                    stroke-width="5"
+                    [attr.stroke-dasharray]="seg.percentage + ' ' + (100 - seg.percentage)"
+                    [attr.stroke-dashoffset]="25 - seg.offset"
+                    stroke-linecap="round"
+                    class="donut-segment">
+            </circle>
+          </svg>
+          <div class="donut-center">
+            <span class="donut-total">{{ donutTotal }}</span>
+            <span class="donut-label">Ticket</span>
           </div>
-          <div class="donut-legend">
-            <div class="legend-item" *ngFor="let seg of donutSegments">
-              <span class="legend-dot" [style.background]="seg.color"></span>
-              <span class="legend-text">{{ seg.label }}</span>
-              <span class="legend-value">{{ seg.value }}</span>
+        </div>
+        <div class="donut-legend">
+          <div class="legend-item" *ngFor="let seg of donutSegments">
+            <span class="legend-dot" [style.background]="seg.color"></span>
+            <span class="legend-text">{{ seg.label }}</span>
+            <span class="legend-value">{{ seg.value }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions Card -->
+      <div class="card card-actions">
+        <div class="card-header">
+          <div class="card-title">
+            <i class="bi bi-lightning-fill"></i>
+            <h3>Thao tác nhanh</h3>
+          </div>
+        </div>
+        <div class="quick-actions">
+          <a *ngIf="!authService.hasRole('CHECKER')" routerLink="/tickets/create" class="action-item">
+            <div class="action-icon action-icon-purple">
+              <i class="bi bi-plus-lg"></i>
+            </div>
+            <div class="action-text">
+              <strong>Tạo Ticket mới</strong>
+              <p>Gửi yêu cầu phê duyệt</p>
+            </div>
+            <i class="bi bi-chevron-right action-arrow"></i>
+          </a>
+          <a routerLink="/tickets" class="action-item">
+            <div class="action-icon action-icon-blue">
+              <i class="bi bi-list-check"></i>
+            </div>
+            <div class="action-text">
+              <strong>Danh sách Ticket</strong>
+              <p>Xem và theo dõi ticket</p>
+            </div>
+            <i class="bi bi-chevron-right action-arrow"></i>
+          </a>
+          <a routerLink="/admin/workflow" class="action-item" *ngIf="authService.hasPermission('WORKFLOW_VIEW')">
+            <div class="action-icon action-icon-orange">
+              <i class="bi bi-diagram-3-fill"></i>
+            </div>
+            <div class="action-text">
+              <strong>Workflow</strong>
+              <p>Phê duyệt yêu cầu</p>
+            </div>
+            <i class="bi bi-chevron-right action-arrow"></i>
+          </a>
+          <a routerLink="/admin/audit-logs" class="action-item" *ngIf="authService.hasPermission('AUDIT_VIEW')">
+            <div class="action-icon action-icon-green">
+              <i class="bi bi-shield-check"></i>
+            </div>
+            <div class="action-text">
+              <strong>Audit Log</strong>
+              <p>Lịch sử hoạt động hệ thống</p>
+            </div>
+            <i class="bi bi-chevron-right action-arrow"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- Activity Timeline -->
+      <div class="card card-timeline" *ngIf="!isLoading && recentTickets.length > 0">
+        <div class="card-header">
+          <div class="card-title">
+            <i class="bi bi-activity"></i>
+            <h3>Hoạt động gần đây</h3>
+          </div>
+        </div>
+        <div class="timeline">
+          <div class="timeline-item" *ngFor="let t of recentTickets.slice(0, 3); let last = last"
+               [class.timeline-last]="last">
+            <div class="timeline-dot" [ngClass]="getStatusClass(t.status)"></div>
+            <div class="timeline-content">
+              <p class="timeline-title">{{ t.title }}</p>
+              <div class="timeline-meta">
+                <span class="badge badge-sm" [class]="getStatusClass(t.status)">{{ getStatusLabel(t.status) }}</span>
+                <span class="timeline-time">{{ getTimeAgo(t.createdAt) }}</span>
+              </div>
             </div>
           </div>
         </div>
-
-        <!-- Quick Actions Card -->
-        <div class="card card-actions">
-          <div class="card-header">
-            <div class="card-title">
-              <i class="bi bi-lightning-fill"></i>
-              <h3>Thao tác nhanh</h3>
-            </div>
-          </div>
-          <div class="quick-actions">
-            <a *ngIf="!authService.hasRole('CHECKER')" routerLink="/tickets/create" class="action-item">
-              <div class="action-icon action-icon-purple">
-                <i class="bi bi-plus-lg"></i>
-              </div>
-              <div class="action-text">
-                <strong>Tạo Ticket mới</strong>
-                <p>Gửi yêu cầu phê duyệt</p>
-              </div>
-              <i class="bi bi-chevron-right action-arrow"></i>
-            </a>
-            <a routerLink="/tickets" class="action-item">
-              <div class="action-icon action-icon-blue">
-                <i class="bi bi-list-check"></i>
-              </div>
-              <div class="action-text">
-                <strong>Danh sách Ticket</strong>
-                <p>Xem và theo dõi ticket</p>
-              </div>
-              <i class="bi bi-chevron-right action-arrow"></i>
-            </a>
-            <a routerLink="/admin/workflow" class="action-item" *ngIf="authService.hasPermission('WORKFLOW_VIEW')">
-              <div class="action-icon action-icon-orange">
-                <i class="bi bi-diagram-3-fill"></i>
-              </div>
-              <div class="action-text">
-                <strong>Workflow</strong>
-                <p>Phê duyệt yêu cầu</p>
-              </div>
-              <i class="bi bi-chevron-right action-arrow"></i>
-            </a>
-            <a routerLink="/admin/audit-logs" class="action-item" *ngIf="authService.hasPermission('AUDIT_VIEW')">
-              <div class="action-icon action-icon-green">
-                <i class="bi bi-shield-check"></i>
-              </div>
-              <div class="action-text">
-                <strong>Audit Log</strong>
-                <p>Lịch sử hoạt động hệ thống</p>
-              </div>
-              <i class="bi bi-chevron-right action-arrow"></i>
-            </a>
-          </div>
-        </div>
-
-        <!-- Activity Timeline -->
-        <div class="card card-timeline" *ngIf="!isLoading && recentTickets.length > 0">
-          <div class="card-header">
-            <div class="card-title">
-              <i class="bi bi-activity"></i>
-              <h3>Hoạt động gần đây</h3>
-            </div>
-          </div>
-          <div class="timeline">
-            <div class="timeline-item" *ngFor="let t of recentTickets.slice(0, 3); let last = last"
-                 [class.timeline-last]="last">
-              <div class="timeline-dot" [ngClass]="getStatusClass(t.status)"></div>
-              <div class="timeline-content">
-                <p class="timeline-title">{{ t.title }}</p>
-                <div class="timeline-meta">
-                  <span class="badge badge-sm" [class]="getStatusClass(t.status)">{{ getStatusLabel(t.status) }}</span>
-                  <span class="timeline-time">{{ getTimeAgo(t.createdAt) }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
       </div>
 
     </div>
-  </ng-container>
 
-  <!-- Guest Content -->
-  <div class="guest-content" *ngIf="!isLoggedIn">
-    <div class="features-grid">
-      <div class="feature-card">
-        <div class="feature-icon feature-icon-purple">
-          <i class="bi bi-shield-lock-fill"></i>
-        </div>
-        <h3>Bảo mật cao</h3>
-        <p>Xác thực đa lớp với Keycloak, mã hóa dữ liệu end-to-end</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon feature-icon-orange">
-          <i class="bi bi-diagram-3-fill"></i>
-        </div>
-        <h3>Workflow linh hoạt</h3>
-        <p>Quy trình phê duyệt Maker-Checker tự động hóa</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon feature-icon-green">
-          <i class="bi bi-speedometer2"></i>
-        </div>
-        <h3>Hiệu suất tối ưu</h3>
-        <p>Xử lý nhanh chóng với microservices architecture</p>
-      </div>
-    </div>
   </div>
-
 </div>
 
-<!-- Footer -->
+<!-- Footer (authenticated) -->
 <footer class="site-footer">
   <div class="footer-main">
 
-    <!-- Brand -->
     <div class="footer-brand">
       <div class="footer-logo-name">
         <i class="bi bi-bank2"></i>
@@ -328,7 +550,6 @@
       </div>
     </div>
 
-    <!-- Quick Links -->
     <div class="footer-col">
       <p class="footer-col-title">Truy cập nhanh</p>
       <ul class="footer-links">
@@ -340,7 +561,6 @@
       </ul>
     </div>
 
-    <!-- Contact -->
     <div class="footer-col">
       <p class="footer-col-title">Hỗ trợ</p>
       <div class="footer-contact-list">
@@ -364,7 +584,6 @@
     </div>
 
   </div>
-
   <div class="footer-bottom">
     <div class="footer-bottom-inner">
       <span class="footer-copy">&copy; {{ today | date:'yyyy' }} FPT Information System. All rights reserved.</span>
@@ -372,3 +591,5 @@
     </div>
   </div>
 </footer>
+
+</ng-container>

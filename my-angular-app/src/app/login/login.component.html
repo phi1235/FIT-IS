@@ -1,95 +1,208 @@
-<div class="login-container">
-    <div class="login-card">
-        <div class="login-header">
-            <h1>Đăng Nhập</h1>
-            <p class="subtitle">Chào mừng bạn quay trở lại</p>
+<div class="ln-page">
+
+  <!-- ===== LEFT PANEL: Branding ===== -->
+  <div class="ln-left">
+    <div class="ln-orb ln-orb-1"></div>
+    <div class="ln-orb ln-orb-2"></div>
+    <div class="ln-orb ln-orb-3"></div>
+
+    <div class="ln-left-inner">
+
+      <!-- Logo -->
+      <a routerLink="/home" class="ln-logo">
+        <img src="logo.png" alt="FIS Logo" class="ln-logo-img">
+        <span class="ln-logo-text">FIS<span class="ln-logo-accent">BANK</span></span>
+      </a>
+
+      <!-- Main content -->
+      <div class="ln-left-body">
+        <div class="ln-left-badge">
+          <span class="ln-badge-dot"></span>
+          Enterprise Edition 2026
+        </div>
+        <h2 class="ln-left-title">
+          Hệ thống quản lý<br/>
+          <span class="ln-title-accent">nội bộ FIS BANK</span>
+        </h2>
+        <p class="ln-left-sub">
+          Nền tảng Maker-Checker hiện đại, bảo mật cao cấp, tối ưu vận hành cho tổ chức tài chính.
+        </p>
+
+        <div class="ln-features">
+          <div class="ln-feat-item">
+            <div class="ln-feat-icon">
+              <i class="bi bi-shield-lock-fill"></i>
+            </div>
+            <span>Xác thực JWT bảo mật chuẩn ngân hàng</span>
+          </div>
+          <div class="ln-feat-item">
+            <div class="ln-feat-icon">
+              <i class="bi bi-diagram-3-fill"></i>
+            </div>
+            <span>Quy trình Maker-Checker tự động hóa</span>
+          </div>
+          <div class="ln-feat-item">
+            <div class="ln-feat-icon">
+              <i class="bi bi-speedometer2"></i>
+            </div>
+            <span>Hiệu suất cao với kiến trúc Microservices</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom stats -->
+      <div class="ln-left-stats">
+        <div class="ln-stat">
+          <span class="ln-stat-num">99.9%</span>
+          <span class="ln-stat-lbl">Uptime</span>
+        </div>
+        <div class="ln-stat-divider"></div>
+        <div class="ln-stat">
+          <span class="ln-stat-num">256-bit</span>
+          <span class="ln-stat-lbl">Encryption</span>
+        </div>
+        <div class="ln-stat-divider"></div>
+        <div class="ln-stat">
+          <span class="ln-stat-num">24/7</span>
+          <span class="ln-stat-lbl">Support</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== RIGHT PANEL: Form ===== -->
+  <div class="ln-right">
+    <div class="ln-form-wrap">
+
+      <!-- Top accent bar -->
+      <div class="ln-form-accent-bar"></div>
+
+      <!-- Header -->
+      <div class="ln-form-header">
+        <div class="ln-form-logo-mobile">
+          <img src="logo.png" alt="FIS Logo" class="ln-logo-img-sm">
+          <span>FIS<span>BANK</span></span>
+        </div>
+        <div class="ln-form-brand-icon">
+          <i class="bi bi-shield-lock-fill"></i>
+        </div>
+        <h1>Đăng nhập</h1>
+        <p>Chào mừng bạn quay trở lại 👋</p>
+      </div>
+
+      <!-- Error Alert -->
+      <div class="ln-alert-error" *ngIf="errorMessage && !showMigrationDialog">
+        <i class="bi bi-exclamation-circle-fill"></i>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" autocomplete="off">
+
+        <!-- Username -->
+        <div class="ln-field"
+             [class.ln-field-error]="f['username'].touched && f['username'].invalid"
+             [class.ln-field-ok]="f['username'].touched && f['username'].valid">
+          <label for="username">Tên đăng nhập</label>
+          <div class="ln-input-wrap">
+            <i class="bi bi-person-fill ln-icon-left"></i>
+            <input type="text" id="username" formControlName="username"
+                   placeholder="Nhập tên đăng nhập" autocomplete="username"/>
+            <i class="bi bi-check-circle-fill ln-icon-ok" *ngIf="f['username'].touched && f['username'].valid"></i>
+          </div>
+          <p class="ln-err-msg" *ngIf="getErrorMessage('username')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('username') }}
+          </p>
         </div>
 
-        <!-- Error Message -->
-        <div class="error-alert" *ngIf="errorMessage">
-            <span>{{ errorMessage }}</span>
-        </div>
-
-        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-            <!-- Username Field -->
-            <div class="form-group" [class.has-error]="f['username'].touched && f['username'].invalid"
-                [class.has-success]="f['username'].touched && f['username'].valid">
-                <label for="username">Tên đăng nhập</label>
-                <input type="text" id="username" formControlName="username" placeholder="Nhập tên đăng nhập"
-                    autocomplete="username" />
-                <div class="error-message" *ngIf="getErrorMessage('username')">
-                    {{ getErrorMessage('username') }}
-                </div>
-            </div>
-
-            <!-- Password Field -->
-            <div class="form-group" [class.has-error]="f['password'].touched && f['password'].invalid"
-                [class.has-success]="f['password'].touched && f['password'].valid">
-                <label for="password">Mật khẩu</label>
-                <div class="password-wrapper">
-                    <input [type]="showPassword ? 'text' : 'password'" id="password" formControlName="password"
-                        placeholder="Nhập mật khẩu" autocomplete="current-password" />
-                    <button type="button" class="toggle-password" (click)="togglePassword()">
-                        {{ showPassword ? 'Ẩn' : 'Hiện' }}
-                    </button>
-                </div>
-                <div class="error-message" *ngIf="getErrorMessage('password')">
-                    {{ getErrorMessage('password') }}
-                </div>
-            </div>
-
-            <!-- Submit Button -->
-            <button type="submit" class="btn-login" [disabled]="isLoading">
-                <span *ngIf="!isLoading">Đăng Nhập</span>
-                <span *ngIf="isLoading">Đang xử lý...</span>
+        <!-- Password -->
+        <div class="ln-field"
+             [class.ln-field-error]="f['password'].touched && f['password'].invalid"
+             [class.ln-field-ok]="f['password'].touched && f['password'].valid">
+          <div class="ln-field-label-row">
+            <label for="password">Mật khẩu</label>
+            <a routerLink="/forgot-password" class="ln-forgot">Quên mật khẩu?</a>
+          </div>
+          <div class="ln-input-wrap">
+            <i class="bi bi-lock-fill ln-icon-left"></i>
+            <input [type]="showPassword ? 'text' : 'password'" id="password"
+                   formControlName="password" placeholder="Nhập mật khẩu"
+                   autocomplete="current-password"/>
+            <button type="button" class="ln-pw-toggle" (click)="togglePassword()">
+              <i [class]="'bi ' + (showPassword ? 'bi-eye-slash-fill' : 'bi-eye-fill')"></i>
             </button>
-        </form>
-
-        <div class="login-footer">
-            <p>Chưa có tài khoản? <a routerLink="/sign">Đăng ký ngay</a></p>
-            <p><a routerLink="/forgot-password" class="forgot-password-link">Quên mật khẩu?</a></p>
-            <a routerLink="/home" class="back-link">Quay về trang chủ</a>
+          </div>
+          <p class="ln-err-msg" *ngIf="getErrorMessage('password')">
+            <i class="bi bi-exclamation-circle"></i> {{ getErrorMessage('password') }}
+          </p>
         </div>
+
+        <!-- Submit -->
+        <button type="submit" class="ln-btn-submit" [disabled]="isLoading">
+          <span class="ln-btn-content" *ngIf="!isLoading">
+            Đăng nhập <i class="bi bi-arrow-right"></i>
+          </span>
+          <span class="ln-btn-loading" *ngIf="isLoading">
+            <span class="ln-spinner"></span> Đang xử lý...
+          </span>
+        </button>
+
+      </form>
+
+      <!-- Footer links -->
+      <div class="ln-form-footer">
+        <p>Chưa có tài khoản? <a routerLink="/sign">Đăng ký ngay</a></p>
+        <a routerLink="/home" class="ln-back-home">
+          <i class="bi bi-arrow-left"></i> Quay về trang chủ
+        </a>
+      </div>
+
+      <!-- Trust badges -->
+      <div class="ln-trust-row">
+        <span class="ln-trust-badge"><i class="bi bi-shield-check"></i> SSL Secure</span>
+        <span class="ln-trust-badge"><i class="bi bi-lock-fill"></i> 256-bit</span>
+        <span class="ln-trust-badge"><i class="bi bi-patch-check-fill"></i> ISO 27001</span>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== Password Migration Modal ===== -->
+<div class="ln-modal-overlay" *ngIf="showMigrationDialog" (click)="closeMigrationDialog()">
+  <div class="ln-modal" (click)="$event.stopPropagation()">
+    <div class="ln-modal-icon">
+      <i class="bi bi-shield-lock-fill"></i>
+    </div>
+    <h2>Cập nhật mật khẩu</h2>
+    <p>Bạn cần cập nhật mật khẩu để sử dụng định dạng bảo mật mới.</p>
+
+    <div class="ln-field" style="margin-top: 20px;">
+      <label for="newPassword">Mật khẩu mới</label>
+      <div class="ln-input-wrap">
+        <i class="bi bi-lock-fill ln-icon-left"></i>
+        <input type="password" id="newPassword" #newPasswordInput
+               placeholder="Tối thiểu 8 ký tự" minlength="8"/>
+      </div>
+      <p class="ln-err-msg" *ngIf="errorMessage && showMigrationDialog">
+        <i class="bi bi-exclamation-circle"></i> {{ errorMessage }}
+      </p>
     </div>
 
-    <!-- Password Migration Dialog -->
-    <div class="modal-overlay" *ngIf="showMigrationDialog" (click)="closeMigrationDialog()">
-        <div class="modal-content" (click)="$event.stopPropagation()">
-            <h2>Cập nhật mật khẩu</h2>
-            <p>Bạn cần cập nhật mật khẩu để sử dụng định dạng bảo mật mới.</p>
-            <p class="migration-info">Vui lòng nhập mật khẩu mới (tối thiểu 8 ký tự):</p>
-            
-            <div class="form-group">
-                <label for="newPassword">Mật khẩu mới</label>
-                <input 
-                    type="password" 
-                    id="newPassword" 
-                    #newPasswordInput
-                    placeholder="Nhập mật khẩu mới"
-                    minlength="8"
-                    class="form-control" />
-                <div class="error-message" *ngIf="errorMessage && showMigrationDialog">
-                    {{ errorMessage }}
-                </div>
-            </div>
-
-            <div class="modal-actions">
-                <button 
-                    type="button" 
-                    class="btn-primary" 
-                    (click)="migratePassword(newPasswordInput.value)"
-                    [disabled]="isLoading || !newPasswordInput.value || newPasswordInput.value.length < 8">
-                    <span *ngIf="!isLoading">Cập nhật</span>
-                    <span *ngIf="isLoading">Đang xử lý...</span>
-                </button>
-                <button 
-                    type="button" 
-                    class="btn-secondary" 
-                    (click)="closeMigrationDialog()"
-                    [disabled]="isLoading">
-                    Hủy
-                </button>
-            </div>
-        </div>
+    <div class="ln-modal-actions">
+      <button type="button" class="ln-btn-submit"
+              (click)="migratePassword(newPasswordInput.value)"
+              [disabled]="isLoading || !newPasswordInput.value || newPasswordInput.value.length < 8">
+        <span *ngIf="!isLoading">Cập nhật</span>
+        <span class="ln-btn-loading" *ngIf="isLoading">
+          <span class="ln-spinner"></span> Đang xử lý...
+        </span>
+      </button>
+      <button type="button" class="ln-btn-cancel"
+              (click)="closeMigrationDialog()" [disabled]="isLoading">
+        Hủy
+      </button>
     </div>
+  </div>
 </div>

@@ -24,7 +24,7 @@ services:
   # Spring API - Main API Gateway
   spring-api:
     build:
-      context: ./spring-boot-keycloak
+      context: ./spring-boot-keycloak/gateway-service
       dockerfile: Dockerfile
     env_file:
       - .env
@@ -134,8 +134,8 @@ services:
   # Auth Service
   auth-service:
     build:
-      context: ./spring-boot-keycloak
-      dockerfile: Dockerfile.auth
+      context: ./spring-boot-keycloak/auth-service
+      dockerfile: Dockerfile
     env_file:
       - .env
     environment:
@@ -169,8 +169,8 @@ services:
   # User Service
   user-service:
     build:
-      context: ./spring-boot-keycloak
-      dockerfile: Dockerfile.user
+      context: ./spring-boot-keycloak/user-service
+      dockerfile: Dockerfile
     env_file:
       - .env
     environment:
@@ -199,8 +199,8 @@ services:
   # Ticket Service
   ticket-service:
     build:
-      context: ./spring-boot-keycloak
-      dockerfile: Dockerfile.ticket
+      context: ./spring-boot-keycloak/ticket-service
+      dockerfile: Dockerfile
     env_file:
       - .env
     environment:
@@ -229,8 +229,8 @@ services:
   # Workflow Service
   workflow-service:
     build:
-      context: ./spring-boot-keycloak
-      dockerfile: Dockerfile.workflow
+      context: ./spring-boot-keycloak/workflow-service
+      dockerfile: Dockerfile
     env_file:
       - .env
     environment:
@@ -259,8 +259,8 @@ services:
   # Audit Service
   audit-service:
     build:
-      context: ./spring-boot-keycloak
-      dockerfile: Dockerfile.audit
+      context: ./spring-boot-keycloak/audit-service
+      dockerfile: Dockerfile
     env_file:
       - .env
     environment:
@@ -289,8 +289,8 @@ services:
   # Report Service
   report-service:
     build:
-      context: ./spring-boot-keycloak
-      dockerfile: Dockerfile.report
+      context: ./spring-boot-keycloak/report-service
+      dockerfile: Dockerfile
     env_file:
       - .env
     environment:
