@@ -28,6 +28,20 @@ export const routes: Routes = [
   { path: 'sign', component: SignPageComponent },
   { path: 'forgot-password', component: ForgotPasswordComponent },
 
+  // Maker Workspace — full-page standalone layout for MAKER role
+  {
+    path: 'workspace',
+    canActivate: [authGuard],
+    loadComponent: () => import('./tickets/maker-workspace.component').then(m => m.MakerWorkspaceComponent)
+  },
+
+  // Checker Hub — full-page standalone layout for CHECKER role
+  {
+    path: 'checker',
+    canActivate: [authGuard],
+    loadComponent: () => import('./tickets/checker-hub.component').then(m => m.CheckerHubComponent)
+  },
+
   // Top-level tickets for regular users (no sidebar)
   {
     path: 'tickets',

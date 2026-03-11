@@ -10,6 +10,12 @@
       <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-item">
         <i class="bi bi-speedometer2"></i> Dashboard
       </a>
+      <a *ngIf="isMaker()" routerLink="/workspace" routerLinkActive="active" class="nav-item">
+        <i class="bi bi-pencil-square"></i> Maker Workspace
+      </a>
+      <a *ngIf="isChecker()" routerLink="/checker" routerLinkActive="active" class="nav-item">
+        <i class="bi bi-check2-square"></i> Checker Hub
+      </a>
       <a *appPermission="'TICKET_VIEW'" routerLink="/admin/tickets" routerLinkActive="active" class="nav-item">
         <i class="bi bi-ticket-perforated"></i> Tickets
       </a>
