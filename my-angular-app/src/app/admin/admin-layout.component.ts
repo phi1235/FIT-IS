@@ -125,6 +125,14 @@ export class AdminLayoutComponent implements OnInit {
     return 'User';
   }
 
+  isMaker(): boolean {
+    return this.authService.hasRole('MAKER');
+  }
+
+  isChecker(): boolean {
+    return this.authService.hasRole('CHECKER');
+  }
+
   openChangePassword() {
     this.changePasswordModal.openModal();
   }
